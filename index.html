@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///C:/Users/Isadora/Downloads/index.html -->
+<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_2.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Escoramento</title>
-<link href="./Controle de Escoramento_files/css2" rel="stylesheet">
-<script src="./Controle de Escoramento_files/supabase-js@2"></script>
+<link href="./index_files/css2" rel="stylesheet">
+<script src="./index_files/supabase.js.download"></script>
 <style>
 :root {
   --ink:      #0f1117;
@@ -320,15 +320,38 @@ async function fazerLogin() {
   const btn   = document.getElementById('btn-login');
   const erro  = document.getElementById('login-erro');
   erro.textContent = '';
+
+  if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
+
   btn.disabled = true;
   btn.textContent = 'Entrando...';
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-  btn.disabled = false;
-  btn.textContent = 'Entrar';
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
 
-  if (error) { erro.textContent = 'E-mail ou senha incorretos.'; return; }
-  iniciarApp(data.user);
+    if (error) {
+      console.error('Login error:', error);
+      if (error.message.includes('Invalid login')) {
+        erro.textContent = 'E-mail ou senha incorretos.';
+      } else if (error.message.includes('Email not confirmed')) {
+        erro.textContent = 'E-mail não confirmado. Desative a confirmação no Supabase.';
+      } else {
+        erro.textContent = 'Erro: ' + error.message;
+      }
+      return;
+    }
+
+    if (data?.user) {
+      iniciarApp(data.user);
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    erro.textContent = 'Erro de conexão. Verifique sua internet.';
+    console.error('Exception:', e);
+  }
 }
 
 async function sair() {
