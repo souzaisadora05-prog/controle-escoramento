@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_7.html -->
-<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Escoramento</title>
-<link href="./index_files/css2" rel="stylesheet">
-<script src="./index_files/supabase.js.download"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
   const SUPABASE_URL = 'https://myhgijtbgmpxawcethas.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
@@ -194,15 +195,15 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
 <div class="toast" id="toast"></div>
 
 <!-- ══════════════════ LOGIN ══════════════════ -->
-<div id="screen-login" class="login-wrap" style="display: none;">
+<div id="screen-login" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="17" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".9"></rect>
-        <rect x="3" y="11" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".6"></rect>
-        <rect x="3" y="5" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".3"></rect>
-        <rect x="6" y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"></rect>
-        <rect x="19.5" y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"></rect>
+        <rect x="3" y="17" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".9"/>
+        <rect x="3" y="11" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".6"/>
+        <rect x="3" y="5"  width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".3"/>
+        <rect x="6"  y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"/>
+        <rect x="19.5" y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"/>
       </svg>
       <div>
         <div class="login-title">Escoramento</div>
@@ -213,11 +214,11 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
     <div id="login-form">
       <div class="field" style="margin-bottom:12px;">
         <label>E-mail</label>
-        <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key===&#39;Enter&#39;)fazerLogin()">
+        <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')fazerLogin()">
       </div>
       <div class="field" style="margin-bottom:20px;">
         <label>Senha</label>
-        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;)fazerLogin()">
+        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
       </div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="fazerLogin()" id="btn-login">
         Entrar
@@ -228,17 +229,17 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
 </div>
 
 <!-- ══════════════════ APP ══════════════════ -->
-<div id="screen-app" style="display: block;">
+<div id="screen-app" style="display:none;">
   <!-- TOPBAR -->
   <div class="topbar">
     <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
-      <rect x="3" y="17" width="22" height="4" rx="1.5" fill="white" opacity=".9"></rect>
-      <rect x="3" y="11" width="22" height="4" rx="1.5" fill="white" opacity=".6"></rect>
-      <rect x="3" y="5" width="22" height="4" rx="1.5" fill="white" opacity=".3"></rect>
+      <rect x="3" y="17" width="22" height="4" rx="1.5" fill="white" opacity=".9"/>
+      <rect x="3" y="11" width="22" height="4" rx="1.5" fill="white" opacity=".6"/>
+      <rect x="3" y="5"  width="22" height="4" rx="1.5" fill="white" opacity=".3"/>
     </svg>
     <span class="topbar-brand">Controle de Escoramento</span>
     <span class="topbar-sep"></span>
-    <span class="topbar-user" id="topbar-email">teste@teste.com</span>
+    <span class="topbar-user" id="topbar-email"></span>
     <button class="topbar-btn" onclick="sair()">Sair</button>
   </div>
 
@@ -250,56 +251,30 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
         <div class="name" id="sidebar-obra-nome">—</div>
       </div>
       <div class="sidebar-section">Navegação</div>
-      <div class="sidebar-item active" onclick="navegar(&#39;obras&#39;)" id="nav-obras">
+      <div class="sidebar-item active" onclick="navegar('obras')" id="nav-obras">
         <span class="icon">🏗️</span> Minhas Obras
       </div>
-      <div class="sidebar-item" onclick="navegar(&#39;projeto&#39;)" id="nav-projeto">
+      <div class="sidebar-item" onclick="navegar('projeto')" id="nav-projeto">
         <span class="icon">📋</span> Dados do Projeto
       </div>
-      <div class="sidebar-item" onclick="navegar(&#39;lajes&#39;)" id="nav-lajes">
-        <span class="icon">🧱</span> Lajes &amp; Ciclos
+      <div class="sidebar-item" onclick="navegar('lajes')" id="nav-lajes">
+        <span class="icon">🧱</span> Lajes & Ciclos
       </div>
-      <div class="sidebar-item" onclick="navegar(&#39;pecas&#39;)" id="nav-pecas">
-        <span class="icon">🔩</span> Peças &amp; Custos
+      <div class="sidebar-item" onclick="navegar('pecas')" id="nav-pecas">
+        <span class="icon">🔩</span> Peças & Custos
       </div>
-      <div class="sidebar-item" onclick="navegar(&#39;resumo&#39;)" id="nav-resumo">
-        <span class="icon">📊</span> Resumo &amp; Análise
+      <div class="sidebar-item" onclick="navegar('resumo')" id="nav-resumo">
+        <span class="icon">📊</span> Resumo & Análise
       </div>
-      <div class="sidebar-item" onclick="navegar(&#39;admin&#39;)" id="nav-admin" style="display:none;">
+      <div class="sidebar-item" onclick="navegar('admin')" id="nav-admin" style="display:none;">
         <span class="icon">🔐</span> Painel Admin
       </div>
     </div>
 
     <!-- CONTENT -->
     <div class="content" id="content-area">
-    <div class="page-title">Minhas Obras</div>
-    <div class="page-sub">Selecione uma obra existente ou crie uma nova.</div>
-    <div style="margin-bottom:20px;">
-      <button class="btn btn-primary" onclick="novaObraModal()">+ Nova Obra</button>
-    </div><div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra cadastrada ainda. Clique em <strong>Nova Obra</strong> para começar.</span></div>
-    <!-- MODAL NOVA OBRA -->
-    <div id="modal-obra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;">
-      <div style="background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
-        <div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px;" id="modal-obra-title">Nova Obra</div>
-        <input type="hidden" id="modal-obra-id">
-        <div class="form-grid form-grid-2" style="margin-bottom:12px;">
-          <div class="field"><label>Nome da Obra *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Residencial Alpha"></div>
-          <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato" placeholder="Ex: 1587"></div>
-          <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor" placeholder="Ex: SH Formas Andaimes"></div>
-          <div class="field"><label>Data de Início</label><input type="date" id="mo-inicio"></div>
-          <div class="field"><label>Nº Pavimentos</label><input type="number" id="mo-pavimentos" placeholder="Ex: 23" min="1"></div>
-          <div class="field"><label>Nº Total Lajes</label><input type="number" id="mo-lajes" placeholder="Ex: 23" min="1"></div>
-          <div class="field"><label>Jogos de Escoramento</label><select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select></div>
-          <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="mo-valor-mensal" placeholder="28801.17" step="0.01"></div>
-          <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-valor-total" placeholder="576023.40" step="0.01"></div>
-          <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" placeholder="90000.00" step="0.01"></div>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
-          <button class="btn btn-primary" onclick="salvarObra()" id="btn-salvar-obra">Salvar Obra</button>
-        </div>
-      </div>
-    </div></div>
+      <div class="loading"><div class="spinner"></div><span style="font-size:13px;color:var(--ink-soft);">Carregando...</span></div>
+    </div>
   </div>
 </div>
 
@@ -1370,6 +1345,5 @@ async function checarSessao() {
 
 document.addEventListener('DOMContentLoaded', () => checarSessao());
 </script>
-
-
-</body></html>
+</body>
+</html>
