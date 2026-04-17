@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_5.html -->
+<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_7.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -194,7 +194,7 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
 <div class="toast" id="toast"></div>
 
 <!-- ══════════════════ LOGIN ══════════════════ -->
-<div id="screen-login" class="login-wrap">
+<div id="screen-login" class="login-wrap" style="display: none;">
   <div class="login-box">
     <div class="login-logo">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -228,7 +228,7 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
 </div>
 
 <!-- ══════════════════ APP ══════════════════ -->
-<div id="screen-app" style="display:none;">
+<div id="screen-app" style="display: block;">
   <!-- TOPBAR -->
   <div class="topbar">
     <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
@@ -238,7 +238,7 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
     </svg>
     <span class="topbar-brand">Controle de Escoramento</span>
     <span class="topbar-sep"></span>
-    <span class="topbar-user" id="topbar-email"></span>
+    <span class="topbar-user" id="topbar-email">teste@teste.com</span>
     <button class="topbar-btn" onclick="sair()">Sair</button>
   </div>
 
@@ -265,12 +265,41 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
       <div class="sidebar-item" onclick="navegar(&#39;resumo&#39;)" id="nav-resumo">
         <span class="icon">📊</span> Resumo &amp; Análise
       </div>
+      <div class="sidebar-item" onclick="navegar(&#39;admin&#39;)" id="nav-admin" style="display:none;">
+        <span class="icon">🔐</span> Painel Admin
+      </div>
     </div>
 
     <!-- CONTENT -->
     <div class="content" id="content-area">
-      <div class="loading"><div class="spinner"></div><span style="font-size:13px;color:var(--ink-soft);">Carregando...</span></div>
-    </div>
+    <div class="page-title">Minhas Obras</div>
+    <div class="page-sub">Selecione uma obra existente ou crie uma nova.</div>
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-primary" onclick="novaObraModal()">+ Nova Obra</button>
+    </div><div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra cadastrada ainda. Clique em <strong>Nova Obra</strong> para começar.</span></div>
+    <!-- MODAL NOVA OBRA -->
+    <div id="modal-obra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
+        <div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px;" id="modal-obra-title">Nova Obra</div>
+        <input type="hidden" id="modal-obra-id">
+        <div class="form-grid form-grid-2" style="margin-bottom:12px;">
+          <div class="field"><label>Nome da Obra *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Residencial Alpha"></div>
+          <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato" placeholder="Ex: 1587"></div>
+          <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor" placeholder="Ex: SH Formas Andaimes"></div>
+          <div class="field"><label>Data de Início</label><input type="date" id="mo-inicio"></div>
+          <div class="field"><label>Nº Pavimentos</label><input type="number" id="mo-pavimentos" placeholder="Ex: 23" min="1"></div>
+          <div class="field"><label>Nº Total Lajes</label><input type="number" id="mo-lajes" placeholder="Ex: 23" min="1"></div>
+          <div class="field"><label>Jogos de Escoramento</label><select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select></div>
+          <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="mo-valor-mensal" placeholder="28801.17" step="0.01"></div>
+          <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-valor-total" placeholder="576023.40" step="0.01"></div>
+          <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" placeholder="90000.00" step="0.01"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="salvarObra()" id="btn-salvar-obra">Salvar Obra</button>
+        </div>
+      </div>
+    </div></div>
   </div>
 </div>
 
@@ -367,7 +396,16 @@ function iniciarApp(user) {
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-app').style.display = 'block';
   document.getElementById('topbar-email').textContent = user.email;
+  verificarAdmin();
   navegar('obras');
+}
+
+async function verificarAdmin() {
+  const { data } = await sb.from('profiles').select('is_admin').eq('id', currentUser.id).single();
+  if (data?.is_admin) {
+    currentUser.isAdmin = true;
+    document.getElementById('nav-admin').style.display = 'flex';
+  }
 }
 
 // ════════════════════════════════════════════════════
@@ -384,6 +422,7 @@ function navegar(pagina) {
     case 'lajes':   renderLajes(); break;
     case 'pecas':   renderPecas(); break;
     case 'resumo':  renderResumo(); break;
+    case 'admin':   renderAdmin(); break;
   }
 }
 
@@ -1093,6 +1132,228 @@ async function renderResumo() {
     <div style="margin-top:8px;">
       <button class="btn btn-ghost" onclick="navegar('pecas')">← Peças</button>
     </div>`;
+}
+
+// ════════════════════════════════════════════════════
+// PAINEL ADMIN
+// ════════════════════════════════════════════════════
+async function renderAdmin() {
+  if (!currentUser?.isAdmin) {
+    setLoading('<div class="alert alert-red" style="margin:24px;"><span>🚫</span><span>Acesso restrito a administradores.</span></div>');
+    return;
+  }
+  setLoading();
+
+  // Buscar todos os usuários (profiles) e todas as obras
+  const [{ data: profiles }, { data: todasObras }] = await Promise.all([
+    sb.from('profiles').select('*').order('created_at'),
+    sb.from('obras').select('*, lajes(count)').order('created_at', { ascending: false }),
+  ]);
+
+  const users = profiles || [];
+  const obras = todasObras || [];
+
+  // Agrupar obras por usuário
+  const obrasPorUser = {};
+  obras.forEach(o => {
+    if (!obrasPorUser[o.user_id]) obrasPorUser[o.user_id] = [];
+    obrasPorUser[o.user_id].push(o);
+  });
+
+  // KPIs
+  const totalUsers = users.length;
+  const totalObras = obras.length;
+  const totalLajes = obras.reduce((s, o) => s + (o.lajes?.[0]?.count || 0), 0);
+  const totalContrato = obras.reduce((s, o) => s + (o.valor_total || 0), 0);
+
+  let usersRows = users.map(u => {
+    const qtdObras = (obrasPorUser[u.id] || []).length;
+    const isAdmin = u.is_admin;
+    return `<tr>
+      <td>${u.email}</td>
+      <td><span class="chip ${isAdmin ? 'chip-blue' : 'chip-gray'}">${isAdmin ? '👑 Admin' : 'Usuário'}</span></td>
+      <td class="num">${qtdObras}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          ${!isAdmin ? `<button class="btn btn-ghost btn-sm" onclick="tornarAdmin('${u.id}','${u.email}')">👑 Tornar Admin</button>` : ''}
+          ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.email}')">✕ Remover</button>` : '<span style="font-size:11px;color:var(--ink-soft);">Você</span>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  let obrasRows = obras.map(o => {
+    const user = users.find(u => u.id === o.user_id);
+    const qtdLajes = o.lajes?.[0]?.count || 0;
+    return `<tr>
+      <td><strong>${o.nome}</strong></td>
+      <td style="font-size:12px;color:var(--ink-soft);">${user?.email || '—'}</td>
+      <td class="num">${o.contrato || '—'}</td>
+      <td class="num">${qtdLajes}</td>
+      <td class="num">${fmt(o.valor_total)}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="verObraAdmin('${o.id}','${o.user_id}')">👁 Ver</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content-area').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title">🔐 Painel Admin</div>
+      <span class="chip chip-blue">👑 ${currentUser.email}</span>
+    </div>
+    <div class="page-sub">Visão geral de todos os usuários e obras do sistema.</div>
+
+    <div class="kpi-row">
+      <div class="kpi-box">
+        <div class="kpi-label">Usuários cadastrados</div>
+        <div class="kpi-val">${totalUsers}</div>
+      </div>
+      <div class="kpi-box amber">
+        <div class="kpi-label">Total de Obras</div>
+        <div class="kpi-val">${totalObras}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Total de Lajes</div>
+        <div class="kpi-val">${totalLajes}</div>
+      </div>
+      <div class="kpi-box green">
+        <div class="kpi-label">Valor Total Contratos</div>
+        <div class="kpi-val" style="font-size:16px;">${fmt(totalContrato)}</div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">👥 Gerenciar Usuários</span>
+        <button class="btn btn-primary btn-sm" onclick="novoUsuarioAdmin()">+ Novo Usuário</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>E-mail</th><th>Perfil</th><th>Obras</th><th>Cadastrado em</th><th>Ações</th>
+          </tr></thead>
+          <tbody>${usersRows || '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum usuário</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OBRAS -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">🏗️ Todas as Obras</span>
+        <span style="font-size:11px;color:var(--ink-soft);">${totalObras} obras no total</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Obra</th><th>Usuário</th><th>Contrato</th><th>Lajes</th><th>Valor Contrato</th><th>Criada em</th><th></th>
+          </tr></thead>
+          <tbody>${obrasRows || '<tr><td colspan="7" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhuma obra cadastrada</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL NOVO USUÁRIO -->
+    <div id="modal-novo-user" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:420px;">
+        <div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px;">Novo Usuário</div>
+        <div class="field" style="margin-bottom:12px;">
+          <label>E-mail</label>
+          <input type="email" id="nu-email" placeholder="email@empresa.com">
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label>Senha</label>
+          <input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="field" style="margin-bottom:20px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="nu-admin"> Tornar administrador
+          </label>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-ghost" onclick="fecharModalUser()">Cancelar</button>
+          <button class="btn btn-primary" onclick="criarUsuarioAdmin()" id="btn-criar-user">Criar Usuário</button>
+        </div>
+        <div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;"></div>
+      </div>
+    </div>`;
+}
+
+function novoUsuarioAdmin() {
+  document.getElementById('nu-email').value = '';
+  document.getElementById('nu-senha').value = '';
+  document.getElementById('nu-admin').checked = false;
+  document.getElementById('nu-erro').textContent = '';
+  document.getElementById('modal-novo-user').style.display = 'flex';
+}
+
+function fecharModalUser() {
+  document.getElementById('modal-novo-user').style.display = 'none';
+}
+
+async function criarUsuarioAdmin() {
+  const email = document.getElementById('nu-email').value.trim();
+  const senha = document.getElementById('nu-senha').value;
+  const isAdmin = document.getElementById('nu-admin').checked;
+  const erro = document.getElementById('nu-erro');
+  const btn = document.getElementById('btn-criar-user');
+
+  if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
+  if (senha.length < 6) { erro.textContent = 'Senha deve ter pelo menos 6 caracteres.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Criando...';
+
+  // Usar signUp para criar o usuário
+  const { data, error } = await sb.auth.admin?.createUser
+    ? await sb.auth.admin.createUser({ email, password: senha, email_confirm: true })
+    : await sb.auth.signUp({ email, password: senha });
+
+  if (error) {
+    erro.textContent = 'Erro: ' + error.message;
+    btn.disabled = false; btn.textContent = 'Criar Usuário';
+    return;
+  }
+
+  // Se admin, atualizar profile
+  if (isAdmin && data?.user) {
+    await sb.from('profiles').upsert({ id: data.user.id, email, is_admin: true });
+  }
+
+  btn.disabled = false; btn.textContent = 'Criar Usuário';
+  fecharModalUser();
+  toast('Usuário criado com sucesso!', 'success');
+  renderAdmin();
+}
+
+async function tornarAdmin(userId, email) {
+  if (!confirm(`Tornar ${email} administrador?`)) return;
+  const { error } = await sb.from('profiles').update({ is_admin: true }).eq('id', userId);
+  if (error) { toast('Erro: ' + error.message, 'error'); return; }
+  toast(`${email} agora é admin!`, 'success');
+  renderAdmin();
+}
+
+async function deletarUsuario(userId, email) {
+  if (!confirm(`Remover o usuário ${email}? Todas as obras dele serão deletadas.`)) return;
+  // Deletar obras do usuário primeiro
+  await sb.from('obras').delete().eq('user_id', userId);
+  await sb.from('profiles').delete().eq('id', userId);
+  toast(`Usuário ${email} removido.`, 'success');
+  renderAdmin();
+}
+
+async function verObraAdmin(obraId, userId) {
+  // Seleciona a obra e navega para ela
+  const { data: o } = await sb.from('obras').select('*').eq('id', obraId).single();
+  if (!o) return;
+  obraAtiva = o;
+  atualizarSidebarObra();
+  toast(`Visualizando obra: ${o.nome}`, 'success');
+  navegar('projeto');
 }
 
 // ════════════════════════════════════════════════════
