@@ -1,19 +1,15 @@
 <!DOCTYPE html>
-<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_4.html -->
+<!-- saved from url=(0047)file:///C:/Users/Isadora/Downloads/index_5.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Escoramento</title>
 <link href="./index_files/css2" rel="stylesheet">
+<script src="./index_files/supabase.js.download"></script>
 <script>
-// Carrega Supabase dinamicamente
-window.addEventListener('load', async () => {
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
   const SUPABASE_URL = 'https://myhgijtbgmpxawcethas.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
-  window.sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  checarSessao();
-});
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 </script>
 <style>
 :root {
@@ -1110,6 +1106,8 @@ async function checarSessao() {
     console.error('Erro ao checar sessão:', e);
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => checarSessao());
 </script>
 
 
