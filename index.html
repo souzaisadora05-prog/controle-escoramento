@@ -7,194 +7,140 @@
 <title>Controle de Escoramento</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script>
-  const SUPABASE_URL = 'https://myhgijtbgmpxawcethas.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
 <style>
-:root {
-  --ink:      #0f1117;
-  --ink-mid:  #2d3142;
-  --ink-soft: #6b7280;
-  --rule:     #e5e7eb;
-  --rule-lt:  #f3f4f6;
-  --white:    #ffffff;
-  --accent:   #1d4ed8;
-  --accent-lt:#eff6ff;
-  --amber:    #b45309;
-  --amber-lt: #fffbeb;
-  --green:    #15803d;
-  --green-lt: #f0fdf4;
-  --red:      #b91c1c;
-  --red-lt:   #fef2f2;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
-  --display: 'Syne', sans-serif;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.6; }
-
-/* ── TOPBAR ── */
-.topbar { background: var(--ink); color: #fff; height: 52px; display: flex; align-items: center; padding: 0 24px; gap: 12px; position: sticky; top: 0; z-index: 200; }
-.topbar-brand { font-family: var(--display); font-size: 15px; font-weight: 700; }
-.topbar-sep { flex: 1; }
-.topbar-user { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.5); }
-.topbar-btn { font-family: var(--display); font-size: 11px; font-weight: 700; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 5px 12px; border-radius: 4px; cursor: pointer; transition: background .15s; }
-.topbar-btn:hover { background: rgba(255,255,255,.2); }
-
-/* ── LOGIN ── */
-.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.login-box { background: var(--white); border: 1px solid var(--rule); border-radius: 10px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 8px 40px rgba(0,0,0,.08); }
-.login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-.login-logo svg { opacity: .8; }
-.login-title { font-family: var(--display); font-size: 22px; font-weight: 800; }
-.login-sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
-
-/* ── LAYOUT ── */
-.app-layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 52px); }
-.sidebar { background: var(--white); border-right: 1px solid var(--rule); padding: 20px 0; }
-.sidebar-section { padding: 6px 16px 4px; font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1px; margin-top: 12px; }
-.sidebar-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--ink-mid); border-right: 2px solid transparent; transition: all .12s; }
-.sidebar-item:hover { background: var(--rule-lt); }
-.sidebar-item.active { background: var(--accent-lt); color: var(--accent); border-right-color: var(--accent); font-weight: 500; }
-.sidebar-item .icon { font-size: 14px; width: 18px; text-align: center; }
-.sidebar-obra-name { padding: 14px 16px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
-.sidebar-obra-name .label { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .8px; }
-.sidebar-obra-name .name { font-family: var(--display); font-size: 13px; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.content { padding: 28px 32px 80px; overflow-y: auto; }
-
-/* ── FORMS & CARDS ── */
-.page-title { font-family: var(--display); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.page-sub { font-size: 12px; color: var(--ink-soft); margin-bottom: 24px; }
-.card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 18px; overflow: hidden; }
-.card-head { padding: 13px 18px; border-bottom: 1px solid var(--rule); background: #fafafa; display: flex; align-items: center; justify-content: space-between; }
-.card-head-title { font-family: var(--display); font-size: 13px; font-weight: 700; }
-.card-body { padding: 18px; }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
-.form-grid-2 { grid-template-columns: 1fr 1fr; }
-.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-@media(max-width:700px){ .form-grid-2,.form-grid-3{ grid-template-columns:1fr; } }
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .7px; }
-.field input, .field select, .field textarea { border: 1px solid var(--rule); border-radius: 5px; padding: 8px 10px; font-family: var(--sans); font-size: 13px; color: var(--ink); background: var(--white); transition: border .15s, box-shadow .15s; outline: none; }
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,.1); }
-.field input[type=number] { font-family: var(--mono); }
-
-/* ── BUTTONS ── */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 5px; font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: .3px; cursor: pointer; border: none; transition: all .15s; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #1e40af; }
-.btn-ghost { background: var(--white); color: var(--ink-mid); border: 1px solid var(--rule); }
-.btn-ghost:hover { background: var(--rule-lt); }
-.btn-danger { background: var(--red-lt); color: var(--red); border: 1px solid #fecaca; }
-.btn-danger:hover { background: #fee2e2; }
-.btn-add { background: var(--accent-lt); color: var(--accent); border: 1px dashed #bfdbfe; }
-.btn-add:hover { background: #dbeafe; }
-.btn-sm { padding: 5px 10px; font-size: 11px; }
-.btn-success { background: var(--green-lt); color: var(--green); border: 1px solid #bbf7d0; }
-.btn-success:hover { background: #dcfce7; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-
-/* ── OBRA LIST ── */
-.obra-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 4px; }
-.obra-card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; cursor: pointer; transition: all .15s; }
-.obra-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(29,78,216,.1); }
-.obra-card-name { font-family: var(--display); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-.obra-card-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
-.obra-card-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule-lt); display: flex; justify-content: space-between; align-items: center; }
-
-/* ── CHIPS ── */
-.chip { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
-.chip-blue  { background: #dbeafe; color: #1d4ed8; }
-.chip-green { background: #dcfce7; color: #15803d; }
-.chip-amber { background: #fef3c7; color: #b45309; }
-.chip-red   { background: #fee2e2; color: #b91c1c; }
-.chip-gray  { background: var(--rule-lt); color: var(--ink-soft); }
-
-/* ── LAJE CARD ── */
-.laje-item { border: 1px solid var(--rule); border-radius: 7px; margin-bottom: 10px; overflow: hidden; }
-.laje-item-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 15px; background: #fafafa; border-bottom: 1px solid var(--rule); cursor: pointer; }
-.laje-item-title { font-family: var(--display); font-size: 13px; font-weight: 700; }
-.laje-item-body { padding: 15px; background: var(--white); }
-.laje-item-body.collapsed { display: none; }
-.cycle-bar { display: flex; height: 24px; border-radius: 4px; overflow: hidden; gap: 1px; margin-top: 8px; }
-.cycle-seg { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 500; color: rgba(255,255,255,.9); overflow: hidden; white-space: nowrap; }
-
-/* ── TABLE ── */
-.tbl-wrap { overflow-x: auto; }
-.tbl { width: 100%; border-collapse: collapse; }
-.tbl th { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .5px; padding: 8px 12px; text-align: left; background: #fafafa; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-.tbl td { padding: 9px 12px; font-size: 13px; border-bottom: 1px solid var(--rule-lt); vertical-align: middle; }
-.tbl tr:last-child td { border-bottom: none; }
-.tbl tr:hover td { background: var(--accent-lt); }
-.tbl td.num { text-align: right; font-family: var(--mono); font-size: 12px; }
-.tbl tfoot td { font-weight: 700; background: #f8f9fb; border-top: 2px solid var(--rule); font-family: var(--mono); font-size: 12px; padding: 10px 12px; }
-.tbl tfoot td.num { text-align: right; }
-.inline-input { border: 1px solid transparent; border-radius: 4px; padding: 4px 6px; font-family: var(--mono); font-size: 12px; width: 100%; background: transparent; transition: border .1s; }
-.inline-input:focus { border-color: var(--accent); background: var(--accent-lt); outline: none; }
-
-/* ── KPIs ── */
-.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 20px; }
-.kpi-box { background: var(--white); border: 1px solid var(--rule); border-radius: 7px; padding: 16px; border-bottom: 3px solid var(--accent); }
-.kpi-box.amber { border-bottom-color: var(--amber); }
-.kpi-box.green { border-bottom-color: var(--green); }
-.kpi-box.red   { border-bottom-color: var(--red); }
-.kpi-label { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
-.kpi-val { font-family: var(--display); font-size: 20px; font-weight: 700; }
-.kpi-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
-
-/* ── RESULT BLOCK ── */
-.result-block { background: var(--ink); color: #fff; border-radius: 8px; padding: 22px 26px; margin-bottom: 18px; }
-.result-block h3 { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .8px; color: rgba(255,255,255,.4); text-transform: uppercase; margin-bottom: 12px; }
-.result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
-.result-row:last-child { border-bottom: none; }
-.result-key { font-size: 13px; color: rgba(255,255,255,.65); }
-.result-val { font-family: var(--mono); font-size: 14px; font-weight: 500; }
-.result-val.highlight { color: #fbbf24; font-size: 18px; }
-.result-val.vred { color: #f87171; }
-.result-val.vgreen { color: #4ade80; }
-
-/* ── SEMÁFORO ── */
-.semaforo { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 7px; border: 1px solid var(--rule); background: var(--white); margin-bottom: 16px; }
-.semaforo-dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
-.semaforo-dot.green { background: #22c55e; box-shadow: 0 0 8px #22c55e66; }
-.semaforo-dot.amber { background: #f59e0b; box-shadow: 0 0 8px #f59e0b66; }
-.semaforo-dot.red   { background: #ef4444; box-shadow: 0 0 8px #ef444466; }
-.semaforo-label { font-family: var(--display); font-size: 13px; font-weight: 700; }
-.semaforo-desc  { font-size: 11px; color: var(--ink-soft); margin-left: 6px; }
-
-/* ── ALERT ── */
-.alert { border-radius: 6px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px; display: flex; gap: 8px; }
-.alert-info  { background: var(--accent-lt); color: var(--accent); border: 1px solid #bfdbfe; }
-.alert-amber { background: var(--amber-lt); color: var(--amber); border: 1px solid #fde68a; }
-.alert-red   { background: var(--red-lt); color: var(--red); border: 1px solid #fecaca; }
-
-/* ── TOAST ── */
-.toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 7px; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,.2); opacity: 0; transform: translateY(10px); transition: all .25s; pointer-events: none; }
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.success { background: #14532d; border-left: 3px solid #22c55e; }
-.toast.error   { background: #7f1d1d; border-left: 3px solid #ef4444; }
-
-/* ── LOADING ── */
-.loading { display: flex; align-items: center; justify-content: center; padding: 60px; flex-direction: column; gap: 12px; }
-.spinner { width: 28px; height: 28px; border: 2px solid var(--rule); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── PROG ── */
-.prog-wrap { background: rgba(255,255,255,.1); border-radius: 4px; height: 7px; overflow: hidden; margin-top: 10px; }
-.prog-bar { height: 100%; border-radius: 4px; background: #fbbf24; transition: width .5s; }
-
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+:root{--ink:#0f1117;--ink-mid:#2d3142;--ink-soft:#6b7280;--rule:#e5e7eb;--rule-lt:#f3f4f6;--white:#ffffff;--accent:#1d4ed8;--accent-lt:#eff6ff;--amber:#b45309;--amber-lt:#fffbeb;--green:#15803d;--green-lt:#f0fdf4;--red:#b91c1c;--red-lt:#fef2f2;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--display:'Syne',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+.topbar{background:var(--ink);color:#fff;height:52px;display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:200}
+.topbar-brand{font-family:var(--display);font-size:15px;font-weight:700}
+.topbar-sep{flex:1}
+.topbar-user{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5)}
+.topbar-btn{font-family:var(--display);font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 14px;border-radius:4px;cursor:pointer;transition:background .15s}
+.topbar-btn:hover{background:rgba(255,255,255,.25)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{background:var(--white);border:1px solid var(--rule);border-radius:10px;padding:40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.login-title{font-family:var(--display);font-size:22px;font-weight:800}
+.login-sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.app-layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--white);border-right:1px solid var(--rule);padding:20px 0}
+.sb-sec{padding:6px 16px 4px;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;margin-top:12px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--ink-mid);border-right:2px solid transparent;transition:all .12s;user-select:none}
+.sb-item:hover{background:var(--rule-lt)}
+.sb-item.active{background:var(--accent-lt);color:var(--accent);border-right-color:var(--accent);font-weight:500}
+.sb-item .ic{font-size:15px;width:20px;text-align:center}
+.sb-obra{padding:14px 16px;border-bottom:1px solid var(--rule);margin-bottom:8px}
+.sb-obra .lbl{font-family:var(--mono);font-size:9px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.8px}
+.sb-obra .nm{font-family:var(--display);font-size:13px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.content{padding:28px 32px 80px;overflow-y:auto}
+.page-title{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:12px;color:var(--ink-soft);margin-bottom:24px}
+.card{background:var(--white);border:1px solid var(--rule);border-radius:8px;margin-bottom:18px;overflow:hidden}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--rule);background:#fafafa;display:flex;align-items:center;justify-content:space-between}
+.card-head-title{font-family:var(--display);font-size:13px;font-weight:700}
+.card-body{padding:18px}
+.fg{display:grid;gap:14px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:700px){.fg2,.fg3{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px}
+.field input,.field select{border:1px solid var(--rule);border-radius:5px;padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--white);transition:border .15s,box-shadow .15s;outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+.field input[type=number]{font-family:var(--mono)}
+.field-hint{font-size:11px;color:var(--ink-soft);font-style:italic}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:5px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#1e40af}
+.btn-ghost{background:var(--white);color:var(--ink-mid);border:1px solid var(--rule)}
+.btn-ghost:hover{background:var(--rule-lt)}
+.btn-danger{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}
+.btn-danger:hover{background:#fee2e2}
+.btn-add{background:var(--accent-lt);color:var(--accent);border:1px dashed #bfdbfe}
+.btn-add:hover{background:#dbeafe}
+.btn-success{background:var(--green-lt);color:var(--green);border:1px solid #bbf7d0}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.obra-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.obra-card{background:var(--white);border:1px solid var(--rule);border-radius:8px;padding:18px;cursor:pointer;transition:all .15s}
+.obra-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(29,78,216,.1)}
+.obra-card-name{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:4px}
+.obra-card-meta{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.obra-card-footer{margin-top:12px;padding-top:10px;border-top:1px solid var(--rule-lt);display:flex;justify-content:space-between;align-items:center}
+.chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px}
+.chip-blue{background:#dbeafe;color:#1d4ed8}
+.chip-green{background:#dcfce7;color:#15803d}
+.chip-amber{background:#fef3c7;color:#b45309}
+.chip-red{background:#fee2e2;color:#b91c1c}
+.chip-gray{background:var(--rule-lt);color:var(--ink-soft)}
+.laje-item{border:1px solid var(--rule);border-radius:7px;margin-bottom:10px;overflow:hidden}
+.laje-item-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:#fafafa;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none}
+.laje-item-title{font-family:var(--display);font-size:13px;font-weight:700}
+.laje-item-body{padding:15px;background:var(--white)}
+.laje-item-body.collapsed{display:none}
+.cycle-bar{display:flex;height:24px;border-radius:4px;overflow:hidden;gap:1px;margin-top:8px}
+.cycle-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:500;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap}
+.tbl td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--accent-lt)}
+.tbl td.num{text-align:right;font-family:var(--mono);font-size:12px}
+.tbl tfoot td{font-weight:700;background:#f8f9fb;border-top:2px solid var(--rule);font-family:var(--mono);font-size:12px;padding:10px 12px}
+.tbl tfoot td.num{text-align:right}
+.ii{border:1px solid transparent;border-radius:4px;padding:4px 6px;font-family:var(--mono);font-size:12px;width:100%;background:transparent;transition:border .1s;outline:none}
+.ii:focus{border-color:var(--accent);background:var(--accent-lt)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi-box{background:var(--white);border:1px solid var(--rule);border-radius:7px;padding:16px;border-bottom:3px solid var(--accent)}
+.kpi-box.amber{border-bottom-color:var(--amber)}
+.kpi-box.green{border-bottom-color:var(--green)}
+.kpi-box.red{border-bottom-color:var(--red)}
+.kpi-label{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.kpi-val{font-family:var(--display);font-size:20px;font-weight:700}
+.kpi-sub{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.result-block{background:var(--ink);color:#fff;border-radius:8px;padding:22px 26px;margin-bottom:18px}
+.result-block h3{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:12px}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.result-row:last-child{border-bottom:none}
+.result-key{font-size:13px;color:rgba(255,255,255,.65)}
+.result-val{font-family:var(--mono);font-size:14px;font-weight:500}
+.result-val.highlight{color:#fbbf24;font-size:18px}
+.result-val.vred{color:#f87171}
+.result-val.vgreen{color:#4ade80}
+.semaforo{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:7px;border:1px solid var(--rule);background:var(--white);margin-bottom:16px}
+.semaforo-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.semaforo-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e66}
+.semaforo-dot.amber{background:#f59e0b;box-shadow:0 0 8px #f59e0b66}
+.semaforo-dot.red{background:#ef4444;box-shadow:0 0 8px #ef444466}
+.semaforo-label{font-family:var(--display);font-size:13px;font-weight:700}
+.semaforo-desc{font-size:11px;color:var(--ink-soft);margin-left:6px}
+.alert{border-radius:6px;padding:10px 14px;font-size:12px;margin-bottom:12px;display:flex;gap:8px;line-height:1.5}
+.alert-info{background:var(--accent-lt);color:var(--accent);border:1px solid #bfdbfe}
+.alert-amber{background:var(--amber-lt);color:var(--amber);border:1px solid #fde68a}
+.alert-red{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--ink);color:#fff;padding:12px 18px;border-radius:7px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:#14532d;border-left:3px solid #22c55e}
+.toast.error{background:#7f1d1d;border-left:3px solid #ef4444}
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px}
+.spinner{width:28px;height:28px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.prog-wrap{background:rgba(255,255,255,.1);border-radius:4px;height:7px;overflow:hidden;margin-top:10px}
+.prog-bar{height:100%;border-radius:4px;background:#fbbf24;transition:width .5s}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
 </style>
 </head>
 <body>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════ LOGIN ══════════════════ -->
+<!-- LOGIN -->
 <div id="screen-login" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
@@ -207,30 +153,24 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
       </svg>
       <div>
         <div class="login-title">Escoramento</div>
-        <div class="login-sub">Controle de Locação · SH Formas</div>
+        <div class="login-sub">Controle de Locação</div>
       </div>
     </div>
-
-    <div id="login-form">
-      <div class="field" style="margin-bottom:12px;">
-        <label>E-mail</label>
-        <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')fazerLogin()">
-      </div>
-      <div class="field" style="margin-bottom:20px;">
-        <label>Senha</label>
-        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
-      </div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="fazerLogin()" id="btn-login">
-        Entrar
-      </button>
-      <div id="login-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;"></div>
+    <div class="field" style="margin-bottom:12px">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')fazerLogin()">
     </div>
+    <div class="field" style="margin-bottom:20px">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="fazerLogin()" id="btn-login">Entrar</button>
+    <div id="login-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
-<!-- ══════════════════ APP ══════════════════ -->
-<div id="screen-app" style="display:none;">
-  <!-- TOPBAR -->
+<!-- APP -->
+<div id="screen-app" style="display:none">
   <div class="topbar">
     <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
       <rect x="3" y="17" width="22" height="4" rx="1.5" fill="white" opacity=".9"/>
@@ -240,1110 +180,663 @@ body { font-family: var(--sans); background: #f8f9fb; color: var(--ink); min-hei
     <span class="topbar-brand">Controle de Escoramento</span>
     <span class="topbar-sep"></span>
     <span class="topbar-user" id="topbar-email"></span>
-    <button class="topbar-btn" onclick="sair()">Sair</button>
+    <button class="topbar-btn" onclick="fazerLogout()">Sair</button>
   </div>
-
   <div class="app-layout">
-    <!-- SIDEBAR -->
     <div class="sidebar">
-      <div class="sidebar-obra-name" id="sidebar-obra-info">
-        <div class="label">Obra ativa</div>
-        <div class="name" id="sidebar-obra-nome">—</div>
+      <div class="sb-obra">
+        <div class="lbl">Obra ativa</div>
+        <div class="nm" id="sb-obra-nome">—</div>
       </div>
-      <div class="sidebar-section">Navegação</div>
-      <div class="sidebar-item active" onclick="navegar('obras')" id="nav-obras">
-        <span class="icon">🏗️</span> Minhas Obras
-      </div>
-      <div class="sidebar-item" onclick="navegar('projeto')" id="nav-projeto">
-        <span class="icon">📋</span> Dados do Projeto
-      </div>
-      <div class="sidebar-item" onclick="navegar('lajes')" id="nav-lajes">
-        <span class="icon">🧱</span> Lajes & Ciclos
-      </div>
-      <div class="sidebar-item" onclick="navegar('pecas')" id="nav-pecas">
-        <span class="icon">🔩</span> Peças & Custos
-      </div>
-      <div class="sidebar-item" onclick="navegar('resumo')" id="nav-resumo">
-        <span class="icon">📊</span> Resumo & Análise
-      </div>
-      <div class="sidebar-item" onclick="navegar('admin')" id="nav-admin" style="display:none;">
-        <span class="icon">🔐</span> Painel Admin
-      </div>
+      <div class="sb-sec">Navegação</div>
+      <div class="sb-item active" onclick="nav('obras')"   id="nav-obras"><span class="ic">🏗️</span> Minhas Obras</div>
+      <div class="sb-item"        onclick="nav('projeto')" id="nav-projeto"><span class="ic">📋</span> Dados do Projeto</div>
+      <div class="sb-item"        onclick="nav('lajes')"   id="nav-lajes"><span class="ic">🧱</span> Lajes & Ciclos</div>
+      <div class="sb-item"        onclick="nav('pecas')"   id="nav-pecas"><span class="ic">🔩</span> Peças & Custos</div>
+      <div class="sb-item"        onclick="nav('resumo')"  id="nav-resumo"><span class="ic">📊</span> Resumo & Análise</div>
+      <div class="sb-item"        onclick="nav('admin')"   id="nav-admin" style="display:none"><span class="ic">🔐</span> Painel Admin</div>
     </div>
-
-    <!-- CONTENT -->
     <div class="content" id="content-area">
-      <div class="loading"><div class="spinner"></div><span style="font-size:13px;color:var(--ink-soft);">Carregando...</span></div>
+      <div class="loading"><div class="spinner"></div></div>
     </div>
   </div>
 </div>
 
+<!-- MODAL OBRA -->
+<div class="modal-overlay" id="modal-obra">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-obra-title">Nova Obra</div>
+    <input type="hidden" id="mo-id">
+    <div class="fg fg2" style="margin-bottom:12px">
+      <div class="field"><label>Nome *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Alpha"></div>
+      <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato"></div>
+      <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor"></div>
+      <div class="field"><label>Data Início</label><input type="date" id="mo-inicio"></div>
+      <div class="field"><label>Nº Pavimentos</label><input type="number" id="mo-pav" min="1"></div>
+      <div class="field"><label>Nº Total Lajes</label><input type="number" id="mo-lajes" min="1"></div>
+      <div class="field"><label>Jogos</label>
+        <select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select>
+      </div>
+      <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="mo-vmensal" step="0.01"></div>
+      <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-vtotal" step="0.01"></div>
+      <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" step="0.01"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-obra')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarObra()" id="btn-salvar-obra">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO USUÁRIO -->
+<div class="modal-overlay" id="modal-novo-user">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-title">Novo Usuário</div>
+    <div class="field" style="margin-bottom:12px"><label>E-mail</label><input type="email" id="nu-email" placeholder="email@empresa.com"></div>
+    <div class="field" style="margin-bottom:12px"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer">
+      <input type="checkbox" id="nu-admin">
+      <label for="nu-admin" style="font-size:13px;cursor:pointer">Tornar administrador</label>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-novo-user')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarUsuario()" id="btn-criar-user">Criar Usuário</button>
+    </div>
+    <div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center"></div>
+  </div>
+</div>
+
 <script>
-// ════════════════════════════════════════════════════
-// SUPABASE CONFIG — substitua pela sua nova chave após o reset
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════
-let currentUser = null;
-let obraAtiva   = null;
-let lajesCache  = [];
-let tiposCache  = [];
+const SUPA_URL = 'https://myhgijtbgmpxawcethas.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// ════════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════════
-function fmt(n) {
-  if (n == null || isNaN(n) || n === '') return '—';
-  return 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let user=null, obra=null, lajesCache=[], tiposCache=[];
+
+const g = id => document.getElementById(id);
+const v = id => g(id)?.value ?? '';
+const fmt = n => !n&&n!==0 ? '—' : 'R$ '+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD = s => { if(!s)return'—'; const[y,m,d]=s.split('-'); return`${d}/${m}/${y}`; };
+
+function toast(msg,type=''){
+  const t=g('toast'); t.textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3000);
 }
-function fmtDate(s) {
-  if (!s) return '—';
-  const [y,m,d] = s.split('-');
-  return `${d}/${m}/${y}`;
-}
-function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function loading(){ g('content-area').innerHTML='<div class="loading"><div class="spinner"></div></div>'; }
+function fecharModal(id){ g(id).classList.remove('open'); }
+function abrirModal(id){ g(id).classList.add('open'); }
+function semObra(){ g('content-area').innerHTML='<div class="alert alert-amber" style="margin:20px"><span>⚠️</span><span>Selecione uma obra em <strong>Minhas Obras</strong> primeiro.</span></div>'; }
 
-function toast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast show ${type}`;
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-function setLoading(html) {
-  document.getElementById('content-area').innerHTML = html ||
-    '<div class="loading"><div class="spinner"></div><span style="font-size:13px;color:var(--ink-soft);">Carregando...</span></div>';
-}
-
-// ════════════════════════════════════════════════════
-// AUTH
-// ════════════════════════════════════════════════════
-async function fazerLogin() {
-  const email = v('login-email').trim();
-  const senha = v('login-senha');
-  const btn   = document.getElementById('btn-login');
-  const erro  = document.getElementById('login-erro');
-  erro.textContent = '';
-
-  if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Entrando...';
-
-  try {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-
-    if (error) {
-      console.error('Login error:', error);
-      if (error.message.includes('Invalid login')) {
-        erro.textContent = 'E-mail ou senha incorretos.';
-      } else if (error.message.includes('Email not confirmed')) {
-        erro.textContent = 'E-mail não confirmado. Desative a confirmação no Supabase.';
-      } else {
-        erro.textContent = 'Erro: ' + error.message;
-      }
-      return;
-    }
-
-    if (data?.user) {
-      iniciarApp(data.user);
-    }
-  } catch (e) {
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-    erro.textContent = 'Erro de conexão. Verifique sua internet.';
-    console.error('Exception:', e);
+// ── AUTH ──────────────────────────────────────────────────
+async function fazerLogin(){
+  const email=v('login-email').trim(), senha=v('login-senha');
+  const btn=g('btn-login'), erro=g('login-erro');
+  erro.textContent='';
+  if(!email||!senha){erro.textContent='Preencha e-mail e senha.';return;}
+  btn.disabled=true; btn.textContent='Entrando...';
+  const{data,error}=await db.auth.signInWithPassword({email,password:senha});
+  btn.disabled=false; btn.textContent='Entrar';
+  if(error){
+    erro.textContent=error.message.includes('Invalid')?'E-mail ou senha incorretos.':error.message;
+    return;
   }
+  iniciarApp(data.user);
 }
 
-async function sair() {
-  await sb.auth.signOut();
-  currentUser = null; obraAtiva = null; lajesCache = []; tiposCache = [];
-  document.getElementById('screen-app').style.display = 'none';
-  document.getElementById('screen-login').style.display = 'flex';
+async function fazerLogout(){
+  await db.auth.signOut();
+  user=null; obra=null; lajesCache=[]; tiposCache=[];
+  g('screen-app').style.display='none';
+  g('screen-login').style.display='flex';
+  g('login-email').value=''; g('login-senha').value='';
+  g('login-erro').textContent='';
 }
 
-function iniciarApp(user) {
-  currentUser = user;
-  document.getElementById('screen-login').style.display = 'none';
-  document.getElementById('screen-app').style.display = 'block';
-  document.getElementById('topbar-email').textContent = user.email;
+async function checarSessao(){
+  try{
+    const{data:{session}}=await db.auth.getSession();
+    if(session?.user) iniciarApp(session.user);
+  }catch(e){console.error('Sessão:',e);}
+}
+
+function iniciarApp(u){
+  user=u;
+  g('screen-login').style.display='none';
+  g('screen-app').style.display='block';
+  g('topbar-email').textContent=u.email;
   verificarAdmin();
-  navegar('obras');
+  nav('obras');
 }
 
-async function verificarAdmin() {
-  const { data } = await sb.from('profiles').select('is_admin').eq('id', currentUser.id).single();
-  if (data?.is_admin) {
-    currentUser.isAdmin = true;
-    document.getElementById('nav-admin').style.display = 'flex';
-  }
+async function verificarAdmin(){
+  const{data}=await db.from('profiles').select('is_admin').eq('id',user.id).single();
+  if(data?.is_admin){ user.isAdmin=true; g('nav-admin').style.display='flex'; }
 }
 
-// ════════════════════════════════════════════════════
-// NAVEGAÇÃO
-// ════════════════════════════════════════════════════
-function navegar(pagina) {
-  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  const navEl = document.getElementById(`nav-${pagina}`);
-  if (navEl) navEl.classList.add('active');
-
-  switch (pagina) {
-    case 'obras':   renderObras(); break;
-    case 'projeto': renderProjeto(); break;
-    case 'lajes':   renderLajes(); break;
-    case 'pecas':   renderPecas(); break;
-    case 'resumo':  renderResumo(); break;
-    case 'admin':   renderAdmin(); break;
-  }
+// ── NAV ───────────────────────────────────────────────────
+function nav(p){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  g(`nav-${p}`)?.classList.add('active');
+  ({obras:renderObras,projeto:renderProjeto,lajes:renderLajes,pecas:renderPecas,resumo:renderResumo,admin:renderAdmin})[p]?.();
 }
 
-// ════════════════════════════════════════════════════
-// PÁGINA: OBRAS
-// ════════════════════════════════════════════════════
-async function renderObras() {
-  setLoading();
-  const { data: obras, error } = await sb.from('obras').select('*').order('created_at', { ascending: false });
-  if (error) { setLoading('<p style="padding:24px;color:var(--red);">Erro ao carregar obras: ' + error.message + '</p>'); return; }
-
-  let html = `
-    <div class="page-title">Minhas Obras</div>
-    <div class="page-sub">Selecione uma obra existente ou crie uma nova.</div>
-    <div style="margin-bottom:20px;">
-      <button class="btn btn-primary" onclick="novaObraModal()">+ Nova Obra</button>
-    </div>`;
-
-  if (!obras || obras.length === 0) {
-    html += `<div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra cadastrada ainda. Clique em <strong>Nova Obra</strong> para começar.</span></div>`;
-  } else {
-    html += '<div class="obra-list">';
-    obras.forEach(o => {
-      const ativa = obraAtiva?.id === o.id;
-      html += `
-        <div class="obra-card ${ativa ? 'active' : ''}" style="${ativa ? 'border-color:var(--accent);' : ''}" onclick="selecionarObra('${o.id}')">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div class="obra-card-name">${o.nome}</div>
-            ${ativa ? '<span class="chip chip-blue">Ativa</span>' : ''}
+// ── OBRAS ─────────────────────────────────────────────────
+async function renderObras(){
+  loading();
+  const{data:obras,error}=await db.from('obras').select('*').order('created_at',{ascending:false});
+  if(error){g('content-area').innerHTML=`<div class="alert alert-red" style="margin:20px">Erro: ${error.message}</div>`;return;}
+  let html=`<div class="page-title">Minhas Obras</div><div class="page-sub">Selecione uma obra ou crie uma nova.</div><div style="margin-bottom:20px"><button class="btn btn-primary" onclick="novaObra()">+ Nova Obra</button></div>`;
+  if(!obras?.length){
+    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra cadastrada. Clique em <strong>Nova Obra</strong>.</span></div>`;
+  }else{
+    html+='<div class="obra-list">';
+    obras.forEach(o=>{
+      const ativa=obra?.id===o.id;
+      html+=`<div class="obra-card" style="${ativa?'border-color:var(--accent)':''}" onclick="selecionarObra('${o.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div class="obra-card-name">${o.nome}</div>
+          ${ativa?'<span class="chip chip-blue">Ativa</span>':''}
+        </div>
+        <div class="obra-card-meta">Contrato: ${o.contrato||'—'} · ${o.fornecedor||'—'}</div>
+        <div class="obra-card-footer">
+          <span style="font-size:11px;color:var(--ink-soft)">${o.total_lajes||0} lajes · ${o.jogos||1} jogo(s)</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarObra('${o.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarObra('${o.id}')">✕</button>
           </div>
-          <div class="obra-card-meta">Contrato: ${o.contrato || '—'} · ${o.fornecedor || '—'}</div>
-          <div class="obra-card-footer">
-            <span style="font-size:11px;color:var(--ink-soft);">${o.total_lajes || 0} lajes · ${o.jogos || 1} jogo(s)</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarObra('${o.id}')">✏️</button>
-              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarObra('${o.id}')">✕</button>
-            </div>
-          </div>
-        </div>`;
+        </div>
+      </div>`;
     });
-    html += '</div>';
+    html+='</div>';
   }
-
-  html += `
-    <!-- MODAL NOVA OBRA -->
-    <div id="modal-obra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;">
-      <div style="background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
-        <div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px;" id="modal-obra-title">Nova Obra</div>
-        <input type="hidden" id="modal-obra-id">
-        <div class="form-grid form-grid-2" style="margin-bottom:12px;">
-          <div class="field"><label>Nome da Obra *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Residencial Alpha"></div>
-          <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato" placeholder="Ex: 1587"></div>
-          <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor" placeholder="Ex: SH Formas Andaimes"></div>
-          <div class="field"><label>Data de Início</label><input type="date" id="mo-inicio"></div>
-          <div class="field"><label>Nº Pavimentos</label><input type="number" id="mo-pavimentos" placeholder="Ex: 23" min="1"></div>
-          <div class="field"><label>Nº Total Lajes</label><input type="number" id="mo-lajes" placeholder="Ex: 23" min="1"></div>
-          <div class="field"><label>Jogos de Escoramento</label><select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select></div>
-          <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="mo-valor-mensal" placeholder="28801.17" step="0.01"></div>
-          <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-valor-total" placeholder="576023.40" step="0.01"></div>
-          <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" placeholder="90000.00" step="0.01"></div>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
-          <button class="btn btn-primary" onclick="salvarObra()" id="btn-salvar-obra">Salvar Obra</button>
-        </div>
-      </div>
-    </div>`;
-
-  document.getElementById('content-area').innerHTML = html;
+  g('content-area').innerHTML=html;
 }
 
-function novaObraModal() {
-  document.getElementById('modal-obra-title').textContent = 'Nova Obra';
-  document.getElementById('modal-obra-id').value = '';
-  ['mo-nome','mo-contrato','mo-fornecedor','mo-inicio','mo-pavimentos','mo-lajes','mo-valor-mensal','mo-valor-total','mo-frete'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('mo-jogos').value = '1';
-  document.getElementById('modal-obra').style.display = 'flex';
+function novaObra(){
+  g('modal-obra-title').textContent='Nova Obra';
+  g('mo-id').value='';
+  ['mo-nome','mo-contrato','mo-fornecedor','mo-inicio','mo-pav','mo-lajes','mo-vmensal','mo-vtotal','mo-frete'].forEach(id=>{const e=g(id);if(e)e.value='';});
+  g('mo-jogos').value='1';
+  abrirModal('modal-obra');
 }
 
-async function editarObra(id) {
-  const { data: o } = await sb.from('obras').select('*').eq('id', id).single();
-  if (!o) return;
-  document.getElementById('modal-obra-title').textContent = 'Editar Obra';
-  document.getElementById('modal-obra-id').value = o.id;
-  document.getElementById('mo-nome').value         = o.nome || '';
-  document.getElementById('mo-contrato').value     = o.contrato || '';
-  document.getElementById('mo-fornecedor').value   = o.fornecedor || '';
-  document.getElementById('mo-inicio').value       = o.inicio || '';
-  document.getElementById('mo-pavimentos').value   = o.pavimentos || '';
-  document.getElementById('mo-lajes').value        = o.total_lajes || '';
-  document.getElementById('mo-jogos').value        = o.jogos || 1;
-  document.getElementById('mo-valor-mensal').value = o.valor_mensal || '';
-  document.getElementById('mo-valor-total').value  = o.valor_total || '';
-  document.getElementById('mo-frete').value        = o.frete || '';
-  document.getElementById('modal-obra').style.display = 'flex';
+async function editarObra(id){
+  const{data:o}=await db.from('obras').select('*').eq('id',id).single();
+  if(!o)return;
+  g('modal-obra-title').textContent='Editar Obra';
+  g('mo-id').value=o.id; g('mo-nome').value=o.nome||''; g('mo-contrato').value=o.contrato||'';
+  g('mo-fornecedor').value=o.fornecedor||''; g('mo-inicio').value=o.inicio||'';
+  g('mo-pav').value=o.pavimentos||''; g('mo-lajes').value=o.total_lajes||'';
+  g('mo-jogos').value=o.jogos||1; g('mo-vmensal').value=o.valor_mensal||'';
+  g('mo-vtotal').value=o.valor_total||''; g('mo-frete').value=o.frete||'';
+  abrirModal('modal-obra');
 }
 
-function fecharModal() {
-  const m = document.getElementById('modal-obra');
-  if (m) m.style.display = 'none';
-}
-
-async function salvarObra() {
-  const nome = v('mo-nome').trim();
-  if (!nome) { toast('Informe o nome da obra', 'error'); return; }
-  const btn = document.getElementById('btn-salvar-obra');
-  btn.disabled = true; btn.textContent = 'Salvando...';
-
-  const payload = {
-    user_id:      currentUser.id,
-    nome,
-    contrato:     v('mo-contrato'),
-    fornecedor:   v('mo-fornecedor'),
-    inicio:       v('mo-inicio') || null,
-    pavimentos:   parseInt(v('mo-pavimentos')) || null,
-    total_lajes:  parseInt(v('mo-lajes')) || null,
-    jogos:        parseInt(v('mo-jogos')) || 1,
-    valor_mensal: parseFloat(v('mo-valor-mensal')) || null,
-    valor_total:  parseFloat(v('mo-valor-total')) || null,
-    frete:        parseFloat(v('mo-frete')) || null,
-    updated_at:   new Date().toISOString(),
-  };
-
-  const obraId = v('modal-obra-id');
-  let error;
-  if (obraId) {
-    ({ error } = await sb.from('obras').update(payload).eq('id', obraId));
-  } else {
-    const { data, error: e } = await sb.from('obras').insert(payload).select().single();
-    error = e;
-    if (data) { obraAtiva = data; atualizarSidebarObra(); }
-  }
-
-  btn.disabled = false; btn.textContent = 'Salvar Obra';
-  if (error) { toast('Erro ao salvar: ' + error.message, 'error'); return; }
-  toast('Obra salva!', 'success');
-  fecharModal();
+async function salvarObra(){
+  const nome=v('mo-nome').trim();
+  if(!nome){toast('Informe o nome','error');return;}
+  const btn=g('btn-salvar-obra');
+  btn.disabled=true; btn.textContent='Salvando...';
+  const payload={user_id:user.id,nome,contrato:v('mo-contrato'),fornecedor:v('mo-fornecedor'),inicio:v('mo-inicio')||null,pavimentos:parseInt(v('mo-pav'))||null,total_lajes:parseInt(v('mo-lajes'))||null,jogos:parseInt(v('mo-jogos'))||1,valor_mensal:parseFloat(v('mo-vmensal'))||null,valor_total:parseFloat(v('mo-vtotal'))||null,frete:parseFloat(v('mo-frete'))||null,updated_at:new Date().toISOString()};
+  const obraId=v('mo-id');
+  let error,data;
+  if(obraId){({error}=await db.from('obras').update(payload).eq('id',obraId));}
+  else{({data,error}=await db.from('obras').insert(payload).select().single());if(data){obra=data;g('sb-obra-nome').textContent=obra.nome;}}
+  btn.disabled=false; btn.textContent='Salvar';
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Obra salva!','success');
+  fecharModal('modal-obra');
   renderObras();
 }
 
-async function selecionarObra(id) {
-  const { data: o } = await sb.from('obras').select('*').eq('id', id).single();
-  if (!o) return;
-  obraAtiva = o;
-  atualizarSidebarObra();
-  toast(`Obra "${o.nome}" selecionada`, 'success');
-  navegar('projeto');
+async function selecionarObra(id){
+  const{data:o}=await db.from('obras').select('*').eq('id',id).single();
+  if(!o)return;
+  obra=o; g('sb-obra-nome').textContent=o.nome;
+  toast(`"${o.nome}" selecionada`,'success');
+  nav('projeto');
 }
 
-function atualizarSidebarObra() {
-  document.getElementById('sidebar-obra-nome').textContent = obraAtiva?.nome || '—';
-}
-
-async function deletarObra(id) {
-  if (!confirm('Deletar esta obra? Todos os dados (lajes, peças) serão removidos.')) return;
-  const { error } = await sb.from('obras').delete().eq('id', id);
-  if (error) { toast('Erro ao deletar: ' + error.message, 'error'); return; }
-  if (obraAtiva?.id === id) { obraAtiva = null; atualizarSidebarObra(); }
-  toast('Obra removida', 'success');
+async function deletarObra(id){
+  if(!confirm('Deletar esta obra e todos os dados?'))return;
+  await db.from('obras').delete().eq('id',id);
+  if(obra?.id===id){obra=null;g('sb-obra-nome').textContent='—';}
+  toast('Obra removida','success');
   renderObras();
 }
 
-// ════════════════════════════════════════════════════
-// PÁGINA: PROJETO
-// ════════════════════════════════════════════════════
-async function renderProjeto() {
-  if (!obraAtiva) { setLoading('<div class="alert alert-amber" style="margin:24px;"><span>⚠️</span><span>Selecione uma obra primeiro em <strong>Minhas Obras</strong>.</span></div>'); return; }
-  const o = obraAtiva;
-  document.getElementById('content-area').innerHTML = `
+// ── PROJETO ───────────────────────────────────────────────
+async function renderProjeto(){
+  if(!obra){semObra();return;}
+  const o=obra;
+  g('content-area').innerHTML=`
     <div class="page-title">Dados do Projeto</div>
-    <div class="page-sub">Informações gerais da obra e do contrato de locação.</div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">Identificação</span></div>
-      <div class="card-body">
-        <div class="form-grid form-grid-2">
-          <div class="field"><label>Nome da Obra</label><input type="text" id="proj-nome" value="${o.nome||''}"></div>
-          <div class="field"><label>Nº Contrato</label><input type="text" id="proj-contrato" value="${o.contrato||''}"></div>
-          <div class="field"><label>Fornecedor</label><input type="text" id="proj-fornecedor" value="${o.fornecedor||''}"></div>
-          <div class="field"><label>Data Início</label><input type="date" id="proj-inicio" value="${o.inicio||''}"></div>
-        </div>
+    <div class="page-sub">Informações gerais e contratuais.</div>
+    <div class="card"><div class="card-head"><span class="card-head-title">Identificação</span></div><div class="card-body">
+      <div class="fg fg2">
+        <div class="field"><label>Nome</label><input type="text" id="pj-nome" value="${o.nome||''}"></div>
+        <div class="field"><label>Nº Contrato</label><input type="text" id="pj-contrato" value="${o.contrato||''}"></div>
+        <div class="field"><label>Fornecedor</label><input type="text" id="pj-fornecedor" value="${o.fornecedor||''}"></div>
+        <div class="field"><label>Data Início</label><input type="date" id="pj-inicio" value="${o.inicio||''}"></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">Estrutura</span></div>
-      <div class="card-body">
-        <div class="form-grid form-grid-3">
-          <div class="field"><label>Nº Pavimentos</label><input type="number" id="proj-pav" value="${o.pavimentos||''}"></div>
-          <div class="field"><label>Nº Total Lajes</label><input type="number" id="proj-lajes" value="${o.total_lajes||''}"></div>
-          <div class="field"><label>Jogos Escoramento</label>
-            <select id="proj-jogos">
-              <option value="1" ${o.jogos==1?'selected':''}>1 jogo</option>
-              <option value="2" ${o.jogos==2?'selected':''}>2 jogos</option>
-              <option value="3" ${o.jogos==3?'selected':''}>3 jogos</option>
-            </select>
-          </div>
-        </div>
+    </div></div>
+    <div class="card"><div class="card-head"><span class="card-head-title">Estrutura</span></div><div class="card-body">
+      <div class="fg fg3">
+        <div class="field"><label>Nº Pavimentos</label><input type="number" id="pj-pav" value="${o.pavimentos||''}"></div>
+        <div class="field"><label>Nº Lajes</label><input type="number" id="pj-lajes" value="${o.total_lajes||''}"></div>
+        <div class="field"><label>Jogos</label><select id="pj-jogos"><option value="1" ${o.jogos==1?'selected':''}>1 jogo</option><option value="2" ${o.jogos==2?'selected':''}>2 jogos</option><option value="3" ${o.jogos==3?'selected':''}>3 jogos</option></select></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">Contrato de Locação</span></div>
-      <div class="card-body">
-        <div class="form-grid form-grid-3">
-          <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="proj-vmensal" value="${o.valor_mensal||''}" step="0.01"></div>
-          <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="proj-vtotal" value="${o.valor_total||''}" step="0.01"></div>
-          <div class="field"><label>Frete (R$)</label><input type="number" id="proj-frete" value="${o.frete||''}" step="0.01"></div>
-        </div>
+    </div></div>
+    <div class="card"><div class="card-head"><span class="card-head-title">Contrato</span></div><div class="card-body">
+      <div class="fg fg3">
+        <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="pj-vmensal" value="${o.valor_mensal||''}" step="0.01"></div>
+        <div class="field"><label>Valor Total (R$)</label><input type="number" id="pj-vtotal" value="${o.valor_total||''}" step="0.01"></div>
+        <div class="field"><label>Frete (R$)</label><input type="number" id="pj-frete" value="${o.frete||''}" step="0.01"></div>
       </div>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="salvarProjeto()">💾 Salvar Alterações</button>
-      <button class="btn btn-ghost" onclick="navegar('lajes')">Próximo: Lajes →</button>
+    </div></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="salvarProjeto()">💾 Salvar</button>
+      <button class="btn btn-ghost" onclick="nav('lajes')">Próximo: Lajes →</button>
     </div>`;
 }
 
-async function salvarProjeto() {
-  if (!obraAtiva) return;
-  const payload = {
-    nome:        v('proj-nome'),
-    contrato:    v('proj-contrato'),
-    fornecedor:  v('proj-fornecedor'),
-    inicio:      v('proj-inicio') || null,
-    pavimentos:  parseInt(v('proj-pav')) || null,
-    total_lajes: parseInt(v('proj-lajes')) || null,
-    jogos:       parseInt(v('proj-jogos')) || 1,
-    valor_mensal:parseFloat(v('proj-vmensal')) || null,
-    valor_total: parseFloat(v('proj-vtotal')) || null,
-    frete:       parseFloat(v('proj-frete')) || null,
-    updated_at:  new Date().toISOString(),
-  };
-  const { error } = await sb.from('obras').update(payload).eq('id', obraAtiva.id);
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  Object.assign(obraAtiva, payload);
-  atualizarSidebarObra();
-  toast('Projeto salvo!', 'success');
+async function salvarProjeto(){
+  if(!obra)return;
+  const payload={nome:v('pj-nome'),contrato:v('pj-contrato'),fornecedor:v('pj-fornecedor'),inicio:v('pj-inicio')||null,pavimentos:parseInt(v('pj-pav'))||null,total_lajes:parseInt(v('pj-lajes'))||null,jogos:parseInt(v('pj-jogos'))||1,valor_mensal:parseFloat(v('pj-vmensal'))||null,valor_total:parseFloat(v('pj-vtotal'))||null,frete:parseFloat(v('pj-frete'))||null,updated_at:new Date().toISOString()};
+  const{error}=await db.from('obras').update(payload).eq('id',obra.id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  Object.assign(obra,payload);
+  g('sb-obra-nome').textContent=obra.nome;
+  toast('Salvo!','success');
 }
 
-// ════════════════════════════════════════════════════
-// PÁGINA: LAJES & CICLOS
-// ════════════════════════════════════════════════════
-async function renderLajes() {
-  if (!obraAtiva) { setLoading('<div class="alert alert-amber" style="margin:24px;"><span>⚠️</span><span>Selecione uma obra primeiro.</span></div>'); return; }
-  setLoading();
-
-  const { data: lajes } = await sb.from('lajes').select('*').eq('obra_id', obraAtiva.id).order('ordem');
-  lajesCache = lajes || [];
-
-  let html = `
+// ── LAJES ─────────────────────────────────────────────────
+async function renderLajes(){
+  if(!obra){semObra();return;}
+  loading();
+  const{data}=await db.from('lajes').select('*').eq('obra_id',obra.id).order('ordem');
+  lajesCache=data||[];
+  let html=`
     <div class="page-title">Lajes & Ciclos</div>
-    <div class="page-sub">Cadastre cada laje com sua data de concretagem e os parâmetros de escoramento.</div>
-    <div class="alert alert-info"><span>ℹ️</span>
-      <span><strong>Escoramento</strong> = dias suportando a laje até o concreto curar. <strong>Reescoramento</strong> = começa alguns dias após a concretagem, garantindo resistência de 50%.</span>
+    <div class="page-sub">Cadastre as lajes com datas e parâmetros de escoramento.</div>
+    <div class="alert alert-info"><span>ℹ️</span><span><strong>Escoramento</strong>: dias suportando a laje. <strong>Reescoramento</strong>: após a cura, garantindo resistência mínima.</span></div>
+    <div class="card"><div class="card-head"><span class="card-head-title">⚙️ Parâmetros Padrão</span></div><div class="card-body">
+      <div class="fg fg3">
+        <div class="field"><label>Dias esc. pós-concret.</label><input type="number" id="pd-esc" value="3" min="1"></div>
+        <div class="field"><label>Início reesc. (dias)</label><input type="number" id="pd-inireesc" value="7" min="1"></div>
+        <div class="field"><label>Duração reesc. (dias)</label><input type="number" id="pd-durreesc" value="28" min="1"></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="adicionarLaje()">+ Adicionar Laje com esses parâmetros</button></div>
+    </div></div>`;
+  if(!lajesCache.length){html+=`<div class="alert alert-amber"><span>⚠️</span><span>Nenhuma laje cadastrada ainda.</span></div>`;}
+  else{html+='<div id="lajes-list">'+lajesCache.map(renderLajeItem).join('')+'</div>';}
+  html+=`<button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:8px" onclick="adicionarLaje()">+ Adicionar Laje</button>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="nav('projeto')">← Projeto</button>
+      <button class="btn btn-ghost" onclick="nav('pecas')">Próximo: Peças →</button>
+    </div>`;
+  g('content-area').innerHTML=html;
+}
+
+function renderLajeItem(l){
+  const t=(l.dias_esc||3)+(l.ini_reesc||7)+(l.dur_reesc||28);
+  const pE=(((l.dias_esc||3)/t)*100).toFixed(1);
+  const pG=(((l.ini_reesc||7)/t)*100).toFixed(1);
+  const pR=(((l.dur_reesc||28)/t)*100).toFixed(1);
+  return `<div class="laje-item" id="li-${l.id}">
+    <div class="laje-item-head" onclick="toggleLaje('${l.id}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="laje-item-title">${l.nome||'Sem nome'}</span>
+        ${l.pavimento?`<span class="chip chip-gray">${l.pavimento}</span>`:''}
+        ${l.concretagem?`<span class="chip chip-blue">${fmtD(l.concretagem)}</span>`:'<span class="chip chip-amber">sem data</span>'}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft)">Ciclo: ${t}d</span>
+        <button class="btn btn-success btn-sm" onclick="event.stopPropagation();salvarLaje('${l.id}')">💾</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarLaje('${l.id}')">✕</button>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">⚙️ Parâmetros Padrão</span></div>
-      <div class="card-body">
-        <div class="form-grid form-grid-3">
-          <div class="field"><label>Dias esc. pós-concretagem</label><input type="number" id="padrao-esc" value="3" min="1"></div>
-          <div class="field"><label>Início reesc. (dias após concret.)</label><input type="number" id="padrao-inireesc" value="7" min="1"></div>
-          <div class="field"><label>Duração reescoramento (dias)</label><input type="number" id="padrao-durreesc" value="28" min="1"></div>
+    <div class="laje-item-body collapsed" id="lib-${l.id}">
+      <div class="fg" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+        <div class="field"><label>Nome</label><input type="text" id="lf-nome-${l.id}" value="${l.nome||''}" placeholder="Ex: Laje 10"></div>
+        <div class="field"><label>Pavimento</label><input type="text" id="lf-pav-${l.id}" value="${l.pavimento||''}" placeholder="Ex: 10º Tipo A"></div>
+        <div class="field"><label>Concretagem</label><input type="date" id="lf-concret-${l.id}" value="${l.concretagem||''}"></div>
+        <div class="field"><label>Dias esc. pós-concret.</label><input type="number" id="lf-esc-${l.id}" value="${l.dias_esc||3}" min="1"></div>
+        <div class="field"><label>Início reesc. (dias)</label><input type="number" id="lf-inireesc-${l.id}" value="${l.ini_reesc||7}" min="1"></div>
+        <div class="field"><label>Duração reesc. (dias)</label><input type="number" id="lf-durreesc-${l.id}" value="${l.dur_reesc||28}" min="1"></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:4px">Visualização do ciclo</div>
+        <div class="cycle-bar">
+          <div class="cycle-seg" style="width:${pE}%;background:#1d4ed8">Esc ${l.dias_esc||3}d</div>
+          <div class="cycle-seg" style="width:${pG}%;background:#9ca3af">Espera</div>
+          <div class="cycle-seg" style="width:${pR}%;background:#15803d">Reesc ${l.dur_reesc||28}d</div>
         </div>
-        <div style="margin-top:10px;">
-          <button class="btn btn-ghost btn-sm" onclick="adicionarLaje()">+ Adicionar Laje com esses parâmetros</button>
+        <div style="display:flex;gap:14px;margin-top:5px;font-size:10px;color:var(--ink-soft);font-family:var(--mono)">
+          <span>🔵 Esc: ${l.dias_esc||3}d</span><span>⚪ Espera: ${l.ini_reesc||7}d</span><span>🟢 Reesc: ${l.dur_reesc||28}d</span>
+          <span style="margin-left:auto;font-weight:600;color:var(--ink)">Total: ${t}d</span>
         </div>
       </div>
-    </div>`;
-
-  if (lajesCache.length === 0) {
-    html += `<div class="alert alert-amber"><span>⚠️</span><span>Nenhuma laje cadastrada. Use o botão acima para adicionar.</span></div>`;
-  } else {
-    html += '<div id="lajes-list">';
-    lajesCache.forEach(l => { html += renderLajeItem(l); });
-    html += '</div>';
-  }
-
-  html += `
-    <button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:8px;" onclick="adicionarLaje()">
-      + Adicionar Laje
-    </button>
-    <div style="margin-top:20px;display:flex;gap:10px;">
-      <button class="btn btn-ghost" onclick="navegar('projeto')">← Projeto</button>
-      <button class="btn btn-ghost" onclick="navegar('pecas')">Próximo: Peças →</button>
-    </div>`;
-
-  document.getElementById('content-area').innerHTML = html;
+    </div>
+  </div>`;
 }
 
-function renderLajeItem(l) {
-  const totalCiclo = (l.dias_esc||3) + (l.ini_reesc||7) + (l.dur_reesc||28);
-  const pEsc   = (((l.dias_esc||3)  / totalCiclo) * 100).toFixed(1);
-  const pGap   = (((l.ini_reesc||7) / totalCiclo) * 100).toFixed(1);
-  const pReesc = (((l.dur_reesc||28)/ totalCiclo) * 100).toFixed(1);
-  return `
-    <div class="laje-item" id="li-${l.id}">
-      <div class="laje-item-head" onclick="toggleLajeItem('${l.id}')">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft);">Laje</span>
-          <span class="laje-item-title">${l.nome || 'Sem nome'}</span>
-          ${l.pavimento ? `<span class="chip chip-gray">${l.pavimento}</span>` : ''}
-          ${l.concretagem ? `<span class="chip chip-blue">${fmtDate(l.concretagem)}</span>` : '<span class="chip chip-amber">sem data</span>'}
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft);">Ciclo: ${totalCiclo}d</span>
-          <button class="btn btn-success btn-sm" onclick="event.stopPropagation();salvarLaje('${l.id}')">💾</button>
-          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarLaje('${l.id}')">✕</button>
-        </div>
-      </div>
-      <div class="laje-item-body collapsed" id="lib-${l.id}">
-        <div class="form-grid" style="gap:12px;">
-          <div class="field"><label>Nome / Identificação</label><input type="text" id="lf-nome-${l.id}" value="${l.nome||''}" placeholder="Ex: Laje 10"></div>
-          <div class="field"><label>Pavimento</label><input type="text" id="lf-pav-${l.id}" value="${l.pavimento||''}" placeholder="Ex: Tipo A – 10º"></div>
-          <div class="field"><label>Concretagem</label><input type="date" id="lf-concret-${l.id}" value="${l.concretagem||''}"></div>
-          <div class="field"><label>Dias esc. pós-concret.</label><input type="number" id="lf-esc-${l.id}" value="${l.dias_esc||3}" min="1"></div>
-          <div class="field"><label>Início reesc. (dias)</label><input type="number" id="lf-inireesc-${l.id}" value="${l.ini_reesc||7}" min="1"></div>
-          <div class="field"><label>Duração reesc. (dias)</label><input type="number" id="lf-durreesc-${l.id}" value="${l.dur_reesc||28}" min="1"></div>
-        </div>
-        <div style="margin-top:12px;">
-          <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:4px;">Visualização do ciclo</div>
-          <div class="cycle-bar">
-            <div class="cycle-seg" style="width:${pEsc}%;background:#1d4ed8;">Esc ${l.dias_esc||3}d</div>
-            <div class="cycle-seg" style="width:${pGap}%;background:#9ca3af;">Espera</div>
-            <div class="cycle-seg" style="width:${pReesc}%;background:#15803d;">Reesc ${l.dur_reesc||28}d</div>
-          </div>
-          <div style="display:flex;gap:14px;margin-top:5px;font-size:10px;color:var(--ink-soft);font-family:var(--mono);">
-            <span>🔵 Escoramento: ${l.dias_esc||3}d</span>
-            <span>⚪ Espera: ${l.ini_reesc||7}d</span>
-            <span>🟢 Reescoramento: ${l.dur_reesc||28}d</span>
-            <span style="margin-left:auto;font-weight:600;color:var(--ink);">Total: ${totalCiclo}d</span>
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
+function toggleLaje(id){g(`lib-${id}`)?.classList.toggle('collapsed');}
 
-function toggleLajeItem(id) {
-  document.getElementById(`lib-${id}`)?.classList.toggle('collapsed');
-}
-
-async function adicionarLaje() {
-  if (!obraAtiva) return;
-  const ordem = lajesCache.length;
-  const payload = {
-    obra_id:    obraAtiva.id,
-    nome:       `Laje ${ordem + 1}`,
-    pavimento:  '',
-    concretagem: null,
-    dias_esc:   parseInt(v('padrao-esc'))      || 3,
-    ini_reesc:  parseInt(v('padrao-inireesc')) || 7,
-    dur_reesc:  parseInt(v('padrao-durreesc')) || 28,
-    ordem,
-  };
-  const { data, error } = await sb.from('lajes').insert(payload).select().single();
-  if (error) { toast('Erro ao criar laje: ' + error.message, 'error'); return; }
+async function adicionarLaje(){
+  if(!obra)return;
+  const payload={obra_id:obra.id,nome:`Laje ${lajesCache.length+1}`,pavimento:'',concretagem:null,dias_esc:parseInt(v('pd-esc'))||3,ini_reesc:parseInt(v('pd-inireesc'))||7,dur_reesc:parseInt(v('pd-durreesc'))||28,ordem:lajesCache.length};
+  const{data,error}=await db.from('lajes').insert(payload).select().single();
+  if(error){toast('Erro: '+error.message,'error');return;}
   lajesCache.push(data);
-  const container = document.getElementById('lajes-list') || (() => {
-    const d = document.createElement('div'); d.id = 'lajes-list';
-    document.querySelector('.btn-add')?.insertAdjacentElement('beforebegin', d);
-    return d;
-  })();
-  container.insertAdjacentHTML('beforeend', renderLajeItem(data));
-  toast('Laje adicionada!', 'success');
+  let list=g('lajes-list');
+  if(!list){
+    g('content-area').querySelector('.alert-amber')?.remove();
+    list=document.createElement('div'); list.id='lajes-list';
+    g('content-area').querySelector('.btn-add').insertAdjacentElement('beforebegin',list);
+  }
+  list.insertAdjacentHTML('beforeend',renderLajeItem(data));
+  toast('Laje adicionada!','success');
 }
 
-async function salvarLaje(id) {
-  const payload = {
-    nome:        v(`lf-nome-${id}`),
-    pavimento:   v(`lf-pav-${id}`),
-    concretagem: v(`lf-concret-${id}`) || null,
-    dias_esc:    parseInt(v(`lf-esc-${id}`))     || 3,
-    ini_reesc:   parseInt(v(`lf-inireesc-${id}`)) || 7,
-    dur_reesc:   parseInt(v(`lf-durreesc-${id}`)) || 28,
-  };
-  const { error } = await sb.from('lajes').update(payload).eq('id', id);
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  const idx = lajesCache.findIndex(l => l.id === id);
-  if (idx >= 0) Object.assign(lajesCache[idx], payload);
-  toast('Laje salva!', 'success');
+async function salvarLaje(id){
+  const payload={nome:v(`lf-nome-${id}`),pavimento:v(`lf-pav-${id}`),concretagem:v(`lf-concret-${id}`)||null,dias_esc:parseInt(v(`lf-esc-${id}`))||3,ini_reesc:parseInt(v(`lf-inireesc-${id}`))||7,dur_reesc:parseInt(v(`lf-durreesc-${id}`))||28};
+  const{error}=await db.from('lajes').update(payload).eq('id',id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  const idx=lajesCache.findIndex(l=>l.id===id);
+  if(idx>=0)Object.assign(lajesCache[idx],payload);
+  toast('Laje salva!','success');
   renderLajes();
 }
 
-async function deletarLaje(id) {
-  if (!confirm('Remover esta laje?')) return;
-  const { error } = await sb.from('lajes').delete().eq('id', id);
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  lajesCache = lajesCache.filter(l => l.id !== id);
-  document.getElementById(`li-${id}`)?.remove();
-  toast('Laje removida', 'success');
+async function deletarLaje(id){
+  if(!confirm('Remover esta laje?'))return;
+  await db.from('lajes').delete().eq('id',id);
+  lajesCache=lajesCache.filter(l=>l.id!==id);
+  g(`li-${id}`)?.remove();
+  toast('Laje removida','success');
 }
 
-// ════════════════════════════════════════════════════
-// PÁGINA: PEÇAS & CUSTOS
-// ════════════════════════════════════════════════════
-async function renderPecas() {
-  if (!obraAtiva) { setLoading('<div class="alert alert-amber" style="margin:24px;"><span>⚠️</span><span>Selecione uma obra primeiro.</span></div>'); return; }
-  setLoading();
-
-  const { data: tipos } = await sb.from('tipos_laje').select('*, pecas(*)').eq('obra_id', obraAtiva.id).order('created_at');
-  tiposCache = tipos || [];
-
-  const { data: log } = await sb.from('logistica').select('*').eq('obra_id', obraAtiva.id).maybeSingle();
-  const antes  = log?.dias_antes  ?? 3;
-  const depois = log?.dias_depois ?? 5;
-
-  let html = `
-    <div class="page-title">Peças & Custos</div>
-    <div class="page-sub">Defina os grupos de peças por tipo de laje e o valor diário de cada item.</div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">⏱ Logística (Tempo Ocioso)</span></div>
-      <div class="card-body">
-        <div class="form-grid form-grid-2">
-          <div class="field"><label>Peças chegam X dias ANTES do ciclo</label><input type="number" id="log-antes" value="${antes}" min="0"></div>
-          <div class="field"><label>Peças saem X dias DEPOIS do ciclo</label><input type="number" id="log-depois" value="${depois}" min="0"></div>
-        </div>
-        <div style="margin-top:10px;">
-          <button class="btn btn-ghost btn-sm" onclick="salvarLogistica('${log?.id||''}')">💾 Salvar logística</button>
-        </div>
-        <div class="alert alert-amber" style="margin-top:12px;margin-bottom:0;">
-          <span>⚠️</span>
-          <span>Esse período em que a peça fica locada mas <strong>não está sendo usada</strong> é o <strong>tempo ocioso</strong> — gera custo separado no resumo.</span>
-        </div>
-      </div>
-    </div>
-    <div id="tipos-list">`;
-
-  tiposCache.forEach(t => { html += renderTipoCard(t); });
-  html += `</div>
-    <button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:4px;" onclick="adicionarTipo()">
-      + Adicionar Tipo de Laje / Grupo de Peças
-    </button>
-    <div style="margin-top:20px;display:flex;gap:10px;">
-      <button class="btn btn-ghost" onclick="navegar('lajes')">← Lajes</button>
-      <button class="btn btn-ghost" onclick="navegar('resumo')">Ver Resumo →</button>
-    </div>`;
-
-  document.getElementById('content-area').innerHTML = html;
-}
-
-function renderTipoCard(t) {
-  const totalDia = (t.pecas||[]).reduce((s,p) => s + (p.quantidade||0)*(p.valor_dia||0), 0);
-  let pecasRows = (t.pecas||[]).map(p => `
-    <tr>
-      <td><input class="inline-input" type="text" id="pc-desc-${p.id}" value="${p.descricao||''}" placeholder="Ex: Escora Plus SH Fêmea" onblur="salvarPeca('${p.id}')"></td>
-      <td><input class="inline-input" type="number" id="pc-qtd-${p.id}" value="${p.quantidade||''}" placeholder="0" style="width:80px;" onblur="salvarPeca('${p.id}')"></td>
-      <td><input class="inline-input" type="number" id="pc-vd-${p.id}" value="${p.valor_dia||''}" placeholder="0.000" step="0.001" onblur="salvarPeca('${p.id}')"></td>
-      <td class="num">R$ ${((p.quantidade||0)*(p.valor_dia||0)).toFixed(2)}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deletarPeca('${p.id}','${t.id}')">✕</button></td>
-    </tr>`).join('');
-
-  return `
-    <div class="card" id="tipo-card-${t.id}" style="margin-bottom:14px;">
-      <div class="card-head">
-        <div style="display:flex;align-items:center;gap:10px;flex:1;">
-          <input type="text" id="tipo-nome-${t.id}" value="${t.nome||''}"
-            style="border:none;font-family:var(--display);font-size:13px;font-weight:700;outline:none;background:transparent;flex:1;"
-            onblur="salvarTipoNome('${t.id}')">
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">R$ ${totalDia.toFixed(3)}/dia</span>
-          <button class="btn btn-danger btn-sm" onclick="deletarTipo('${t.id}')">✕ Remover</button>
-        </div>
-      </div>
-      <div style="padding:0;">
-        <table class="tbl">
-          <thead><tr>
-            <th>Descrição da Peça</th><th>Quantidade</th><th>Valor Unit./Dia (R$)</th><th>Subtotal/Dia</th><th></th>
-          </tr></thead>
-          <tbody id="pecas-tbody-${t.id}">${pecasRows}</tbody>
-          <tfoot><tr>
-            <td colspan="3">Total diário deste tipo</td>
-            <td class="num">R$ ${totalDia.toFixed(3)}</td><td></td>
-          </tr></tfoot>
-        </table>
-        <div style="padding:10px 14px;">
-          <button class="btn btn-add btn-sm" onclick="adicionarPeca('${t.id}')">+ Adicionar Peça</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-async function salvarLogistica(logId) {
-  const antes  = parseInt(v('log-antes'))  || 0;
-  const depois = parseInt(v('log-depois')) || 0;
-  const payload = { obra_id: obraAtiva.id, dias_antes: antes, dias_depois: depois };
-  let error;
-  if (logId) {
-    ({ error } = await sb.from('logistica').update(payload).eq('id', logId));
-  } else {
-    ({ error } = await sb.from('logistica').insert(payload));
-  }
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  toast('Logística salva!', 'success');
-}
-
-async function adicionarTipo() {
-  if (!obraAtiva) return;
-  const { data, error } = await sb.from('tipos_laje').insert({ obra_id: obraAtiva.id, nome: `Tipo ${tiposCache.length + 1}` }).select('*, pecas(*)').single();
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  tiposCache.push(data);
-  document.getElementById('tipos-list').insertAdjacentHTML('beforeend', renderTipoCard(data));
-  toast('Grupo adicionado!', 'success');
-}
-
-async function salvarTipoNome(id) {
-  const nome = v(`tipo-nome-${id}`);
-  await sb.from('tipos_laje').update({ nome }).eq('id', id);
-}
-
-async function deletarTipo(id) {
-  if (!confirm('Remover este grupo e todas as peças?')) return;
-  const { error } = await sb.from('tipos_laje').delete().eq('id', id);
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  tiposCache = tiposCache.filter(t => t.id !== id);
-  document.getElementById(`tipo-card-${id}`)?.remove();
-  toast('Grupo removido', 'success');
-}
-
-async function adicionarPeca(tipoId) {
-  const { data, error } = await sb.from('pecas').insert({ tipo_id: tipoId, descricao: '', quantidade: 0, valor_dia: 0 }).select().single();
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  const tipo = tiposCache.find(t => t.id === tipoId);
-  if (tipo) tipo.pecas.push(data);
-  const tbody = document.getElementById(`pecas-tbody-${tipoId}`);
-  if (tbody) tbody.insertAdjacentHTML('beforeend', `
-    <tr id="peca-row-${data.id}">
-      <td><input class="inline-input" type="text" id="pc-desc-${data.id}" placeholder="Ex: Escora Plus SH Fêmea" onblur="salvarPeca('${data.id}')"></td>
-      <td><input class="inline-input" type="number" id="pc-qtd-${data.id}" placeholder="0" style="width:80px;" onblur="salvarPeca('${data.id}')"></td>
-      <td><input class="inline-input" type="number" id="pc-vd-${data.id}" placeholder="0.000" step="0.001" onblur="salvarPeca('${data.id}')"></td>
-      <td class="num" id="pcsub-${data.id}">R$ 0.00</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deletarPeca('${data.id}','${tipoId}')">✕</button></td>
-    </tr>`);
-}
-
-async function salvarPeca(id) {
-  const desc = v(`pc-desc-${id}`);
-  const qtd  = parseInt(v(`pc-qtd-${id}`)) || 0;
-  const vd   = parseFloat(v(`pc-vd-${id}`)) || 0;
-  await sb.from('pecas').update({ descricao: desc, quantidade: qtd, valor_dia: vd }).eq('id', id);
-  const sub = document.getElementById(`pcsub-${id}`);
-  if (sub) sub.textContent = `R$ ${(qtd * vd).toFixed(2)}`;
-}
-
-async function deletarPeca(id, tipoId) {
-  await sb.from('pecas').delete().eq('id', id);
-  document.getElementById(`peca-row-${id}`)?.remove();
-  const tipo = tiposCache.find(t => t.id === tipoId);
-  if (tipo) tipo.pecas = tipo.pecas.filter(p => p.id !== id);
-}
-
-// ════════════════════════════════════════════════════
-// PÁGINA: RESUMO & ANÁLISE
-// ════════════════════════════════════════════════════
-async function renderResumo() {
-  if (!obraAtiva) { setLoading('<div class="alert alert-amber" style="margin:24px;"><span>⚠️</span><span>Selecione uma obra primeiro.</span></div>'); return; }
-  setLoading();
-
-  const [{ data: lajes }, { data: tipos }, { data: log }] = await Promise.all([
-    sb.from('lajes').select('*').eq('obra_id', obraAtiva.id).order('ordem'),
-    sb.from('tipos_laje').select('*, pecas(*)').eq('obra_id', obraAtiva.id),
-    sb.from('logistica').select('*').eq('obra_id', obraAtiva.id).maybeSingle(),
+// ── PEÇAS ─────────────────────────────────────────────────
+async function renderPecas(){
+  if(!obra){semObra();return;}
+  loading();
+  const[{data:tipos},{data:log}]=await Promise.all([
+    db.from('tipos_laje').select('*, pecas(*)').eq('obra_id',obra.id).order('created_at'),
+    db.from('logistica').select('*').eq('obra_id',obra.id).maybeSingle(),
   ]);
+  tiposCache=tipos||[];
+  const antes=log?.dias_antes??3, depois=log?.dias_depois??5;
+  g('content-area').innerHTML=`
+    <div class="page-title">Peças & Custos</div>
+    <div class="page-sub">Grupos de peças por tipo de laje e valores diários.</div>
+    <div class="card"><div class="card-head"><span class="card-head-title">⏱ Tempo Ocioso (Logística)</span></div><div class="card-body">
+      <div class="fg fg2">
+        <div class="field"><label>Peças chegam X dias ANTES do ciclo</label><input type="number" id="log-antes" value="${antes}" min="0"></div>
+        <div class="field"><label>Peças saem X dias DEPOIS do ciclo</label><input type="number" id="log-depois" value="${depois}" min="0"></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="salvarLogistica('${log?.id||''}')">💾 Salvar logística</button></div>
+      <div class="alert alert-amber" style="margin-top:12px;margin-bottom:0"><span>⚠️</span><span>Período locado mas <strong>não utilizado</strong> — custo ocioso exibido separado no resumo.</span></div>
+    </div></div>
+    <div id="tipos-list">${tiposCache.map(renderTipoCard).join('')}</div>
+    <button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:4px" onclick="adicionarTipo()">+ Adicionar Grupo de Peças</button>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="nav('lajes')">← Lajes</button>
+      <button class="btn btn-ghost" onclick="nav('resumo')">Ver Resumo →</button>
+    </div>`;
+}
 
-  const lajesData = lajes || [];
-  const tiposData = tipos || [];
-  const logAntes  = log?.dias_antes  ?? 3;
-  const logDepois = log?.dias_depois ?? 5;
+function renderTipoCard(t){
+  const total=(t.pecas||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0);
+  return `<div class="card" id="tc-${t.id}" style="margin-bottom:14px">
+    <div class="card-head">
+      <input type="text" id="tn-${t.id}" value="${t.nome||''}" style="border:none;font-family:var(--display);font-size:13px;font-weight:700;outline:none;background:transparent;flex:1" onblur="salvarTipoNome('${t.id}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">R$ ${total.toFixed(3)}/dia</span>
+        <button class="btn btn-danger btn-sm" onclick="deletarTipo('${t.id}')">✕</button>
+      </div>
+    </div>
+    <div>
+      <table class="tbl">
+        <thead><tr><th>Descrição</th><th>Qtd</th><th>Valor/Dia (R$)</th><th>Subtotal/Dia</th><th></th></tr></thead>
+        <tbody id="pb-${t.id}">${(t.pecas||[]).map(p=>renderPecaRow(p,t.id)).join('')}</tbody>
+        <tfoot><tr><td colspan="3">Total diário</td><td class="num">R$ ${total.toFixed(3)}</td><td></td></tr></tfoot>
+      </table>
+      <div style="padding:10px 14px"><button class="btn btn-add btn-sm" onclick="adicionarPeca('${t.id}')">+ Peça</button></div>
+    </div>
+  </div>`;
+}
 
-  // Taxa diária do primeiro tipo (ou zero)
-  const taxaDiaria = tiposData.length > 0
-    ? tiposData[0].pecas.reduce((s,p) => s + (p.quantidade||0)*(p.valor_dia||0), 0)
-    : 0;
+function renderPecaRow(p,tid){
+  return `<tr id="pr-${p.id}">
+    <td><input class="ii" type="text" id="pd-desc-${p.id}" value="${p.descricao||''}" placeholder="Ex: Escora Plus Fêmea" onblur="salvarPeca('${p.id}','${tid}')"></td>
+    <td><input class="ii" type="number" id="pd-qtd-${p.id}" value="${p.quantidade||''}" placeholder="0" style="width:80px" onblur="salvarPeca('${p.id}','${tid}')"></td>
+    <td><input class="ii" type="number" id="pd-vd-${p.id}" value="${p.valor_dia||''}" placeholder="0.000" step="0.001" onblur="salvarPeca('${p.id}','${tid}')"></td>
+    <td class="num" id="ps-${p.id}">R$ ${((p.quantidade||0)*(p.valor_dia||0)).toFixed(2)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deletarPeca('${p.id}','${tid}')">✕</button></td>
+  </tr>`;
+}
 
-  // Calcular por laje
-  let rows = [], totEsc=0, totReesc=0, totOcioso=0, totCiclo=0, totCustoC=0, totCustoO=0;
-  lajesData.forEach(l => {
-    const durCiclo  = (l.dias_esc||3) + (l.ini_reesc||7) + (l.dur_reesc||28);
-    const durOcioso = logAntes + logDepois;
-    const custoCiclo  = durCiclo  * taxaDiaria;
-    const custoOcioso = durOcioso * taxaDiaria;
-    totEsc    += l.dias_esc||3;
-    totReesc  += l.dur_reesc||28;
-    totOcioso += durOcioso;
-    totCiclo  += durCiclo;
-    totCustoC += custoCiclo;
-    totCustoO += custoOcioso;
-    rows.push({ l, durCiclo, durOcioso, custoCiclo, custoOcioso });
+async function salvarLogistica(logId){
+  const payload={obra_id:obra.id,dias_antes:parseInt(v('log-antes'))||0,dias_depois:parseInt(v('log-depois'))||0};
+  const{error}=logId?await db.from('logistica').update(payload).eq('id',logId):await db.from('logistica').insert(payload);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Logística salva!','success');
+}
+
+async function adicionarTipo(){
+  if(!obra)return;
+  const{data,error}=await db.from('tipos_laje').insert({obra_id:obra.id,nome:`Tipo ${tiposCache.length+1}`}).select('*, pecas(*)').single();
+  if(error){toast('Erro: '+error.message,'error');return;}
+  tiposCache.push(data);
+  g('tipos-list').insertAdjacentHTML('beforeend',renderTipoCard(data));
+  toast('Grupo adicionado!','success');
+}
+
+async function salvarTipoNome(id){await db.from('tipos_laje').update({nome:v(`tn-${id}`)}).eq('id',id);}
+
+async function deletarTipo(id){
+  if(!confirm('Remover grupo e peças?'))return;
+  await db.from('tipos_laje').delete().eq('id',id);
+  tiposCache=tiposCache.filter(t=>t.id!==id);
+  g(`tc-${id}`)?.remove();
+  toast('Grupo removido','success');
+}
+
+async function adicionarPeca(tipoId){
+  const{data,error}=await db.from('pecas').insert({tipo_id:tipoId,descricao:'',quantidade:0,valor_dia:0}).select().single();
+  if(error){toast('Erro: '+error.message,'error');return;}
+  const tipo=tiposCache.find(t=>t.id===tipoId);
+  if(tipo)tipo.pecas.push(data);
+  g(`pb-${tipoId}`)?.insertAdjacentHTML('beforeend',renderPecaRow(data,tipoId));
+}
+
+async function salvarPeca(id,tipoId){
+  const qtd=parseInt(v(`pd-qtd-${id}`))||0, vd=parseFloat(v(`pd-vd-${id}`))||0;
+  await db.from('pecas').update({descricao:v(`pd-desc-${id}`),quantidade:qtd,valor_dia:vd}).eq('id',id);
+  const sub=g(`ps-${id}`); if(sub)sub.textContent=`R$ ${(qtd*vd).toFixed(2)}`;
+}
+
+async function deletarPeca(id,tipoId){
+  await db.from('pecas').delete().eq('id',id);
+  g(`pr-${id}`)?.remove();
+  const tipo=tiposCache.find(t=>t.id===tipoId);
+  if(tipo)tipo.pecas=tipo.pecas.filter(p=>p.id!==id);
+}
+
+// ── RESUMO ────────────────────────────────────────────────
+async function renderResumo(){
+  if(!obra){semObra();return;}
+  loading();
+  const[{data:lajes},{data:tipos},{data:log}]=await Promise.all([
+    db.from('lajes').select('*').eq('obra_id',obra.id).order('ordem'),
+    db.from('tipos_laje').select('*, pecas(*)').eq('obra_id',obra.id),
+    db.from('logistica').select('*').eq('obra_id',obra.id).maybeSingle(),
+  ]);
+  const ld=lajes||[], td=tipos||[];
+  const logA=log?.dias_antes??3, logD=log?.dias_depois??5;
+  const taxa=td.length>0?td[0].pecas.reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0):0;
+  let rows=[],totE=0,totR=0,totO=0,totC=0,totCC=0,totCO=0;
+  ld.forEach(l=>{
+    const dc=(l.dias_esc||3)+(l.ini_reesc||7)+(l.dur_reesc||28);
+    const dO=logA+logD, cC=dc*taxa, cO=dO*taxa;
+    totE+=l.dias_esc||3; totR+=l.dur_reesc||28; totO+=dO; totC+=dc; totCC+=cC; totCO+=cO;
+    rows.push({l,dc,dO,cC,cO});
   });
-
-  const valorContrato = obraAtiva.valor_total || 0;
-  const saldo = valorContrato - totCustoC;
-  const pctExec = valorContrato ? Math.min(100, (totCustoC / valorContrato * 100)) : 0;
-
-  let semCor = 'green', semLabel = 'Dentro do orçamento', semDesc = 'Custo previsto abaixo do contrato.';
-  if (saldo < 0) { semCor = 'red'; semLabel = 'Estouro de contrato'; semDesc = 'Custo supera o valor contratado.'; }
-  else if (totCustoO > totCustoC * 0.25) { semCor = 'red'; semLabel = 'Alto custo ocioso'; semDesc = 'Tempo ocioso > 25% do custo de ciclo.'; }
-  else if (saldo < valorContrato * 0.1) { semCor = 'amber'; semLabel = 'Saldo baixo'; semDesc = 'Saldo contratual abaixo de 10%.'; }
-
-  let tblRows = rows.map(({ l, durCiclo, durOcioso, custoCiclo, custoOcioso }) => `
-    <tr>
-      <td><strong>${l.nome||'—'}</strong></td>
-      <td>${l.pavimento||'—'}</td>
-      <td style="font-family:var(--mono);font-size:12px;">${fmtDate(l.concretagem)}</td>
-      <td class="num">${l.dias_esc||3}d</td>
-      <td class="num">${l.dur_reesc||28}d</td>
-      <td class="num" style="color:var(--amber)">${durOcioso}d</td>
-      <td class="num">${durCiclo}d</td>
-      <td class="num">${fmt(custoCiclo)}</td>
-      <td class="num" style="color:var(--red)">${fmt(custoOcioso)}</td>
-    </tr>`).join('');
-
-  const maxCusto = Math.max(...rows.map(r => r.custoCiclo + r.custoOcioso), 1);
-  const chartBars = rows.map(({ l, custoCiclo, custoOcioso }) => {
-    const total = custoCiclo + custoOcioso;
-    const pC = (custoCiclo / maxCusto * 88).toFixed(1);
-    const pO = (custoOcioso / maxCusto * 88).toFixed(1);
-    return `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:120px;font-size:11px;color:var(--ink-soft);text-align:right;flex-shrink:0;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.nome}</div>
-        <div style="flex:1;display:flex;height:18px;border-radius:3px;overflow:hidden;gap:1px;">
-          <div style="width:${pC}%;background:#1d4ed8;height:100%;"></div>
-          <div style="width:${pO}%;background:#fbbf24;height:100%;"></div>
-        </div>
-        <div style="width:90px;font-family:var(--mono);font-size:11px;text-align:right;">${fmt(total)}</div>
-      </div>`;
-  }).join('');
-
-  document.getElementById('content-area').innerHTML = `
+  const vct=obra.valor_total||0, saldo=vct-totCC, pct=vct?Math.min(100,(totCC/vct*100)):0;
+  let sC='green',sL='Dentro do orçamento',sD='Custo previsto abaixo do contrato.';
+  if(saldo<0){sC='red';sL='Estouro de contrato';sD='Custo supera o contrato.';}
+  else if(totCO>totCC*0.25){sC='red';sL='Alto custo ocioso';sD='Tempo ocioso > 25% do ciclo.';}
+  else if(saldo<vct*0.1){sC='amber';sL='Saldo baixo';sD='Saldo abaixo de 10%.';}
+  const maxC=Math.max(...rows.map(r=>r.cC+r.cO),1);
+  g('content-area').innerHTML=`
     <div class="page-title">Resumo & Análise</div>
-    <div class="page-sub">${obraAtiva.nome} · Contrato ${obraAtiva.contrato||'—'}</div>
-
-    <div class="semaforo">
-      <div class="semaforo-dot ${semCor}"></div>
-      <div><span class="semaforo-label">${semLabel}</span><span class="semaforo-desc">— ${semDesc}</span></div>
-    </div>
-
+    <div class="page-sub">${obra.nome} · Contrato ${obra.contrato||'—'}</div>
+    <div class="semaforo"><div class="semaforo-dot ${sC}"></div><div><span class="semaforo-label">${sL}</span><span class="semaforo-desc">— ${sD}</span></div></div>
     <div class="kpi-row">
-      <div class="kpi-box">
-        <div class="kpi-label">Lajes Cadastradas</div>
-        <div class="kpi-val">${lajesData.length}</div>
-        <div class="kpi-sub">de ${obraAtiva.total_lajes||'—'} previstas</div>
-      </div>
-      <div class="kpi-box amber">
-        <div class="kpi-label">Custo Total Ciclos</div>
-        <div class="kpi-val" style="font-size:16px;">${fmt(totCustoC)}</div>
-        <div class="kpi-sub">${totCiclo} dias de locação ativa</div>
-      </div>
-      <div class="kpi-box red">
-        <div class="kpi-label">Custo Tempo Ocioso</div>
-        <div class="kpi-val" style="font-size:16px;">${fmt(totCustoO)}</div>
-        <div class="kpi-sub">${totOcioso} dias ociosos no total</div>
-      </div>
-      <div class="kpi-box green">
-        <div class="kpi-label">Saldo Contratual</div>
-        <div class="kpi-val" style="font-size:16px;color:${saldo>=0?'var(--green)':'var(--red)'};">${fmt(saldo)}</div>
-        <div class="kpi-sub">${pctExec.toFixed(1)}% estimado</div>
-      </div>
+      <div class="kpi-box"><div class="kpi-label">Lajes</div><div class="kpi-val">${ld.length}</div><div class="kpi-sub">de ${obra.total_lajes||'—'} previstas</div></div>
+      <div class="kpi-box amber"><div class="kpi-label">Custo Ciclos</div><div class="kpi-val" style="font-size:16px">${fmt(totCC)}</div><div class="kpi-sub">${totC} dias ativos</div></div>
+      <div class="kpi-box red"><div class="kpi-label">Custo Ocioso</div><div class="kpi-val" style="font-size:16px">${fmt(totCO)}</div><div class="kpi-sub">${totO} dias ociosos</div></div>
+      <div class="kpi-box green"><div class="kpi-label">Saldo Contratual</div><div class="kpi-val" style="font-size:16px;color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div><div class="kpi-sub">${pct.toFixed(1)}% estimado</div></div>
     </div>
-
     <div class="result-block">
       <h3>Previsão Financeira</h3>
-      <div class="result-row"><span class="result-key">Valor Total Contrato</span><span class="result-val">${fmt(valorContrato)}</span></div>
-      <div class="result-row"><span class="result-key">Frete</span><span class="result-val">${fmt(obraAtiva.frete)}</span></div>
-      <div class="result-row"><span class="result-key">Custo ciclos (esc. + reesc.)</span><span class="result-val">${fmt(totCustoC)}</span></div>
-      <div class="result-row"><span class="result-key">Custo tempo ocioso (logística)</span><span class="result-val vred">${fmt(totCustoO)}</span></div>
-      <div class="result-row"><span class="result-key">Total Geral Previsto</span><span class="result-val highlight">${fmt(totCustoC+totCustoO)}</span></div>
+      <div class="result-row"><span class="result-key">Valor Total Contrato</span><span class="result-val">${fmt(vct)}</span></div>
+      <div class="result-row"><span class="result-key">Frete</span><span class="result-val">${fmt(obra.frete)}</span></div>
+      <div class="result-row"><span class="result-key">Custo ciclos</span><span class="result-val">${fmt(totCC)}</span></div>
+      <div class="result-row"><span class="result-key">Custo tempo ocioso</span><span class="result-val vred">${fmt(totCO)}</span></div>
+      <div class="result-row"><span class="result-key">Total Geral Previsto</span><span class="result-val highlight">${fmt(totCC+totCO)}</span></div>
       <div class="result-row"><span class="result-key">Saldo Contratual</span><span class="result-val ${saldo>=0?'vgreen':'vred'}">${fmt(saldo)}</span></div>
-      <div class="prog-wrap" style="margin-top:14px;"><div class="prog-bar" style="width:${pctExec.toFixed(1)}%;"></div></div>
-      <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;">${pctExec.toFixed(1)}% do contrato estimado</div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${pct.toFixed(1)}%"></div></div>
+      <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-top:4px">${pct.toFixed(1)}% do contrato estimado</div>
     </div>
-
-    <div class="card">
-      <div class="card-head"><span class="card-head-title">📋 Detalhamento por Laje</span></div>
-      <div class="card-body" style="padding:0;">
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr>
-              <th>Laje</th><th>Pavimento</th><th>Concretagem</th>
-              <th>Esc. (d)</th><th>Reesc. (d)</th><th>Ocioso (d)</th>
-              <th>Total (d)</th><th>Custo Ciclo</th><th>Custo Ocioso</th>
-            </tr></thead>
-            <tbody>${tblRows || '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhuma laje cadastrada</td></tr>'}</tbody>
-            <tfoot><tr>
-              <td colspan="3">TOTAL</td>
-              <td class="num">${totEsc}d</td>
-              <td class="num">${totReesc}d</td>
-              <td class="num">${totOcioso}d</td>
-              <td class="num">${totCiclo + totOcioso}d</td>
-              <td class="num">${fmt(totCustoC)}</td>
-              <td class="num">${fmt(totCustoO)}</td>
-            </tr></tfoot>
-          </table>
+    <div class="card"><div class="card-head"><span class="card-head-title">📋 Detalhamento por Laje</span></div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>Laje</th><th>Pavimento</th><th>Concretagem</th><th>Esc.(d)</th><th>Reesc.(d)</th><th>Ocioso(d)</th><th>Total(d)</th><th>Custo Ciclo</th><th>Custo Ocioso</th></tr></thead>
+        <tbody>${rows.map(({l,dc,dO,cC,cO})=>`<tr>
+          <td><strong>${l.nome||'—'}</strong></td><td>${l.pavimento||'—'}</td>
+          <td style="font-family:var(--mono);font-size:12px">${fmtD(l.concretagem)}</td>
+          <td class="num">${l.dias_esc||3}d</td><td class="num">${l.dur_reesc||28}d</td>
+          <td class="num" style="color:var(--amber)">${dO}d</td><td class="num">${dc}d</td>
+          <td class="num">${fmt(cC)}</td><td class="num" style="color:var(--red)">${fmt(cO)}</td>
+        </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px">Nenhuma laje</td></tr>'}
+        </tbody>
+        <tfoot><tr><td colspan="3">TOTAL</td><td class="num">${totE}d</td><td class="num">${totR}d</td><td class="num">${totO}d</td><td class="num">${totC}d</td><td class="num">${fmt(totCC)}</td><td class="num">${fmt(totCO)}</td></tr></tfoot>
+      </table></div>
+    </div>
+    <div class="card"><div class="card-head">
+      <span class="card-head-title">📊 Composição do Custo</span>
+      <span style="font-size:11px;color:var(--ink-soft)">
+        <span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:10px;height:10px;background:#1d4ed8;border-radius:2px;display:inline-block"></span>Ciclo</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#fbbf24;border-radius:2px;display:inline-block"></span>Ocioso</span>
+      </span>
+    </div><div class="card-body">
+      ${rows.map(({l,cC,cO})=>{const t=cC+cO,pC=(cC/maxC*88).toFixed(1),pO=(cO/maxC*88).toFixed(1);return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:120px;font-size:11px;color:var(--ink-soft);text-align:right;flex-shrink:0;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome}</div>
+        <div style="flex:1;display:flex;height:18px;border-radius:3px;overflow:hidden;gap:1px">
+          <div style="width:${pC}%;background:#1d4ed8;height:100%"></div>
+          <div style="width:${pO}%;background:#fbbf24;height:100%"></div>
         </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <span class="card-head-title">📊 Composição do Custo por Laje</span>
-        <span style="font-size:11px;color:var(--ink-soft);">
-          <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;"><span style="width:10px;height:10px;background:#1d4ed8;border-radius:2px;display:inline-block;"></span> Ciclo</span>
-          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#fbbf24;border-radius:2px;display:inline-block;"></span> Ocioso</span>
-        </span>
-      </div>
-      <div class="card-body">${chartBars || '<p style="color:var(--ink-soft);font-size:13px;">Nenhuma laje com dados.</p>'}</div>
-    </div>
-
-    <div style="margin-top:8px;">
-      <button class="btn btn-ghost" onclick="navegar('pecas')">← Peças</button>
-    </div>`;
+        <div style="width:90px;font-family:var(--mono);font-size:11px;text-align:right">${fmt(t)}</div>
+      </div>`;}).join('')||'<p style="color:var(--ink-soft);font-size:13px">Nenhuma laje.</p>'}
+    </div></div>
+    <div style="margin-top:8px"><button class="btn btn-ghost" onclick="nav('pecas')">← Peças</button></div>`;
 }
 
-// ════════════════════════════════════════════════════
-// PAINEL ADMIN
-// ════════════════════════════════════════════════════
-async function renderAdmin() {
-  if (!currentUser?.isAdmin) {
-    setLoading('<div class="alert alert-red" style="margin:24px;"><span>🚫</span><span>Acesso restrito a administradores.</span></div>');
-    return;
-  }
-  setLoading();
-
-  // Buscar todos os usuários (profiles) e todas as obras
-  const [{ data: profiles }, { data: todasObras }] = await Promise.all([
-    sb.from('profiles').select('*').order('created_at'),
-    sb.from('obras').select('*, lajes(count)').order('created_at', { ascending: false }),
+// ── ADMIN ─────────────────────────────────────────────────
+async function renderAdmin(){
+  if(!user?.isAdmin){g('content-area').innerHTML='<div class="alert alert-red" style="margin:20px"><span>🚫</span><span>Acesso restrito.</span></div>';return;}
+  loading();
+  const[{data:profiles},{data:todasObras}]=await Promise.all([
+    db.from('profiles').select('*').order('created_at'),
+    db.from('obras').select('*').order('created_at',{ascending:false}),
   ]);
-
-  const users = profiles || [];
-  const obras = todasObras || [];
-
-  // Agrupar obras por usuário
-  const obrasPorUser = {};
-  obras.forEach(o => {
-    if (!obrasPorUser[o.user_id]) obrasPorUser[o.user_id] = [];
-    obrasPorUser[o.user_id].push(o);
-  });
-
-  // KPIs
-  const totalUsers = users.length;
-  const totalObras = obras.length;
-  const totalLajes = obras.reduce((s, o) => s + (o.lajes?.[0]?.count || 0), 0);
-  const totalContrato = obras.reduce((s, o) => s + (o.valor_total || 0), 0);
-
-  let usersRows = users.map(u => {
-    const qtdObras = (obrasPorUser[u.id] || []).length;
-    const isAdmin = u.is_admin;
-    return `<tr>
-      <td>${u.email}</td>
-      <td><span class="chip ${isAdmin ? 'chip-blue' : 'chip-gray'}">${isAdmin ? '👑 Admin' : 'Usuário'}</span></td>
-      <td class="num">${qtdObras}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>
-        <div style="display:flex;gap:6px;">
-          ${!isAdmin ? `<button class="btn btn-ghost btn-sm" onclick="tornarAdmin('${u.id}','${u.email}')">👑 Tornar Admin</button>` : ''}
-          ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.email}')">✕ Remover</button>` : '<span style="font-size:11px;color:var(--ink-soft);">Você</span>'}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  let obrasRows = obras.map(o => {
-    const user = users.find(u => u.id === o.user_id);
-    const qtdLajes = o.lajes?.[0]?.count || 0;
-    return `<tr>
-      <td><strong>${o.nome}</strong></td>
-      <td style="font-size:12px;color:var(--ink-soft);">${user?.email || '—'}</td>
-      <td class="num">${o.contrato || '—'}</td>
-      <td class="num">${qtdLajes}</td>
-      <td class="num">${fmt(o.valor_total)}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick="verObraAdmin('${o.id}','${o.user_id}')">👁 Ver</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('content-area').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+  const users=profiles||[], obras=todasObras||[];
+  const opu={};
+  obras.forEach(o=>{if(!opu[o.user_id])opu[o.user_id]=[];opu[o.user_id].push(o);});
+  const totC=obras.reduce((s,o)=>s+(o.valor_total||0),0);
+  g('content-area').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div class="page-title">🔐 Painel Admin</div>
-      <span class="chip chip-blue">👑 ${currentUser.email}</span>
+      <span class="chip chip-blue">👑 ${user.email}</span>
     </div>
-    <div class="page-sub">Visão geral de todos os usuários e obras do sistema.</div>
-
+    <div class="page-sub">Gerencie usuários e visualize todas as obras.</div>
     <div class="kpi-row">
-      <div class="kpi-box">
-        <div class="kpi-label">Usuários cadastrados</div>
-        <div class="kpi-val">${totalUsers}</div>
-      </div>
-      <div class="kpi-box amber">
-        <div class="kpi-label">Total de Obras</div>
-        <div class="kpi-val">${totalObras}</div>
-      </div>
-      <div class="kpi-box">
-        <div class="kpi-label">Total de Lajes</div>
-        <div class="kpi-val">${totalLajes}</div>
-      </div>
-      <div class="kpi-box green">
-        <div class="kpi-label">Valor Total Contratos</div>
-        <div class="kpi-val" style="font-size:16px;">${fmt(totalContrato)}</div>
-      </div>
+      <div class="kpi-box"><div class="kpi-label">Usuários</div><div class="kpi-val">${users.length}</div></div>
+      <div class="kpi-box amber"><div class="kpi-label">Total Obras</div><div class="kpi-val">${obras.length}</div></div>
+      <div class="kpi-box green"><div class="kpi-label">Valor Total Contratos</div><div class="kpi-val" style="font-size:16px">${fmt(totC)}</div></div>
     </div>
-
-    <!-- USUÁRIOS -->
-    <div class="card">
-      <div class="card-head">
-        <span class="card-head-title">👥 Gerenciar Usuários</span>
-        <button class="btn btn-primary btn-sm" onclick="novoUsuarioAdmin()">+ Novo Usuário</button>
-      </div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead><tr>
-            <th>E-mail</th><th>Perfil</th><th>Obras</th><th>Cadastrado em</th><th>Ações</th>
-          </tr></thead>
-          <tbody>${usersRows || '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum usuário</td></tr>'}</tbody>
-        </table>
-      </div>
+    <div class="card"><div class="card-head">
+      <span class="card-head-title">👥 Usuários</span>
+      <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-user')">+ Novo Usuário</button>
     </div>
-
-    <!-- OBRAS -->
-    <div class="card">
-      <div class="card-head">
-        <span class="card-head-title">🏗️ Todas as Obras</span>
-        <span style="font-size:11px;color:var(--ink-soft);">${totalObras} obras no total</span>
-      </div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead><tr>
-            <th>Obra</th><th>Usuário</th><th>Contrato</th><th>Lajes</th><th>Valor Contrato</th><th>Criada em</th><th></th>
-          </tr></thead>
-          <tbody>${obrasRows || '<tr><td colspan="7" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhuma obra cadastrada</td></tr>'}</tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- MODAL NOVO USUÁRIO -->
-    <div id="modal-novo-user" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center;padding:20px;">
-      <div style="background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:420px;">
-        <div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px;">Novo Usuário</div>
-        <div class="field" style="margin-bottom:12px;">
-          <label>E-mail</label>
-          <input type="email" id="nu-email" placeholder="email@empresa.com">
-        </div>
-        <div class="field" style="margin-bottom:12px;">
-          <label>Senha</label>
-          <input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres">
-        </div>
-        <div class="field" style="margin-bottom:20px;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" id="nu-admin"> Tornar administrador
-          </label>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button class="btn btn-ghost" onclick="fecharModalUser()">Cancelar</button>
-          <button class="btn btn-primary" onclick="criarUsuarioAdmin()" id="btn-criar-user">Criar Usuário</button>
-        </div>
-        <div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;"></div>
-      </div>
-    </div>`;
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>E-mail</th><th>Perfil</th><th>Obras</th><th>Desde</th><th>Ações</th></tr></thead>
+      <tbody>${users.map(u=>`<tr>
+        <td>${u.email}</td>
+        <td><span class="chip ${u.is_admin?'chip-blue':'chip-gray'}">${u.is_admin?'👑 Admin':'Usuário'}</span></td>
+        <td class="num">${(opu[u.id]||[]).length}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+        <td style="display:flex;gap:6px">
+          ${!u.is_admin?`<button class="btn btn-ghost btn-sm" onclick="tornarAdmin('${u.id}')">👑 Admin</button>`:''}
+          ${u.id!==user.id?`<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.email}')">✕</button>`:'<span style="font-size:11px;color:var(--ink-soft)">Você</span>'}
+        </td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div></div>
+    <div class="card"><div class="card-head"><span class="card-head-title">🏗️ Todas as Obras</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Obra</th><th>Usuário</th><th>Contrato</th><th>Valor</th><th>Criada em</th><th></th></tr></thead>
+      <tbody>${obras.map(o=>{const u=users.find(u=>u.id===o.user_id);return`<tr>
+        <td><strong>${o.nome}</strong></td>
+        <td style="font-size:12px;color:var(--ink-soft)">${u?.email||'—'}</td>
+        <td class="num">${o.contrato||'—'}</td>
+        <td class="num">${fmt(o.valor_total)}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="verObraAdmin('${o.id}')">👁 Ver</button></td>
+      </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:20px">Nenhuma obra</td></tr>'}
+      </tbody>
+    </table></div></div>`;
 }
 
-function novoUsuarioAdmin() {
-  document.getElementById('nu-email').value = '';
-  document.getElementById('nu-senha').value = '';
-  document.getElementById('nu-admin').checked = false;
-  document.getElementById('nu-erro').textContent = '';
-  document.getElementById('modal-novo-user').style.display = 'flex';
-}
-
-function fecharModalUser() {
-  document.getElementById('modal-novo-user').style.display = 'none';
-}
-
-async function criarUsuarioAdmin() {
-  const email = document.getElementById('nu-email').value.trim();
-  const senha = document.getElementById('nu-senha').value;
-  const isAdmin = document.getElementById('nu-admin').checked;
-  const erro = document.getElementById('nu-erro');
-  const btn = document.getElementById('btn-criar-user');
-
-  if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
-  if (senha.length < 6) { erro.textContent = 'Senha deve ter pelo menos 6 caracteres.'; return; }
-
-  btn.disabled = true; btn.textContent = 'Criando...';
-
-  // Usar signUp para criar o usuário
-  const { data, error } = await sb.auth.admin?.createUser
-    ? await sb.auth.admin.createUser({ email, password: senha, email_confirm: true })
-    : await sb.auth.signUp({ email, password: senha });
-
-  if (error) {
-    erro.textContent = 'Erro: ' + error.message;
-    btn.disabled = false; btn.textContent = 'Criar Usuário';
-    return;
-  }
-
-  // Se admin, atualizar profile
-  if (isAdmin && data?.user) {
-    await sb.from('profiles').upsert({ id: data.user.id, email, is_admin: true });
-  }
-
-  btn.disabled = false; btn.textContent = 'Criar Usuário';
-  fecharModalUser();
-  toast('Usuário criado com sucesso!', 'success');
+async function criarUsuario(){
+  const email=g('nu-email').value.trim(), senha=g('nu-senha').value;
+  const isAdm=g('nu-admin').checked, erro=g('nu-erro'), btn=g('btn-criar-user');
+  erro.textContent='';
+  if(!email||!senha){erro.textContent='Preencha e-mail e senha.';return;}
+  if(senha.length<6){erro.textContent='Senha mínima: 6 caracteres.';return;}
+  btn.disabled=true; btn.textContent='Criando...';
+  const{data,error}=await db.auth.signUp({email,password:senha});
+  btn.disabled=false; btn.textContent='Criar Usuário';
+  if(error){erro.textContent='Erro: '+error.message;return;}
+  if(isAdm&&data?.user)await db.from('profiles').upsert({id:data.user.id,email,is_admin:true});
+  fecharModal('modal-novo-user');
+  toast('Usuário criado!','success');
   renderAdmin();
 }
 
-async function tornarAdmin(userId, email) {
-  if (!confirm(`Tornar ${email} administrador?`)) return;
-  const { error } = await sb.from('profiles').update({ is_admin: true }).eq('id', userId);
-  if (error) { toast('Erro: ' + error.message, 'error'); return; }
-  toast(`${email} agora é admin!`, 'success');
-  renderAdmin();
+async function tornarAdmin(userId){
+  if(!confirm('Tornar admin?'))return;
+  await db.from('profiles').update({is_admin:true}).eq('id',userId);
+  toast('Agora é admin!','success'); renderAdmin();
 }
 
-async function deletarUsuario(userId, email) {
-  if (!confirm(`Remover o usuário ${email}? Todas as obras dele serão deletadas.`)) return;
-  // Deletar obras do usuário primeiro
-  await sb.from('obras').delete().eq('user_id', userId);
-  await sb.from('profiles').delete().eq('id', userId);
-  toast(`Usuário ${email} removido.`, 'success');
-  renderAdmin();
+async function deletarUsuario(userId,email){
+  if(!confirm(`Remover ${email}?`))return;
+  await db.from('obras').delete().eq('user_id',userId);
+  await db.from('profiles').delete().eq('id',userId);
+  toast(`${email} removido.`,'success'); renderAdmin();
 }
 
-async function verObraAdmin(obraId, userId) {
-  // Seleciona a obra e navega para ela
-  const { data: o } = await sb.from('obras').select('*').eq('id', obraId).single();
-  if (!o) return;
-  obraAtiva = o;
-  atualizarSidebarObra();
-  toast(`Visualizando obra: ${o.nome}`, 'success');
-  navegar('projeto');
+async function verObraAdmin(obraId){
+  const{data:o}=await db.from('obras').select('*').eq('id',obraId).single();
+  if(!o)return;
+  obra=o; g('sb-obra-nome').textContent=o.nome;
+  toast(`Visualizando: ${o.nome}`,'success'); nav('projeto');
 }
 
-// ════════════════════════════════════════════════════
-// INIT — chamado pelo loader após Supabase carregar
-// ════════════════════════════════════════════════════
-async function checarSessao() {
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) iniciarApp(session.user);
-  } catch(e) {
-    console.error('Erro ao checar sessão:', e);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => checarSessao());
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', checarSessao);
 </script>
 </body>
 </html>
