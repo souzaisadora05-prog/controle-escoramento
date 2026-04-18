@@ -698,70 +698,78 @@ async function renderCronograma(){
   const pavComDatas=calcSeqDatas(pavimentos);
 
   // ── CALCULAR CICLOS ──────────────────────────────
-  // REGRA DA ESCADINHA:
-  // Reesc laje N termina = MAX de:
-  //   1) Mínimo Z dias
-  //   2) 1 dia após C(N+2)   ← nunca termina antes de concretar a laje +2
-  //   3) fimReesc(N+1) + 1   ← nunca termina antes do reesc da laje acima
+  // REGRA CORRETA DA ESCADINHA:
   //
-  // Os 2 últimos pavimentos não têm laje +2 → só Z mínimo (e regra 3)
+  // fimReesc(N) = MAX de:
+  //   A) iniReesc(N) + Z - 1          → mínimo Z dias de reesc
+  //   B) C(N+2) + 1 dia               → se existe laje +2, termina 1d após ela concretar
+  //
+  // Para os 2 ÚLTIMOS (sem laje +2), a regra B não existe.
+  // MAS a escadinha garante: fimReesc(N) >= fimReesc(N+1)
+  // porque C(N) < C(N+1) → iniReesc(N) < iniReesc(N+1)
+  // → fimReescPorZ(N) < fimReescPorZ(N+1)
+  // LOGO: para os penúltimos sem laje +2, o fimReesc deles
+  // é naturalmente menor — EXCETO que precisamos garantir que
+  // o reesc do G3 não termina antes de o Lazer ter sido concretado
+  // + Z dias.
+  //
+  // REGRA FINAL CORRETA:
+  // fimReesc(N) = MAX(
+  //   iniReesc(N) + Z - 1,            → Z mínimo
+  //   C(N+2) + 1,                     → 1d após laje +2 (se existir)
+  //   C(N+1) + Y + 1 + Z - 1         → Z dias após fim do esc da laje +1 (se existir)
+  // )
+  //
+  // Simplificando: o reesc de N não termina antes que a laje N+1
+  // complete seu próprio escoramento (Y dias) + Z dias de reesc.
 
-  // PASSAGEM 1: calcular fimEsc e iniReesc de todos
-  const base = pavComDatas.map((p,idx)=>{
+  const ciclos = pavComDatas.map((p,idx)=>{
     const dataInicio = p.dataInicioCalc||p.data_inicio||null;
     const C = p.data_concretagem||null;
+
+    // Escoramento: dataInicio → C + Y
     const fimEsc = C ? addD(C, Y) : null;
     const iniReesc = fimEsc ? addD(fimEsc, 1) : null;
-    const fimReescPorZ = iniReesc ? addD(iniReesc, Z - 1) : null;
+
+    // Laje +1 e +2
+    const lajeMais1 = pavComDatas[idx+1]||null;
     const lajeMais2 = pavComDatas[idx+2]||null;
+    const cMais1 = lajeMais1?.data_concretagem||null;
     const cMais2 = lajeMais2?.data_concretagem||null;
-    const fimReescPorLaje = cMais2 ? addD(cMais2, 1) : null;
-    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReescPorZ,fimReescPorLaje,lajeMais2};
-  });
 
-  // PASSAGEM 2: calcular fimReesc de baixo para cima (do último para o primeiro)
-  // garantindo que nenhum termine antes do que está acima na escadinha
-  const fimReescArr = new Array(base.length).fill(null);
-  const reescPorMais2Arr = new Array(base.length).fill(false);
+    // Candidatos para fim do reesc
+    let candidatos = [];
 
-  for(let i = base.length - 1; i >= 0; i--){
-    const b = base[i];
-    if(!b.iniReesc){ fimReescArr[i] = null; continue; }
+    // A: mínimo Z dias
+    if(iniReesc) candidatos.push({fim: addD(iniReesc, Z-1), crit:'z'});
 
-    // Candidatos para o fim do reescoramento
-    let fim = b.fimReescPorZ; // mínimo Z dias
-    let porMais2 = false;
+    // B: 1 dia após concretagem da laje +2 (regra principal)
+    if(cMais2) candidatos.push({fim: addD(cMais2, 1), crit:'laje2'});
 
-    // Regra laje +2: terminar 1d após concretagem da laje +2
-    if(b.fimReescPorLaje && new Date(b.fimReescPorLaje) > new Date(fim)){
-      fim = b.fimReescPorLaje;
-      porMais2 = true;
+    // C: Z dias após o início do reesc da laje +1
+    // (garante que o reesc de N não termina antes que laje+1 complete Z dias de reesc)
+    // fimReesc(N+1) por Z = C(N+1) + Y + 1 (iniReesc) + Z - 1
+    if(cMais1){
+      const iniReescMais1 = addD(addD(cMais1, Y), 1);
+      const fimReescMais1porZ = addD(iniReescMais1, Z-1);
+      candidatos.push({fim: fimReescMais1porZ, crit:'laje1z'});
     }
 
-    // Regra escadinha: nunca terminar antes da laje imediatamente acima (i+1)
-    // O reesc do pavimento N não pode terminar antes do reesc do pavimento N+1
-    if(i + 1 < base.length && fimReescArr[i+1]){
-      const fimAcima = addD(fimReescArr[i+1], 1); // termina pelo menos 1d depois do acima
-      if(new Date(fimAcima) > new Date(fim)){
-        fim = fimAcima;
-        porMais2 = false; // está sendo segurado pelo pavimento acima
+    // Pega o maior
+    let melhor = candidatos[0]||{fim:null,crit:'z'};
+    for(const c of candidatos){
+      if(c.fim && (!melhor.fim || new Date(c.fim) > new Date(melhor.fim))){
+        melhor = c;
       }
     }
 
-    fimReescArr[i] = fim;
-    reescPorMais2Arr[i] = porMais2;
-  }
-
-  // PASSAGEM 3: montar objetos finais com status
-  const ciclos = base.map((b,idx)=>{
-    const{p,dataInicio,C,fimEsc,iniReesc,fimReescPorZ,fimReescPorLaje,lajeMais2} = b;
-    const fimReesc = fimReescArr[idx];
-    const reescPorMais2 = reescPorMais2Arr[idx];
+    const fimReesc = melhor.fim;
+    const reescPorMais2 = melhor.crit === 'laje2';
+    const criterioReesc = melhor.crit;
 
     const diasEsc = dataInicio && C ? diffD(dataInicio, C) : null;
     const diasReesc = iniReesc && fimReesc ? diffD(iniReesc, fimReesc) + 1 : null;
 
-    // Status atual
     let status = 'aguard';
     if(!C){ status = 'aguard'; }
     else if(hoje < C){ status = 'esc_antes'; }
@@ -772,12 +780,7 @@ async function renderCronograma(){
     const diasParaFim = fimReesc ? diffD(hoje, fimReesc) : null;
     const alertaFim = diasParaFim !== null && diasParaFim >= 0 && diasParaFim <= 5 && status === 'reesc';
 
-    // Critério do reesc
-    let criterioReesc = 'z'; // padrão: Z mínimo
-    if(reescPorMais2) criterioReesc = 'laje';
-    else if(idx+1 < base.length && fimReesc && fimReescArr[idx+1] && fimReesc === addD(fimReescArr[idx+1],1)) criterioReesc = 'acima';
-
-    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,fimReescPorZ,fimReescPorLaje,reescPorMais2,lajeMais2,criterioReesc,diasEsc,diasReesc,status,alertaFim,diasParaFim};
+    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,reescPorMais2,lajeMais2,criterioReesc,diasEsc,diasReesc,status,alertaFim,diasParaFim};
   });
 
   // Alertas urgentes
@@ -816,11 +819,11 @@ async function renderCronograma(){
   </div>
 
   <div class="legenda">
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Esc. (pré-concretagem)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (pós-concretagem, Y dias)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>Reesc. (pela laje +2) 🟢</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#b45309"></div>Reesc. (segurado pelo pav. acima) 🟡</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>Reesc. (Z mínimo — 2 últimos) 🔴</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Esc. (executando)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (cura Y dias)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>🟢 Reesc. pela laje +2</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#b45309"></div>🟡 Reesc. Z dias após laje +1</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>🔴 Reesc. Z mínimo (último)</div>
   </div>
 
   <div class="card"><div class="tbl-wrap"><table class="crono-tbl">
@@ -852,17 +855,16 @@ async function renderCronograma(){
       `<span class="bar-aguard">Aguardando</span>`;
 
     const statusReesc =
-      status==='reesc' && c.criterioReesc==='laje'  ? `<span class="bar-reesc">🟢 Em reesc.</span>` :
-      status==='reesc' && c.criterioReesc==='acima' ? `<span class="bar-reesc" style="background:#b45309">🟡 Em reesc.</span>` :
-      status==='reesc'                               ? `<span class="bar-reesc alerta">🔴 Em reesc.</span>` :
+      status==='reesc' && c.criterioReesc==='laje2'  ? `<span class="bar-reesc">🟢 Em reesc.</span>` :
+      status==='reesc' && c.criterioReesc==='laje1z' ? `<span class="bar-reesc" style="background:#b45309">🟡 Em reesc.</span>` :
+      status==='reesc'                                ? `<span class="bar-reesc alerta">🔴 Em reesc.</span>` :
       status==='ok' ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
       (status==='esc_antes'||status==='esc_apos') ? `<span class="bar-aguard">Aguarda esc.</span>` :
       `<span class="bar-aguard">Aguardando</span>`;
 
-    // Critério exibido na tabela
     const criterio = !C ? '—' :
-      c.criterioReesc==='laje'  ? `<span class="chip chip-green">📅 ${lajeMais2?.p?.nome||lajeMais2?.nome||'Laje +2'}</span>` :
-      c.criterioReesc==='acima' ? `<span class="chip chip-amber">⬆️ Pav. acima</span>` :
+      c.criterioReesc==='laje2'  ? `<span class="chip chip-green">📅 ${c.lajeMais2?.nome||'Laje +2'}</span>` :
+      c.criterioReesc==='laje1z' ? `<span class="chip chip-amber">📅+Z Laje +1</span>` :
       `<span class="chip chip-red">⏱ Z mín. (${Z}d)</span>`;
 
     // Linha com destaque
