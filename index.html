@@ -697,63 +697,90 @@ async function renderCronograma(){
   const hoje=new Date().toISOString().slice(0,10);
   const pavComDatas=calcSeqDatas(pavimentos);
 
-  // Calcular ciclos
+  // ── CALCULAR CICLOS ──────────────────────────────
+  // Lógica correta (escadinha):
+  // Escoramento laje N:
+  //   início = 1 dia após concretagem laje N-1 (= dataInicioCalc)
+  //   fim    = C(N) + Y dias
+  //
+  // Reescoramento laje N:
+  //   início = fim escoramento + 1 dia = C(N) + Y + 1
+  //   fim    = MAX( início + Z dias,  C(N+2) + 1 dia )
+  //   → se terminar por Z mínimo: exibir em VERMELHO
+  //   → se terminar por laje+2:   exibir em VERDE
+
   const ciclos=pavComDatas.map((p,idx)=>{
     const dataInicio=p.dataInicioCalc||p.data_inicio||null;
     const C=p.data_concretagem||null;
 
-    // Escoramento: início = dataInicio; fim = C + Y
-    const fimEsc=C?addD(C,Y):null;
+    // ── Escoramento ──
+    // Começa no dataInicio, termina em C + Y
+    const fimEsc = C ? addD(C, Y) : null;
 
-    // Reescoramento: início = fimEsc + 1; fim = MAX(Z dias, concret. +2)
-    const iniReesc=fimEsc?addD(fimEsc,1):null;
-    const fimReescMin=iniReesc?addD(iniReesc,Z-1):null;
+    // ── Reescoramento ──
+    // Começa 1 dia após fim do escoramento
+    const iniReesc = fimEsc ? addD(fimEsc, 1) : null;
 
-    // Concretagem da laje +2
-    const lajeMais2=pavComDatas[idx+2];
-    const dataMais2=lajeMais2?.data_concretagem||null;
+    // Fim mínimo pelo Z
+    const fimReescPorZ = iniReesc ? addD(iniReesc, Z - 1) : null;
 
-    let fimReesc=fimReescMin;
-    let reescPorMais2=false;
-    if(dataMais2&&fimReescMin){
-      // Fim reesc = 1 dia APÓS concretagem +2
-      const fimPorMais2=addD(dataMais2,1);
-      if(new Date(fimPorMais2)>new Date(fimReescMin)){
-        fimReesc=fimPorMais2;
-        reescPorMais2=true;
+    // Fim pela laje +2: 1 dia após concretagem da laje idx+2
+    const lajeMais2 = pavComDatas[idx+2] || null;
+    const cMais2 = lajeMais2?.data_concretagem || null;
+    const fimReescPorLaje = cMais2 ? addD(cMais2, 1) : null;
+
+    // Regra: usa o MAIOR entre Z e laje+2
+    let fimReesc = fimReescPorZ;
+    let reescPorMais2 = false;
+
+    if(fimReescPorLaje && fimReescPorZ){
+      if(new Date(fimReescPorLaje) > new Date(fimReescPorZ)){
+        fimReesc = fimReescPorLaje;
+        reescPorMais2 = true;
       }
+    }else if(fimReescPorLaje && !fimReescPorZ){
+      fimReesc = fimReescPorLaje;
+      reescPorMais2 = true;
     }
 
-    const diasEsc=dataInicio&&C?diffD(dataInicio,C):null;
-    const diasReesc=iniReesc&&fimReesc?diffD(iniReesc,fimReesc):null;
+    const diasEsc = dataInicio && C ? diffD(dataInicio, C) : null;
+    const diasReesc = iniReesc && fimReesc ? diffD(iniReesc, fimReesc) + 1 : null;
 
-    // Status
-    let status='aguard';
-    if(C&&hoje>=C&&fimEsc&&hoje<=fimEsc)status='esc';
-    else if(iniReesc&&fimReesc&&hoje>fimEsc&&hoje<=fimReesc)status='reesc';
-    else if(fimReesc&&hoje>fimReesc)status='ok';
+    // ── Status atual ──
+    let status = 'aguard';
+    if(!C){
+      status = 'aguard';
+    } else if(hoje < C){
+      status = 'esc_antes'; // em escoramento, antes de concretar
+    } else if(hoje >= C && fimEsc && hoje <= fimEsc){
+      status = 'esc_apos'; // em escoramento, após concretar (Y dias)
+    } else if(iniReesc && fimReesc && hoje >= iniReesc && hoje <= fimReesc){
+      status = 'reesc';
+    } else if(fimReesc && hoje > fimReesc){
+      status = 'ok';
+    }
 
     // Alerta: reesc. termina em ≤5 dias
-    const diasParaFim=fimReesc?diffD(hoje,fimReesc):null;
-    const alertaFim=diasParaFim!==null&&diasParaFim>=0&&diasParaFim<=5;
+    const diasParaFim = fimReesc ? diffD(hoje, fimReesc) : null;
+    const alertaFim = diasParaFim !== null && diasParaFim >= 0 && diasParaFim <= 5 && status === 'reesc';
 
-    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,fimReescMin,reescPorMais2,diasEsc,diasReesc,status,alertaFim,diasParaFim};
+    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,fimReescPorZ,fimReescPorLaje,reescPorMais2,lajeMais2,diasEsc,diasReesc,status,alertaFim,diasParaFim};
   });
 
-  // Alertas
-  const alertas=ciclos.filter(c=>c.alertaFim||c.status==='reesc'&&c.reescPorMais2&&diffD(hoje,c.fimReesc||'')<=7);
+  // Alertas urgentes
+  const alertas = ciclos.filter(c => c.alertaFim);
 
   let html=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div>
         <div style="font-family:var(--display);font-size:20px;font-weight:700">Cronograma & Ciclos</div>
-        <div style="font-size:12px;color:var(--ink-soft)">${obra.nome} · Parâmetros: X=${X}d Y=${Y}d Z=${Z}d T=${T}d</div>
+        <div style="font-size:12px;color:var(--ink-soft)">${obra.nome} · X=${X}d · Y=${Y}d · Z=${Z}d · T=${T}d</div>
       </div>
     </div>`;
 
   if(alertas.length){
-    html+=`<div class="alert alert-red"><span>🚨</span><div><strong>Atenção — Lajes aguardando desmobilização:</strong><br>
-      ${alertas.map(c=>`<strong>${c.p.nome}</strong>: reesc. termina em ${fmtD(c.fimReesc)} ${c.diasParaFim!==null?`(${c.diasParaFim}d)`:''}${c.reescPorMais2?' · por laje+2':' · por Z mínimo'}`).join('<br>')}
+    html+=`<div class="alert alert-red"><span>🚨</span><div><strong>Atenção — Desmobilização iminente:</strong><br>
+      ${alertas.map(c=>`<strong>${c.p.nome}</strong>: reesc. termina em ${fmtD(c.fimReesc)} (${c.diasParaFim}d restante${c.diasParaFim===1?'':'s'})`).join('<br>')}
     </div></div>`;
   }
 
@@ -763,55 +790,73 @@ async function renderCronograma(){
   }
 
   // KPIs
-  const comData=ciclos.filter(c=>c.C);
-  const emEsc=ciclos.filter(c=>c.status==='esc').length;
-  const emReesc=ciclos.filter(c=>c.status==='reesc').length;
-  const concluidos=ciclos.filter(c=>c.status==='ok').length;
+  const emEscAntes = ciclos.filter(c=>c.status==='esc_antes').length;
+  const emEscApos  = ciclos.filter(c=>c.status==='esc_apos').length;
+  const emReesc    = ciclos.filter(c=>c.status==='reesc').length;
+  const concluidos = ciclos.filter(c=>c.status==='ok').length;
 
   html+=`<div class="kpi-row">
-    <div class="kpi-box"><div class="kpi-label">Total Pavimentos</div><div class="kpi-val">${pavimentos.length}</div><div class="kpi-sub">${comData.length} com datas</div></div>
-    <div class="kpi-box amber"><div class="kpi-label">Em Escoramento</div><div class="kpi-val">${emEsc}</div></div>
+    <div class="kpi-box"><div class="kpi-label">Total Pavimentos</div><div class="kpi-val">${pavimentos.length}</div><div class="kpi-sub">${ciclos.filter(c=>c.C).length} com datas</div></div>
+    <div class="kpi-box amber"><div class="kpi-label">Em Escoramento</div><div class="kpi-val">${emEscAntes+emEscApos}</div><div class="kpi-sub">antes: ${emEscAntes} · pós-concret: ${emEscApos}</div></div>
     <div class="kpi-box green"><div class="kpi-label">Em Reescoramento</div><div class="kpi-val">${emReesc}</div></div>
     <div class="kpi-box"><div class="kpi-label">Concluídos</div><div class="kpi-val">${concluidos}</div></div>
   </div>
 
   <div class="legenda">
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Escoramento</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>Reescoramento (pela laje +2)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>Reescoramento (pelo Z mínimo)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#e5e7eb"></div>Aguardando</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Esc. (pré-concretagem)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (pós-concretagem, Y dias)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>Reesc. (pelo laje +2)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>Reesc. (pelo Z mínimo)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#e5e7eb"></div>Aguardando / Concluído</div>
   </div>
 
   <div class="card"><div class="tbl-wrap"><table class="crono-tbl">
     <thead><tr>
       <th>#</th>
       <th>Pavimento</th>
-      <th>Início exec.</th>
+      <th>Início Exec.</th>
       <th>Concretagem (C)</th>
       <th>Fim Esc. (C+${Y}d)</th>
       <th>Início Reesc.</th>
       <th>Fim Reesc.</th>
+      <th>Critério</th>
       <th>Dias Esc.</th>
       <th>Dias Reesc.</th>
-      <th>Critério reesc.</th>
-      <th>Status</th>
+      <th>Status Esc.</th>
+      <th>Status Reesc.</th>
     </tr></thead>
     <tbody>`;
 
   ciclos.forEach(c=>{
-    const{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,reescPorMais2,diasEsc,diasReesc,status,alertaFim}=c;
-    const lajeMais2=pavComDatas[idx+2];
+    const{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,reescPorMais2,lajeMais2,diasEsc,diasReesc,status,alertaFim}=c;
 
-    const statusEl=status==='esc'?`<span class="bar-esc">Em esc.</span>`
-      :status==='reesc'?`<span class="bar-reesc ${!reescPorMais2?'alerta':''}">Em reesc.</span>`
-      :status==='ok'?`<span class="chip chip-green">✓ Concluído</span>`
-      :`<span class="bar-aguard">Aguardando</span>`;
+    // Status Escoramento
+    const statusEsc =
+      status==='esc_antes' ? `<span class="bar-esc" style="opacity:.6">⬛ Executando</span>` :
+      status==='esc_apos'  ? `<span class="bar-esc">🔵 Cura (${Y}d)</span>` :
+      (status==='reesc'||status==='ok') ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
+      C ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
+      `<span class="bar-aguard">Aguardando</span>`;
 
-    const criterio=!C?'—'
-      :reescPorMais2?`<span class="chip chip-green">Laje ${lajeMais2?.nome||'+2'}</span>`
-      :`<span class="chip chip-red">Z mín. (${Z}d)</span>`;
+    // Status Reescoramento
+    const statusReesc =
+      status==='reesc' && reescPorMais2  ? `<span class="bar-reesc">🟢 Em reesc.</span>` :
+      status==='reesc' && !reescPorMais2 ? `<span class="bar-reesc alerta">🔴 Em reesc.</span>` :
+      status==='ok' ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
+      (status==='esc_antes'||status==='esc_apos') ? `<span class="bar-aguard">Aguarda esc.</span>` :
+      `<span class="bar-aguard">Aguardando</span>`;
 
-    html+=`<tr style="${alertaFim?'background:#fef2f2;':''}">
+    // Critério
+    const criterio = !C ? '—' :
+      reescPorMais2 ? `<span class="chip chip-green">📅 ${lajeMais2?.nome||'Laje +2'}</span>` :
+      `<span class="chip chip-red">⏱ Z mín. (${Z}d)</span>`;
+
+    // Linha com destaque
+    const rowBg = alertaFim ? 'background:#fef2f2' :
+      status==='esc_antes'||status==='esc_apos' ? 'background:#eff6ff' :
+      status==='reesc' ? 'background:#f0fdf4' : '';
+
+    html+=`<tr style="${rowBg}">
       <td class="num" style="color:var(--ink-soft);font-weight:700">${idx+1}</td>
       <td class="nome">${p.nome}</td>
       <td class="dt">${fmtD(dataInicio)}</td>
@@ -819,10 +864,11 @@ async function renderCronograma(){
       <td class="dt">${fmtD(fimEsc)}</td>
       <td class="dt">${fmtD(iniReesc)}</td>
       <td class="dt" style="${!reescPorMais2&&C?'color:var(--red);font-weight:700':''}${alertaFim?';background:#fee2e2':''}">${fmtD(fimReesc)}</td>
+      <td>${criterio}</td>
       <td class="num">${diasEsc!=null?diasEsc+'d':'—'}</td>
       <td class="num">${diasReesc!=null?diasReesc+'d':'—'}</td>
-      <td>${criterio}</td>
-      <td>${statusEl}</td>
+      <td>${statusEsc}</td>
+      <td>${statusReesc}</td>
     </tr>`;
   });
 
