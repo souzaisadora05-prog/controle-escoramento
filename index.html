@@ -7,147 +7,184 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--ink:#0f1117;--ink-mid:#2d3142;--ink-soft:#6b7280;--rule:#e5e7eb;--rule-lt:#f3f4f6;--white:#ffffff;--accent:#1d4ed8;--accent-lt:#eff6ff;--amber:#b45309;--amber-lt:#fffbeb;--green:#15803d;--green-lt:#f0fdf4;--red:#b91c1c;--red-lt:#fef2f2;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--display:'Syne',sans-serif}
+:root{--ink:#0f1117;--ink-mid:#2d3142;--ink-soft:#6b7280;--rule:#e5e7eb;--rule-lt:#f3f4f6;--white:#fff;--accent:#1d4ed8;--accent-lt:#eff6ff;--amber:#b45309;--amber-lt:#fffbeb;--green:#15803d;--green-lt:#f0fdf4;--red:#b91c1c;--red-lt:#fef2f2;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--display:'Syne',sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+/* TOPBAR */
 .topbar{background:var(--ink);color:#fff;height:52px;display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:200}
 .topbar-brand{font-family:var(--display);font-size:15px;font-weight:700}
 .topbar-sep{flex:1}
 .topbar-user{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5)}
-.topbar-btn{font-family:var(--display);font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 14px;border-radius:4px;cursor:pointer;transition:background .15s}
+.topbar-btn{font-family:var(--display);font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 14px;border-radius:4px;cursor:pointer}
 .topbar-btn:hover{background:rgba(255,255,255,.25)}
+/* LOGIN */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .login-box{background:var(--white);border:1px solid var(--rule);border-radius:10px;padding:40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.08)}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
-.login-title{font-family:var(--display);font-size:22px;font-weight:800}
-.login-sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
-.app-layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px)}
-.sidebar{background:var(--white);border-right:1px solid var(--rule);padding:20px 0}
-.sb-sec{padding:6px 16px 4px;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;margin-top:12px}
-.sb-item{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--ink-mid);border-right:2px solid transparent;transition:all .12s;user-select:none}
-.sb-item:hover{background:var(--rule-lt)}
-.sb-item.active{background:var(--accent-lt);color:var(--accent);border-right-color:var(--accent);font-weight:500}
-.sb-item .ic{font-size:15px;width:20px;text-align:center}
-.sb-obra{padding:14px 16px;border-bottom:1px solid var(--rule);margin-bottom:8px}
+.login-title{font-family:var(--display);font-size:22px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--ink-soft);margin-bottom:28px}
+/* LAYOUT */
+.app-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--white);border-right:1px solid var(--rule);padding:16px 0;overflow-y:auto}
+.sb-obra{padding:12px 16px;border-bottom:1px solid var(--rule);margin-bottom:8px}
 .sb-obra .lbl{font-family:var(--mono);font-size:9px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.8px}
 .sb-obra .nm{font-family:var(--display);font-size:13px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.content{padding:28px 32px 80px;overflow-y:auto}
-.page-title{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:4px}
-.page-sub{font-size:12px;color:var(--ink-soft);margin-bottom:24px}
-.card{background:var(--white);border:1px solid var(--rule);border-radius:8px;margin-bottom:18px;overflow:hidden}
-.card-head{padding:13px 18px;border-bottom:1px solid var(--rule);background:#fafafa;display:flex;align-items:center;justify-content:space-between}
+.sb-sec{padding:4px 16px;font-family:var(--mono);font-size:9px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;margin-top:10px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:13px;color:var(--ink-mid);border-right:2px solid transparent;transition:all .12s;user-select:none}
+.sb-item:hover{background:var(--rule-lt)}
+.sb-item.active{background:var(--accent-lt);color:var(--accent);border-right-color:var(--accent);font-weight:500}
+.sb-item .ic{font-size:14px;width:18px;text-align:center}
+.content{padding:24px 28px 80px;overflow-y:auto}
+/* TYPOGRAPHY */
+.page-title{font-family:var(--display);font-size:20px;font-weight:700;margin-bottom:3px}
+.page-sub{font-size:12px;color:var(--ink-soft);margin-bottom:20px}
+/* CARD */
+.card{background:var(--white);border:1px solid var(--rule);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--rule);background:#fafafa;display:flex;align-items:center;justify-content:space-between}
 .card-head-title{font-family:var(--display);font-size:13px;font-weight:700}
-.card-body{padding:18px}
-.fg{display:grid;gap:14px}
+.card-body{padding:16px}
+/* FORM */
+.fg{display:grid;gap:12px}
 .fg2{grid-template-columns:1fr 1fr}
 .fg3{grid-template-columns:1fr 1fr 1fr}
-@media(max-width:700px){.fg2,.fg3{grid-template-columns:1fr}}
-.field{display:flex;flex-direction:column;gap:5px}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+@media(max-width:700px){.fg2,.fg3,.fg4{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px}
 .field label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px}
-.field input,.field select{border:1px solid var(--rule);border-radius:5px;padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--white);transition:border .15s,box-shadow .15s;outline:none}
+.field input,.field select,.field textarea{border:1px solid var(--rule);border-radius:5px;padding:7px 10px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--white);outline:none;transition:border .15s}
 .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
 .field input[type=number]{font-family:var(--mono)}
 .field-hint{font-size:11px;color:var(--ink-soft);font-style:italic}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:5px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:none;transition:all .15s}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#1e40af}
-.btn-ghost{background:var(--white);color:var(--ink-mid);border:1px solid var(--rule)}
-.btn-ghost:hover{background:var(--rule-lt)}
-.btn-danger{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}
-.btn-danger:hover{background:#fee2e2}
-.btn-add{background:var(--accent-lt);color:var(--accent);border:1px dashed #bfdbfe}
-.btn-add:hover{background:#dbeafe}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:5px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1e40af}
+.btn-ghost{background:var(--white);color:var(--ink-mid);border:1px solid var(--rule)}.btn-ghost:hover{background:var(--rule-lt)}
+.btn-danger{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}.btn-danger:hover{background:#fee2e2}
+.btn-add{background:var(--accent-lt);color:var(--accent);border:1px dashed #bfdbfe}.btn-add:hover{background:#dbeafe}
 .btn-success{background:var(--green-lt);color:var(--green);border:1px solid #bbf7d0}
-.btn-sm{padding:5px 10px;font-size:11px}
+.btn-amber{background:var(--amber-lt);color:var(--amber);border:1px solid #fde68a}
+.btn-sm{padding:4px 9px;font-size:11px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.obra-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.obra-card{background:var(--white);border:1px solid var(--rule);border-radius:8px;padding:18px;cursor:pointer;transition:all .15s}
+/* OBRA LIST */
+.obra-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.obra-card{background:var(--white);border:1px solid var(--rule);border-radius:8px;padding:16px;cursor:pointer;transition:all .15s}
 .obra-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(29,78,216,.1)}
-.obra-card-name{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:4px}
+.obra-card-name{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:3px}
 .obra-card-meta{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
-.obra-card-footer{margin-top:12px;padding-top:10px;border-top:1px solid var(--rule-lt);display:flex;justify-content:space-between;align-items:center}
-.chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px}
+.obra-card-footer{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-lt);display:flex;justify-content:space-between;align-items:center}
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px}
 .chip-blue{background:#dbeafe;color:#1d4ed8}
 .chip-green{background:#dcfce7;color:#15803d}
 .chip-amber{background:#fef3c7;color:#b45309}
 .chip-red{background:#fee2e2;color:#b91c1c}
 .chip-gray{background:var(--rule-lt);color:var(--ink-soft)}
-.laje-item{border:1px solid var(--rule);border-radius:7px;margin-bottom:10px;overflow:hidden}
-.laje-item-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:#fafafa;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none}
-.laje-item-title{font-family:var(--display);font-size:13px;font-weight:700}
-.laje-item-body{padding:15px;background:var(--white)}
-.laje-item-body.collapsed{display:none}
-.cycle-bar{display:flex;height:24px;border-radius:4px;overflow:hidden;gap:1px;margin-top:8px}
-.cycle-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:500;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap}
+/* TABLE */
 .tbl-wrap{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap}
-.tbl td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
+.tbl td{padding:8px 12px;font-size:13px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--accent-lt)}
 .tbl td.num{text-align:right;font-family:var(--mono);font-size:12px}
-.tbl tfoot td{font-weight:700;background:#f8f9fb;border-top:2px solid var(--rule);font-family:var(--mono);font-size:12px;padding:10px 12px}
+.tbl td.mono{font-family:var(--mono);font-size:11px}
+.tbl tfoot td{font-weight:700;background:#f8f9fb;border-top:2px solid var(--rule);font-family:var(--mono);font-size:12px;padding:9px 12px}
 .tbl tfoot td.num{text-align:right}
-.ii{border:1px solid transparent;border-radius:4px;padding:4px 6px;font-family:var(--mono);font-size:12px;width:100%;background:transparent;transition:border .1s;outline:none}
+.ii{border:1px solid transparent;border-radius:4px;padding:4px 6px;font-family:var(--mono);font-size:12px;width:100%;background:transparent;outline:none;transition:border .1s}
 .ii:focus{border-color:var(--accent);background:var(--accent-lt)}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.kpi-box{background:var(--white);border:1px solid var(--rule);border-radius:7px;padding:16px;border-bottom:3px solid var(--accent)}
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.kpi-box{background:var(--white);border:1px solid var(--rule);border-radius:7px;padding:14px;border-bottom:3px solid var(--accent)}
 .kpi-box.amber{border-bottom-color:var(--amber)}
 .kpi-box.green{border-bottom-color:var(--green)}
 .kpi-box.red{border-bottom-color:var(--red)}
-.kpi-label{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
-.kpi-val{font-family:var(--display);font-size:20px;font-weight:700}
+.kpi-label{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.kpi-val{font-family:var(--display);font-size:18px;font-weight:700}
 .kpi-sub{font-size:11px;color:var(--ink-soft);margin-top:2px}
-.result-block{background:var(--ink);color:#fff;border-radius:8px;padding:22px 26px;margin-bottom:18px}
-.result-block h3{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:12px}
-.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+/* RESULT */
+.result-block{background:var(--ink);color:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px}
+.result-block h3{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:10px}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .result-row:last-child{border-bottom:none}
-.result-key{font-size:13px;color:rgba(255,255,255,.65)}
-.result-val{font-family:var(--mono);font-size:14px;font-weight:500}
-.result-val.highlight{color:#fbbf24;font-size:18px}
+.result-key{font-size:12px;color:rgba(255,255,255,.65)}
+.result-val{font-family:var(--mono);font-size:13px;font-weight:500}
+.result-val.highlight{color:#fbbf24;font-size:17px}
 .result-val.vred{color:#f87171}
 .result-val.vgreen{color:#4ade80}
-.semaforo{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:7px;border:1px solid var(--rule);background:var(--white);margin-bottom:16px}
-.semaforo-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
-.semaforo-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e66}
-.semaforo-dot.amber{background:#f59e0b;box-shadow:0 0 8px #f59e0b66}
-.semaforo-dot.red{background:#ef4444;box-shadow:0 0 8px #ef444466}
-.semaforo-label{font-family:var(--display);font-size:13px;font-weight:700}
-.semaforo-desc{font-size:11px;color:var(--ink-soft);margin-left:6px}
-.alert{border-radius:6px;padding:10px 14px;font-size:12px;margin-bottom:12px;display:flex;gap:8px;line-height:1.5}
+/* ALERT */
+.alert{border-radius:6px;padding:9px 12px;font-size:12px;margin-bottom:10px;display:flex;gap:8px;line-height:1.5}
 .alert-info{background:var(--accent-lt);color:var(--accent);border:1px solid #bfdbfe}
 .alert-amber{background:var(--amber-lt);color:var(--amber);border:1px solid #fde68a}
 .alert-red{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}
-.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--ink);color:#fff;padding:12px 18px;border-radius:7px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+.alert-green{background:var(--green-lt);color:var(--green);border:1px solid #bbf7d0}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--ink);color:#fff;padding:11px 16px;border-radius:7px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{background:#14532d;border-left:3px solid #22c55e}
 .toast.error{background:#7f1d1d;border-left:3px solid #ef4444}
+/* LOADING */
 .loading{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px}
-.spinner{width:28px;height:28px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.spinner{width:24px;height:24px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.prog-wrap{background:rgba(255,255,255,.1);border-radius:4px;height:7px;overflow:hidden;margin-top:10px}
-.prog-bar{height:100%;border-radius:4px;background:#fbbf24;transition:width .5s}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--white);border-radius:10px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:20px}
-::-webkit-scrollbar{width:5px;height:5px}
+.modal-box{background:var(--white);border-radius:10px;padding:24px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto}
+.modal-title{font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:18px}
+/* TIPO CARD */
+.tipo-card{border:1px solid var(--rule);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.tipo-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fafafa;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none}
+.tipo-card-title{font-family:var(--display);font-size:13px;font-weight:700}
+.tipo-card-body{padding:16px;background:var(--white)}
+.tipo-card-body.collapsed{display:none}
+/* CICLO BAR */
+.ciclo-wrap{margin-top:10px}
+.ciclo-bar{display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px}
+.ciclo-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:500;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap;min-width:20px}
+/* PAVIMENTO */
+.pav-item{border:1px solid var(--rule);border-radius:6px;margin-bottom:8px;overflow:hidden}
+.pav-item-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fafafa;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none}
+.pav-item-body{padding:14px;background:var(--white)}
+.pav-item-body.collapsed{display:none}
+/* SEMÁFORO */
+.semaforo{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:7px;border:1px solid var(--rule);background:var(--white);margin-bottom:14px}
+.sem-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.sem-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e66}
+.sem-dot.amber{background:#f59e0b;box-shadow:0 0 8px #f59e0b66}
+.sem-dot.red{background:#ef4444;box-shadow:0 0 8px #ef444466}
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:16px}
+.tab{padding:8px 16px;font-family:var(--display);font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-soft);border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* SELECT PECAS */
+.select-peca-list{max-height:240px;overflow-y:auto;border:1px solid var(--rule);border-radius:5px}
+.select-peca-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--rule-lt);cursor:pointer;transition:background .1s}
+.select-peca-item:last-child{border-bottom:none}
+.select-peca-item:hover{background:var(--accent-lt)}
+.select-peca-item input[type=checkbox]{flex-shrink:0}
+.select-peca-nome{font-size:12px;flex:1}
+.select-peca-codigo{font-family:var(--mono);font-size:10px;color:var(--ink-soft)}
+.select-peca-vd{font-family:var(--mono);font-size:10px;color:var(--green);white-space:nowrap}
+/* PROG */
+.prog-wrap{background:rgba(255,255,255,.1);border-radius:4px;height:6px;overflow:hidden;margin-top:8px}
+.prog-bar{height:100%;border-radius:4px;background:#fbbf24;transition:width .5s}
+::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
 </style>
 </head>
 <body>
-
 <div class="toast" id="toast"></div>
 
 <!-- LOGIN -->
 <div id="screen-login" class="login-wrap">
   <div class="login-box">
-    <div class="login-logo">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="17" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".9"/>
         <rect x="3" y="11" width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".6"/>
         <rect x="3" y="5"  width="22" height="4" rx="1.5" fill="#1d4ed8" opacity=".3"/>
-        <rect x="6"  y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"/>
+        <rect x="6" y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"/>
         <rect x="19.5" y="21" width="2.5" height="5" rx="1" fill="#1d4ed8"/>
       </svg>
       <div>
@@ -155,23 +192,23 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
         <div class="login-sub">Controle de Locação</div>
       </div>
     </div>
-    <div class="field" style="margin-bottom:12px">
+    <div class="field" style="margin-bottom:10px">
       <label>E-mail</label>
-      <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')fazerLogin()">
+      <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')login()">
     </div>
-    <div class="field" style="margin-bottom:20px">
+    <div class="field" style="margin-bottom:18px">
       <label>Senha</label>
-      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
     </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="fazerLogin()" id="btn-login">Entrar</button>
-    <div id="login-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="login()" id="btn-login">Entrar</button>
+    <div id="login-erro" style="color:var(--red);font-size:12px;margin-top:8px;text-align:center"></div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="screen-app" style="display:none">
   <div class="topbar">
-    <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+    <svg width="16" height="16" viewBox="0 0 28 28" fill="none">
       <rect x="3" y="17" width="22" height="4" rx="1.5" fill="white" opacity=".9"/>
       <rect x="3" y="11" width="22" height="4" rx="1.5" fill="white" opacity=".6"/>
       <rect x="3" y="5"  width="22" height="4" rx="1.5" fill="white" opacity=".3"/>
@@ -179,7 +216,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
     <span class="topbar-brand">Controle de Escoramento</span>
     <span class="topbar-sep"></span>
     <span class="topbar-user" id="topbar-email"></span>
-    <button class="topbar-btn" onclick="fazerLogout()">Sair</button>
+    <button class="topbar-btn" onclick="logout()">Sair</button>
   </div>
   <div class="app-layout">
     <div class="sidebar">
@@ -187,13 +224,16 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
         <div class="lbl">Obra ativa</div>
         <div class="nm" id="sb-obra-nome">—</div>
       </div>
-      <div class="sb-sec">Navegação</div>
-      <div class="sb-item active" onclick="nav('obras')"   id="nav-obras"><span class="ic">🏗️</span> Minhas Obras</div>
-      <div class="sb-item"        onclick="nav('projeto')" id="nav-projeto"><span class="ic">📋</span> Dados do Projeto</div>
-      <div class="sb-item"        onclick="nav('lajes')"   id="nav-lajes"><span class="ic">🧱</span> Lajes & Ciclos</div>
-      <div class="sb-item"        onclick="nav('pecas')"   id="nav-pecas"><span class="ic">🔩</span> Peças & Custos</div>
-      <div class="sb-item"        onclick="nav('resumo')"  id="nav-resumo"><span class="ic">📊</span> Resumo & Análise</div>
-      <div class="sb-item"        onclick="nav('admin')"   id="nav-admin" style="display:none"><span class="ic">🔐</span> Painel Admin</div>
+      <div class="sb-sec">Geral</div>
+      <div class="sb-item active" onclick="nav('obras')" id="nav-obras"><span class="ic">🏗️</span> Minhas Obras</div>
+      <div class="sb-item" onclick="nav('projeto')" id="nav-projeto"><span class="ic">📋</span> Dados do Projeto</div>
+      <div class="sb-sec">Módulo B — Engenharia</div>
+      <div class="sb-item" onclick="nav('tipos')" id="nav-tipos"><span class="ic">🗂️</span> Tipos de Pavimento</div>
+      <div class="sb-item" onclick="nav('pavimentos')" id="nav-pavimentos"><span class="ic">🧱</span> Pavimentos</div>
+      <div class="sb-item" onclick="nav('cronograma')" id="nav-cronograma"><span class="ic">📅</span> Cronograma & Ciclos</div>
+      <div class="sb-sec">Análise</div>
+      <div class="sb-item" onclick="nav('custos')" id="nav-custos"><span class="ic">💰</span> Análise de Custo</div>
+      <div class="sb-item" onclick="nav('admin')" id="nav-admin" style="display:none"><span class="ic">🔐</span> Painel Admin</div>
     </div>
     <div class="content" id="content-area">
       <div class="loading"><div class="spinner"></div></div>
@@ -206,8 +246,8 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
   <div class="modal-box">
     <div class="modal-title" id="modal-obra-title">Nova Obra</div>
     <input type="hidden" id="mo-id">
-    <div class="fg fg2" style="margin-bottom:12px">
-      <div class="field"><label>Nome *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Alpha"></div>
+    <div class="fg fg2" style="margin-bottom:10px">
+      <div class="field"><label>Nome da Obra *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Alpha"></div>
       <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato"></div>
       <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor"></div>
       <div class="field"><label>Data Início</label><input type="date" id="mo-inicio"></div>
@@ -216,86 +256,221 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
       <div class="field"><label>Jogos</label>
         <select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select>
       </div>
-      <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="mo-vmensal" step="0.01"></div>
       <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-vtotal" step="0.01"></div>
       <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" step="0.01"></div>
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
       <button class="btn btn-ghost" onclick="fecharModal('modal-obra')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarObra()" id="btn-salvar-obra">Salvar</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL TIPO PAVIMENTO -->
+<div class="modal-overlay" id="modal-tipo">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-title" id="modal-tipo-title">Novo Tipo de Pavimento</div>
+    <input type="hidden" id="mt-id">
+    <div class="fg fg2" style="margin-bottom:12px">
+      <div class="field"><label>Nome do Tipo *</label><input type="text" id="mt-nome" placeholder="Ex: Tipo A, Garagem, Lazer"></div>
+      <div class="field"><label>Descrição</label><input type="text" id="mt-desc" placeholder="Ex: Pavimentos 5 ao 15"></div>
+    </div>
+    <div style="font-family:var(--display);font-size:12px;font-weight:700;margin-bottom:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px">Parâmetros do Ciclo (padrão)</div>
+    <div class="fg fg3" style="margin-bottom:6px">
+      <div class="field"><label>Log. antes (dias)</label><input type="number" id="mt-log-antes" value="3" min="0"><span class="field-hint">Peças chegam antes</span></div>
+      <div class="field"><label>Duração execução (dias)</label><input type="number" id="mt-dias-exec" value="30" min="1"><span class="field-hint">Início até concretagem</span></div>
+      <div class="field"><label>Dias após concret.</label><input type="number" id="mt-dias-apos" value="3" min="0"><span class="field-hint">Cura antes de mover</span></div>
+    </div>
+    <div class="fg fg3" style="margin-bottom:12px">
+      <div class="field"><label>Log. movimentação (dias)</label><input type="number" id="mt-log-mov" value="3" min="0"><span class="field-hint">Peças vão para próxima</span></div>
+      <div class="field"><label>Duração reesc. mín. (dias)</label><input type="number" id="mt-dur-reesc" value="21" min="1"><span class="field-hint">Mínimo 21d ou +2 lajes</span></div>
+      <div class="field"><label>Log. depois (dias)</label><input type="number" id="mt-log-depois" value="3" min="0"><span class="field-hint">Peças saem depois</span></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-tipo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTipo()" id="btn-salvar-tipo">Salvar Tipo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADICIONAR PEÇA DA LISTA -->
+<div class="modal-overlay" id="modal-add-peca">
+  <div class="modal-box" style="max-width:620px">
+    <div class="modal-title">Adicionar Peças da Lista Base</div>
+    <div style="margin-bottom:10px">
+      <input type="text" id="filtro-peca" placeholder="🔍 Buscar peça..." style="width:100%;border:1px solid var(--rule);border-radius:5px;padding:8px 10px;font-size:13px;outline:none" oninput="filtrarPecas()">
+    </div>
+    <div class="select-peca-list" id="lista-pecas-modal"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-add-peca')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarAddPecas()" id="btn-confirmar-pecas">Adicionar Selecionadas</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO USUÁRIO -->
 <div class="modal-overlay" id="modal-novo-user">
-  <div class="modal-box" style="max-width:420px">
+  <div class="modal-box" style="max-width:400px">
     <div class="modal-title">Novo Usuário</div>
-    <div class="field" style="margin-bottom:12px"><label>E-mail</label><input type="email" id="nu-email" placeholder="email@empresa.com"></div>
-    <div class="field" style="margin-bottom:12px"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer">
+    <div class="field" style="margin-bottom:10px"><label>E-mail</label><input type="email" id="nu-email"></div>
+    <div class="field" style="margin-bottom:10px"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;cursor:pointer">
       <input type="checkbox" id="nu-admin">
       <label for="nu-admin" style="font-size:13px;cursor:pointer">Tornar administrador</label>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="fecharModal('modal-novo-user')">Cancelar</button>
-      <button class="btn btn-primary" onclick="criarUsuario()" id="btn-criar-user">Criar Usuário</button>
+      <button class="btn btn-primary" onclick="criarUsuario()" id="btn-criar-user">Criar</button>
     </div>
-    <div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center"></div>
+    <div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:8px;text-align:center"></div>
   </div>
 </div>
 
 <script>
-const SUPA_URL = 'https://myhgijtbgmpxawcethas.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
-const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const SUPA_URL='https://myhgijtbgmpxawcethas.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15aGdpanRiZ21weGF3Y2V0aGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NTgyNzksImV4cCI6MjA5MjAzNDI3OX0.Gf5sXtWraTE6jOoFXYvN6wTYTX0bYCLIrbCCGG9Pk7M';
+const db=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-let user=null, obra=null, lajesCache=[], tiposCache=[];
+// ═══════════════════════════════════════════════════
+// LISTA BASE DE PEÇAS (PDF)
+// ═══════════════════════════════════════════════════
+const PECAS_BASE=[
+  {item:"225301-1",desc:"Adaptador Aprumador 300 Pilar",vd:0.046667,peso:0.811},
+  {item:"225102-3",desc:"Adaptador LTT-Escora",vd:0.167333,peso:2.958},
+  {item:"225300-3",desc:"Aprumador 300",vd:0.500667,peso:9.95},
+  {item:"245106-5",desc:"Bag1000",vd:0.036000,peso:3.0},
+  {item:"111075-9",desc:"Barra de Ancoragem 075",vd:0.056000,peso:1.26},
+  {item:"111100-4",desc:"Barra de Ancoragem 100",vd:0.075667,peso:1.68},
+  {item:"111130-1",desc:"Barra de Ancoragem 130",vd:0.100333,peso:2.18},
+  {item:"111150-9",desc:"Barra de Ancoragem 150",vd:0.114667,peso:2.52},
+  {item:"111200-2",desc:"Barra de Ancoragem 200",vd:0.153333,peso:3.36},
+  {item:"248101-8",desc:"Base Dupla",vd:0.053000,peso:2.19},
+  {item:"247102-7",desc:"Base Regulável Tubular",vd:0.110333,peso:3.3},
+  {item:"252106-2",desc:"Braçadeira Fixa F",vd:0.045333,peso:1.17},
+  {item:"252108-8",desc:"Braçadeira Móvel F",vd:0.047333,peso:1.22},
+  {item:"244101-2",desc:"Conector",vd:0.016333,peso:0.54},
+  {item:"249101-7",desc:"Console SH",vd:0.509000,peso:11.2},
+  {item:"242100-6",desc:"Cruzeta 075/100",vd:0.167333,peso:7.6},
+  {item:"242101-4",desc:"Cruzeta 125/155",vd:0.206667,peso:9.4},
+  {item:"242102-2",desc:"Cruzeta 175/200",vd:0.242667,peso:11.02},
+  {item:"242103-0",desc:"Cruzeta 225/250",vd:0.279333,peso:12.65},
+  {item:"221202-5",desc:"Esc. Extra Fêmea Hunnebeck",vd:0.371000,peso:11.2},
+  {item:"221201-7",desc:"Esc. Extra Macho Hunnebeck",vd:0.277667,peso:9.3},
+  {item:"221102-7",desc:"Esc. Standard Fêmea Hunnebeck",vd:0.318333,peso:9.2},
+  {item:"221101-9",desc:"Esc. Standard Macho Hunnebeck",vd:0.223333,peso:7.2},
+  {item:"228500-1",desc:"Escora Lume",vd:2.148000,peso:22.0},
+  {item:"221152-2",desc:"Escora Plus Fêmea",vd:0.350000,peso:9.7},
+  {item:"221151-4",desc:"Escora Plus Macho",vd:0.243333,peso:7.6},
+  {item:"223103-3",desc:"Forcado de Escora Light",vd:0.023667,peso:0.99},
+  {item:"246101-0",desc:"Forcado Regulável",vd:0.210333,peso:5.6},
+  {item:"154001-3",desc:"Garra para Ancoragem",vd:0.007333,peso:0.29},
+  {item:"224101-6",desc:"Grampo Contraventamento",vd:0.052667,peso:1.1},
+  {item:"252048-6",desc:"Luva",vd:0.034000,peso:1.08},
+  {item:"381400-2",desc:"Parafuso 1/2x2",vd:0.002000,peso:0.07},
+  {item:"267075-2",desc:"Perfil C-05/075",vd:0.124333,peso:4.65},
+  {item:"267100-7",desc:"Perfil C-05/100",vd:0.166000,peso:6.2},
+  {item:"267150-2",desc:"Perfil C-05/150",vd:0.250333,peso:9.3},
+  {item:"267200-5",desc:"Perfil C-05/200",vd:0.338333,peso:12.4},
+  {item:"264150-5",desc:"Perfil C-12/150",vd:0.415333,peso:15.3},
+  {item:"264200-8",desc:"Perfil C-12/200",vd:0.553333,peso:20.4},
+  {item:"264250-3",desc:"Perfil C-12/250",vd:0.692000,peso:25.5},
+  {item:"264300-6",desc:"Perfil C-12/300",vd:0.828667,peso:30.6},
+  {item:"264350-1",desc:"Perfil C-12/350",vd:0.969000,peso:35.7},
+  {item:"264400-4",desc:"Perfil C-12/400",vd:1.104667,peso:40.8},
+  {item:"264450-9",desc:"Perfil C-12/450",vd:1.235667,peso:45.9},
+  {item:"269100-5",desc:"Perfil C-7,5/100",vd:0.236333,peso:6.5},
+  {item:"269150-0",desc:"Perfil C-7,5/150",vd:0.351000,peso:9.75},
+  {item:"269200-3",desc:"Perfil C-7,5/200",vd:0.472333,peso:13.0},
+  {item:"269250-8",desc:"Perfil C-7,5/250",vd:0.589000,peso:16.25},
+  {item:"269300-1",desc:"Perfil C-7,5/300",vd:0.707333,peso:19.5},
+  {item:"269350-6",desc:"Perfil C-7,5/350",vd:0.823333,peso:22.73},
+  {item:"269400-9",desc:"Perfil C-7,5/400",vd:0.940667,peso:26.0},
+  {item:"245101-1",desc:"Pino",vd:0.012333,peso:0.22},
+  {item:"228200-4",desc:"Pino Lume",vd:0.018333,peso:0.91},
+  {item:"221160-9",desc:"Pino Plus",vd:0.022000,peso:0.5},
+  {item:"119000-8",desc:"Pino Topec",vd:0.008667,peso:0.09},
+  {item:"112203-5",desc:"Porca TS",vd:0.044333,peso:0.8},
+  {item:"228100-5",desc:"Prolongador Lume",vd:0.386333,peso:4.28},
+  {item:"241636-2",desc:"Quadro 136 LTT-2",vd:0.447000,peso:14.27},
+  {item:"241700-5",desc:"Quadro 200 LTT-2",vd:0.488000,peso:19.77},
+  {item:"222101-8",desc:"Triangulo",vd:0.089333,peso:4.11},
+  {item:"226101-4",desc:"Tripé",vd:0.158667,peso:8.06},
+  {item:"228005-1",desc:"Tripé Lume",vd:0.259333,peso:13.0},
+  {item:"251025-5",desc:"Tubo 48/025",vd:0.012000,peso:0.9},
+  {item:"251050-2",desc:"Tubo 48/050",vd:0.023667,peso:1.8},
+  {item:"251075-0",desc:"Tubo 48/075",vd:0.035667,peso:2.7},
+  {item:"251100-5",desc:"Tubo 48/100",vd:0.047333,peso:3.6},
+  {item:"251125-3",desc:"Tubo 48/125",vd:0.059333,peso:4.5},
+  {item:"251150-0",desc:"Tubo 48/150",vd:0.071000,peso:5.4},
+  {item:"251175-8",desc:"Tubo 48/175",vd:0.083000,peso:6.3},
+  {item:"251200-3",desc:"Tubo 48/200",vd:0.094667,peso:7.2},
+  {item:"251225-1",desc:"Tubo 48/225",vd:0.106667,peso:8.1},
+  {item:"251250-8",desc:"Tubo 48/250",vd:0.118333,peso:9.0},
+  {item:"251275-6",desc:"Tubo 48/275",vd:0.130333,peso:9.9},
+  {item:"251300-1",desc:"Tubo 48/300",vd:0.142000,peso:10.8},
+  {item:"251325-9",desc:"Tubo 48/325",vd:0.154000,peso:11.7},
+  {item:"251350-6",desc:"Tubo 48/350",vd:0.165667,peso:12.6},
+  {item:"251375-4",desc:"Tubo 48/375",vd:0.177667,peso:13.5},
+  {item:"251400-9",desc:"Tubo 48/400",vd:0.189333,peso:14.4},
+  {item:"251475-2",desc:"Tubo 48/475",vd:0.225000,peso:17.1}
+];
 
-const g = id => document.getElementById(id);
-const v = id => g(id)?.value ?? '';
-const fmt = n => !n&&n!==0 ? '—' : 'R$ '+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtD = s => { if(!s)return'—'; const[y,m,d]=s.split('-'); return`${d}/${m}/${y}`; };
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let user=null,obra=null;
+let tiposCache=[],pavimentosCache=[];
+let addPecaContext={tipoId:null,tabela:null}; // tabela = 'pecas_escoramento' | 'pecas_reescoramento'
+let pecasSelecionadas=new Set();
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+const g=id=>document.getElementById(id);
+const v=id=>g(id)?.value??'';
+const fmt=n=>(!n&&n!==0)?'—':'R$ '+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD=s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;};
+const addDias=(s,d)=>{if(!s)return null;const dt=new Date(s);dt.setDate(dt.getDate()+d);return dt.toISOString().slice(0,10);};
+const diffDias=(a,b)=>{if(!a||!b)return 0;return Math.round((new Date(b)-new Date(a))/86400000);};
 
 function toast(msg,type=''){
-  const t=g('toast'); t.textContent=msg; t.className=`toast show ${type}`;
+  const t=g('toast');t.textContent=msg;t.className=`toast show ${type}`;
   setTimeout(()=>t.className='toast',3000);
 }
-function loading(){ g('content-area').innerHTML='<div class="loading"><div class="spinner"></div></div>'; }
-function fecharModal(id){ g(id).classList.remove('open'); }
-function abrirModal(id){ g(id).classList.add('open'); }
-function semObra(){ g('content-area').innerHTML='<div class="alert alert-amber" style="margin:20px"><span>⚠️</span><span>Selecione uma obra em <strong>Minhas Obras</strong> primeiro.</span></div>'; }
+function loading(){g('content-area').innerHTML='<div class="loading"><div class="spinner"></div></div>';}
+function fecharModal(id){g(id).classList.remove('open');}
+function abrirModal(id){g(id).classList.add('open');}
+function semObra(){g('content-area').innerHTML='<div class="alert alert-amber" style="margin:20px"><span>⚠️</span><span>Selecione uma obra em <strong>Minhas Obras</strong> primeiro.</span></div>';}
 
-// ── AUTH ──────────────────────────────────────────────────
-async function fazerLogin(){
-  const email=v('login-email').trim(), senha=v('login-senha');
-  const btn=g('btn-login'), erro=g('login-erro');
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+async function login(){
+  const email=v('login-email').trim(),senha=v('login-senha');
+  const btn=g('btn-login'),erro=g('login-erro');
   erro.textContent='';
   if(!email||!senha){erro.textContent='Preencha e-mail e senha.';return;}
-  btn.disabled=true; btn.textContent='Entrando...';
+  btn.disabled=true;btn.textContent='Entrando...';
   const{data,error}=await db.auth.signInWithPassword({email,password:senha});
-  btn.disabled=false; btn.textContent='Entrar';
-  if(error){
-    erro.textContent=error.message.includes('Invalid')?'E-mail ou senha incorretos.':error.message;
-    return;
-  }
+  btn.disabled=false;btn.textContent='Entrar';
+  if(error){erro.textContent=error.message.includes('Invalid')?'E-mail ou senha incorretos.':error.message;return;}
   iniciarApp(data.user);
 }
 
-async function fazerLogout(){
+async function logout(){
   await db.auth.signOut();
-  user=null; obra=null; lajesCache=[]; tiposCache=[];
+  user=null;obra=null;
   g('screen-app').style.display='none';
   g('screen-login').style.display='flex';
-  g('login-email').value=''; g('login-senha').value='';
-  g('login-erro').textContent='';
+  g('login-email').value='';g('login-senha').value='';
 }
 
 async function checarSessao(){
-  try{
-    const{data:{session}}=await db.auth.getSession();
-    if(session?.user) iniciarApp(session.user);
-  }catch(e){console.error('Sessão:',e);}
+  try{const{data:{session}}=await db.auth.getSession();if(session?.user)iniciarApp(session.user);}
+  catch(e){console.error(e);}
 }
 
 function iniciarApp(u){
@@ -308,25 +483,32 @@ function iniciarApp(u){
 }
 
 async function verificarAdmin(){
-  const{data}=await db.from('profiles').select('is_admin').eq('id',user.id).single();
-  if(data?.is_admin){ user.isAdmin=true; g('nav-admin').style.display='flex'; }
+  try{
+    const{data}=await db.from('profiles').select('is_admin').eq('id',user.id).single();
+    if(data?.is_admin){user.isAdmin=true;g('nav-admin').style.display='flex';}
+  }catch(e){}
 }
 
-// ── NAV ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// NAVEGAÇÃO
+// ═══════════════════════════════════════════════════
 function nav(p){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   g(`nav-${p}`)?.classList.add('active');
-  ({obras:renderObras,projeto:renderProjeto,lajes:renderLajes,pecas:renderPecas,resumo:renderResumo,admin:renderAdmin})[p]?.();
+  ({obras:renderObras,projeto:renderProjeto,tipos:renderTipos,pavimentos:renderPavimentos,cronograma:renderCronograma,custos:renderCustos,admin:renderAdmin})[p]?.();
 }
 
-// ── OBRAS ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// OBRAS
+// ═══════════════════════════════════════════════════
 async function renderObras(){
   loading();
   const{data:obras,error}=await db.from('obras').select('*').order('created_at',{ascending:false});
   if(error){g('content-area').innerHTML=`<div class="alert alert-red" style="margin:20px">Erro: ${error.message}</div>`;return;}
-  let html=`<div class="page-title">Minhas Obras</div><div class="page-sub">Selecione uma obra ou crie uma nova.</div><div style="margin-bottom:20px"><button class="btn btn-primary" onclick="novaObra()">+ Nova Obra</button></div>`;
+  let html=`<div class="page-title">Minhas Obras</div><div class="page-sub">Selecione ou crie uma nova obra.</div>
+    <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="novaObra()">+ Nova Obra</button></div>`;
   if(!obras?.length){
-    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra cadastrada. Clique em <strong>Nova Obra</strong>.</span></div>`;
+    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhuma obra. Clique em <strong>Nova Obra</strong>.</span></div>`;
   }else{
     html+='<div class="obra-list">';
     obras.forEach(o=>{
@@ -339,7 +521,7 @@ async function renderObras(){
         <div class="obra-card-meta">Contrato: ${o.contrato||'—'} · ${o.fornecedor||'—'}</div>
         <div class="obra-card-footer">
           <span style="font-size:11px;color:var(--ink-soft)">${o.total_lajes||0} lajes · ${o.jogos||1} jogo(s)</span>
-          <div style="display:flex;gap:6px">
+          <div style="display:flex;gap:5px">
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarObra('${o.id}')">✏️</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarObra('${o.id}')">✕</button>
           </div>
@@ -352,65 +534,56 @@ async function renderObras(){
 }
 
 function novaObra(){
-  g('modal-obra-title').textContent='Nova Obra';
-  g('mo-id').value='';
-  ['mo-nome','mo-contrato','mo-fornecedor','mo-inicio','mo-pav','mo-lajes','mo-vmensal','mo-vtotal','mo-frete'].forEach(id=>{const e=g(id);if(e)e.value='';});
-  g('mo-jogos').value='1';
-  abrirModal('modal-obra');
+  g('modal-obra-title').textContent='Nova Obra';g('mo-id').value='';
+  ['mo-nome','mo-contrato','mo-fornecedor','mo-inicio','mo-pav','mo-lajes','mo-vtotal','mo-frete'].forEach(id=>{const e=g(id);if(e)e.value='';});
+  g('mo-jogos').value='1';abrirModal('modal-obra');
 }
 
 async function editarObra(id){
   const{data:o}=await db.from('obras').select('*').eq('id',id).single();
   if(!o)return;
-  g('modal-obra-title').textContent='Editar Obra';
-  g('mo-id').value=o.id; g('mo-nome').value=o.nome||''; g('mo-contrato').value=o.contrato||'';
-  g('mo-fornecedor').value=o.fornecedor||''; g('mo-inicio').value=o.inicio||'';
-  g('mo-pav').value=o.pavimentos||''; g('mo-lajes').value=o.total_lajes||'';
-  g('mo-jogos').value=o.jogos||1; g('mo-vmensal').value=o.valor_mensal||'';
-  g('mo-vtotal').value=o.valor_total||''; g('mo-frete').value=o.frete||'';
+  g('modal-obra-title').textContent='Editar Obra';g('mo-id').value=o.id;
+  g('mo-nome').value=o.nome||'';g('mo-contrato').value=o.contrato||'';g('mo-fornecedor').value=o.fornecedor||'';
+  g('mo-inicio').value=o.inicio||'';g('mo-pav').value=o.pavimentos||'';g('mo-lajes').value=o.total_lajes||'';
+  g('mo-jogos').value=o.jogos||1;g('mo-vtotal').value=o.valor_total||'';g('mo-frete').value=o.frete||'';
   abrirModal('modal-obra');
 }
 
 async function salvarObra(){
-  const nome=v('mo-nome').trim();
-  if(!nome){toast('Informe o nome','error');return;}
-  const btn=g('btn-salvar-obra');
-  btn.disabled=true; btn.textContent='Salvando...';
-  const payload={user_id:user.id,nome,contrato:v('mo-contrato'),fornecedor:v('mo-fornecedor'),inicio:v('mo-inicio')||null,pavimentos:parseInt(v('mo-pav'))||null,total_lajes:parseInt(v('mo-lajes'))||null,jogos:parseInt(v('mo-jogos'))||1,valor_mensal:parseFloat(v('mo-vmensal'))||null,valor_total:parseFloat(v('mo-vtotal'))||null,frete:parseFloat(v('mo-frete'))||null,updated_at:new Date().toISOString()};
-  const obraId=v('mo-id');
-  let error,data;
+  const nome=v('mo-nome').trim();if(!nome){toast('Informe o nome','error');return;}
+  const btn=g('btn-salvar-obra');btn.disabled=true;btn.textContent='Salvando...';
+  const payload={user_id:user.id,nome,contrato:v('mo-contrato'),fornecedor:v('mo-fornecedor'),inicio:v('mo-inicio')||null,pavimentos:parseInt(v('mo-pav'))||null,total_lajes:parseInt(v('mo-lajes'))||null,jogos:parseInt(v('mo-jogos'))||1,valor_total:parseFloat(v('mo-vtotal'))||null,frete:parseFloat(v('mo-frete'))||null,updated_at:new Date().toISOString()};
+  const obraId=v('mo-id');let error,data;
   if(obraId){({error}=await db.from('obras').update(payload).eq('id',obraId));}
   else{({data,error}=await db.from('obras').insert(payload).select().single());if(data){obra=data;g('sb-obra-nome').textContent=obra.nome;}}
-  btn.disabled=false; btn.textContent='Salvar';
+  btn.disabled=false;btn.textContent='Salvar';
   if(error){toast('Erro: '+error.message,'error');return;}
-  toast('Obra salva!','success');
-  fecharModal('modal-obra');
-  renderObras();
+  toast('Obra salva!','success');fecharModal('modal-obra');renderObras();
 }
 
 async function selecionarObra(id){
   const{data:o}=await db.from('obras').select('*').eq('id',id).single();
   if(!o)return;
-  obra=o; g('sb-obra-nome').textContent=o.nome;
-  toast(`"${o.nome}" selecionada`,'success');
-  nav('projeto');
+  obra=o;g('sb-obra-nome').textContent=o.nome;
+  toast(`"${o.nome}" selecionada`,'success');nav('tipos');
 }
 
 async function deletarObra(id){
-  if(!confirm('Deletar esta obra e todos os dados?'))return;
+  if(!confirm('Deletar esta obra?'))return;
   await db.from('obras').delete().eq('id',id);
   if(obra?.id===id){obra=null;g('sb-obra-nome').textContent='—';}
-  toast('Obra removida','success');
-  renderObras();
+  toast('Removida','success');renderObras();
 }
 
-// ── PROJETO ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// PROJETO
+// ═══════════════════════════════════════════════════
 async function renderProjeto(){
   if(!obra){semObra();return;}
   const o=obra;
   g('content-area').innerHTML=`
     <div class="page-title">Dados do Projeto</div>
-    <div class="page-sub">Informações gerais e contratuais.</div>
+    <div class="page-sub">Informações gerais da obra e do contrato.</div>
     <div class="card"><div class="card-head"><span class="card-head-title">Identificação</span></div><div class="card-body">
       <div class="fg fg2">
         <div class="field"><label>Nome</label><input type="text" id="pj-nome" value="${o.nome||''}"></div>
@@ -423,326 +596,680 @@ async function renderProjeto(){
       <div class="fg fg3">
         <div class="field"><label>Nº Pavimentos</label><input type="number" id="pj-pav" value="${o.pavimentos||''}"></div>
         <div class="field"><label>Nº Lajes</label><input type="number" id="pj-lajes" value="${o.total_lajes||''}"></div>
-        <div class="field"><label>Jogos</label><select id="pj-jogos"><option value="1" ${o.jogos==1?'selected':''}>1 jogo</option><option value="2" ${o.jogos==2?'selected':''}>2 jogos</option><option value="3" ${o.jogos==3?'selected':''}>3 jogos</option></select></div>
-      </div>
-    </div></div>
-    <div class="card"><div class="card-head"><span class="card-head-title">Contrato</span></div><div class="card-body">
-      <div class="fg fg3">
-        <div class="field"><label>Valor Mensal (R$)</label><input type="number" id="pj-vmensal" value="${o.valor_mensal||''}" step="0.01"></div>
-        <div class="field"><label>Valor Total (R$)</label><input type="number" id="pj-vtotal" value="${o.valor_total||''}" step="0.01"></div>
+        <div class="field"><label>Jogos</label><select id="pj-jogos"><option value="1" ${o.jogos==1?'selected':''}>1</option><option value="2" ${o.jogos==2?'selected':''}>2</option><option value="3" ${o.jogos==3?'selected':''}>3</option></select></div>
+        <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="pj-vtotal" value="${o.valor_total||''}" step="0.01"></div>
         <div class="field"><label>Frete (R$)</label><input type="number" id="pj-frete" value="${o.frete||''}" step="0.01"></div>
       </div>
     </div></div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-primary" onclick="salvarProjeto()">💾 Salvar</button>
-      <button class="btn btn-ghost" onclick="nav('lajes')">Próximo: Lajes →</button>
+      <button class="btn btn-ghost" onclick="nav('tipos')">→ Tipos de Pavimento</button>
     </div>`;
 }
 
 async function salvarProjeto(){
   if(!obra)return;
-  const payload={nome:v('pj-nome'),contrato:v('pj-contrato'),fornecedor:v('pj-fornecedor'),inicio:v('pj-inicio')||null,pavimentos:parseInt(v('pj-pav'))||null,total_lajes:parseInt(v('pj-lajes'))||null,jogos:parseInt(v('pj-jogos'))||1,valor_mensal:parseFloat(v('pj-vmensal'))||null,valor_total:parseFloat(v('pj-vtotal'))||null,frete:parseFloat(v('pj-frete'))||null,updated_at:new Date().toISOString()};
+  const payload={nome:v('pj-nome'),contrato:v('pj-contrato'),fornecedor:v('pj-fornecedor'),inicio:v('pj-inicio')||null,pavimentos:parseInt(v('pj-pav'))||null,total_lajes:parseInt(v('pj-lajes'))||null,jogos:parseInt(v('pj-jogos'))||1,valor_total:parseFloat(v('pj-vtotal'))||null,frete:parseFloat(v('pj-frete'))||null,updated_at:new Date().toISOString()};
   const{error}=await db.from('obras').update(payload).eq('id',obra.id);
   if(error){toast('Erro: '+error.message,'error');return;}
-  Object.assign(obra,payload);
-  g('sb-obra-nome').textContent=obra.nome;
+  Object.assign(obra,payload);g('sb-obra-nome').textContent=obra.nome;
   toast('Salvo!','success');
 }
 
-// ── LAJES ─────────────────────────────────────────────────
-async function renderLajes(){
+// ═══════════════════════════════════════════════════
+// TIPOS DE PAVIMENTO
+// ═══════════════════════════════════════════════════
+async function renderTipos(){
   if(!obra){semObra();return;}
   loading();
-  const{data}=await db.from('lajes').select('*').eq('obra_id',obra.id).order('ordem');
-  lajesCache=data||[];
+  const{data}=await db.from('tipos_pavimento').select('*, pecas_escoramento(*), pecas_reescoramento(*)').eq('obra_id',obra.id).order('created_at');
+  tiposCache=data||[];
+
   let html=`
-    <div class="page-title">Lajes & Ciclos</div>
-    <div class="page-sub">Cadastre as lajes com datas e parâmetros de escoramento.</div>
-    <div class="alert alert-info"><span>ℹ️</span><span><strong>Escoramento</strong>: dias suportando a laje. <strong>Reescoramento</strong>: após a cura, garantindo resistência mínima.</span></div>
-    <div class="card"><div class="card-head"><span class="card-head-title">⚙️ Parâmetros Padrão</span></div><div class="card-body">
-      <div class="fg fg3">
-        <div class="field"><label>Dias esc. pós-concret.</label><input type="number" id="pd-esc" value="3" min="1"></div>
-        <div class="field"><label>Início reesc. (dias)</label><input type="number" id="pd-inireesc" value="7" min="1"></div>
-        <div class="field"><label>Duração reesc. (dias)</label><input type="number" id="pd-durreesc" value="28" min="1"></div>
-      </div>
-      <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="adicionarLaje()">+ Adicionar Laje com esses parâmetros</button></div>
-    </div></div>`;
-  if(!lajesCache.length){html+=`<div class="alert alert-amber"><span>⚠️</span><span>Nenhuma laje cadastrada ainda.</span></div>`;}
-  else{html+='<div id="lajes-list">'+lajesCache.map(renderLajeItem).join('')+'</div>';}
-  html+=`<button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:8px" onclick="adicionarLaje()">+ Adicionar Laje</button>
-    <div style="margin-top:20px;display:flex;gap:10px">
+    <div class="page-title">Tipos de Pavimento</div>
+    <div class="page-sub">Defina os tipos (ex: Tipo A, Garagem, Lazer) com suas listas de peças e parâmetros de ciclo.</div>
+    <div class="alert alert-info"><span>ℹ️</span><span>Cada tipo tem sua própria lista de peças de <strong>escoramento</strong> e <strong>reescoramento</strong>, além dos parâmetros do ciclo.</span></div>
+    <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="novoTipo()">+ Novo Tipo de Pavimento</button></div>
+    <div id="tipos-list">`;
+
+  if(!tiposCache.length){
+    html+=`<div class="alert alert-amber"><span>⚠️</span><span>Nenhum tipo cadastrado. Crie o primeiro tipo de pavimento.</span></div>`;
+  }else{
+    tiposCache.forEach(t=>{html+=renderTipoCard(t);});
+  }
+  html+=`</div>
+    <div style="margin-top:16px;display:flex;gap:10px">
       <button class="btn btn-ghost" onclick="nav('projeto')">← Projeto</button>
-      <button class="btn btn-ghost" onclick="nav('pecas')">Próximo: Peças →</button>
+      <button class="btn btn-ghost" onclick="nav('pavimentos')">→ Pavimentos</button>
     </div>`;
   g('content-area').innerHTML=html;
 }
 
-function renderLajeItem(l){
-  const t=(l.dias_esc||3)+(l.ini_reesc||7)+(l.dur_reesc||28);
-  const pE=(((l.dias_esc||3)/t)*100).toFixed(1);
-  const pG=(((l.ini_reesc||7)/t)*100).toFixed(1);
-  const pR=(((l.dur_reesc||28)/t)*100).toFixed(1);
-  return `<div class="laje-item" id="li-${l.id}">
-    <div class="laje-item-head" onclick="toggleLaje('${l.id}')">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="laje-item-title">${l.nome||'Sem nome'}</span>
-        ${l.pavimento?`<span class="chip chip-gray">${l.pavimento}</span>`:''}
-        ${l.concretagem?`<span class="chip chip-blue">${fmtD(l.concretagem)}</span>`:'<span class="chip chip-amber">sem data</span>'}
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft)">Ciclo: ${t}d</span>
-        <button class="btn btn-success btn-sm" onclick="event.stopPropagation();salvarLaje('${l.id}')">💾</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarLaje('${l.id}')">✕</button>
-      </div>
-    </div>
-    <div class="laje-item-body collapsed" id="lib-${l.id}">
-      <div class="fg" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
-        <div class="field"><label>Nome</label><input type="text" id="lf-nome-${l.id}" value="${l.nome||''}" placeholder="Ex: Laje 10"></div>
-        <div class="field"><label>Pavimento</label><input type="text" id="lf-pav-${l.id}" value="${l.pavimento||''}" placeholder="Ex: 10º Tipo A"></div>
-        <div class="field"><label>Concretagem</label><input type="date" id="lf-concret-${l.id}" value="${l.concretagem||''}"></div>
-        <div class="field"><label>Dias esc. pós-concret.</label><input type="number" id="lf-esc-${l.id}" value="${l.dias_esc||3}" min="1"></div>
-        <div class="field"><label>Início reesc. (dias)</label><input type="number" id="lf-inireesc-${l.id}" value="${l.ini_reesc||7}" min="1"></div>
-        <div class="field"><label>Duração reesc. (dias)</label><input type="number" id="lf-durreesc-${l.id}" value="${l.dur_reesc||28}" min="1"></div>
-      </div>
-      <div style="margin-top:12px">
-        <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:4px">Visualização do ciclo</div>
-        <div class="cycle-bar">
-          <div class="cycle-seg" style="width:${pE}%;background:#1d4ed8">Esc ${l.dias_esc||3}d</div>
-          <div class="cycle-seg" style="width:${pG}%;background:#9ca3af">Espera</div>
-          <div class="cycle-seg" style="width:${pR}%;background:#15803d">Reesc ${l.dur_reesc||28}d</div>
+function renderTipoCard(t){
+  const taxaEsc=(t.pecas_escoramento||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0);
+  const taxaReesc=(t.pecas_reescoramento||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0);
+  const diasEsc=(t.log_antes||3)+(t.dias_exec||30)+(t.dias_apos_concret||3)+(t.log_movimentacao||3);
+  const diasReesc=t.dur_reesc||21;
+  const custoEsc=taxaEsc*diasEsc;
+  const custoReesc=taxaReesc*diasReesc;
+  const total=diasEsc+diasReesc+(t.log_depois||3);
+  const pE=((diasEsc/total)*100).toFixed(1);
+  const pR=((diasReesc/total)*100).toFixed(1);
+  const pD=(((t.log_depois||3)/total)*100).toFixed(1);
+
+  return `
+    <div class="tipo-card" id="tc-${t.id}">
+      <div class="tipo-card-head" onclick="toggleTipo('${t.id}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${t.cor||'#1d4ed8'};flex-shrink:0"></div>
+          <span class="tipo-card-title">${t.nome}</span>
+          ${t.descricao?`<span class="chip chip-gray">${t.descricao}</span>`:''}
+          <span class="chip chip-blue">${(t.pecas_escoramento||[]).length} peças esc.</span>
+          <span class="chip chip-green">${(t.pecas_reescoramento||[]).length} peças reesc.</span>
         </div>
-        <div style="display:flex;gap:14px;margin-top:5px;font-size:10px;color:var(--ink-soft);font-family:var(--mono)">
-          <span>🔵 Esc: ${l.dias_esc||3}d</span><span>⚪ Espera: ${l.ini_reesc||7}d</span><span>🟢 Reesc: ${l.dur_reesc||28}d</span>
-          <span style="margin-left:auto;font-weight:600;color:var(--ink)">Total: ${t}d</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft)">${fmt(custoEsc+custoReesc)}/ciclo</span>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarTipo('${t.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarTipo('${t.id}')">✕</button>
         </div>
       </div>
-    </div>
-  </div>`;
-}
+      <div class="tipo-card-body collapsed" id="tb-${t.id}">
+        <!-- CICLO VISUAL -->
+        <div style="margin-bottom:14px">
+          <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:5px">Composição do Ciclo — ${total} dias no total</div>
+          <div class="ciclo-bar">
+            <div class="ciclo-seg" style="width:${pE}%;background:#1d4ed8" title="Escoramento: ${diasEsc}d">Esc ${diasEsc}d</div>
+            <div class="ciclo-seg" style="width:${pR}%;background:#15803d" title="Reescoramento: ${diasReesc}d">Reesc ${diasReesc}d</div>
+            <div class="ciclo-seg" style="width:${pD}%;background:#9ca3af" title="Log. depois: ${t.log_depois||3}d">Log</div>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:5px;font-size:10px;color:var(--ink-soft);font-family:var(--mono)">
+            <span>🔵 Log.antes: ${t.log_antes||3}d · Exec: ${t.dias_exec||30}d · Pós: ${t.dias_apos_concret||3}d · Log.mov: ${t.log_movimentacao||3}d = <strong>${diasEsc}d</strong></span>
+            <span style="margin-left:auto">🟢 Reesc min: ${t.dur_reesc||21}d</span>
+          </div>
+        </div>
 
-function toggleLaje(id){g(`lib-${id}`)?.classList.toggle('collapsed');}
+        <!-- FINANCEIRO RESUMO -->
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1;background:var(--accent-lt);border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Custo Escoramento</div>
+            <div style="font-family:var(--display);font-size:16px;font-weight:700">${fmt(custoEsc)}</div>
+            <div style="font-size:11px;color:var(--ink-soft)">${diasEsc} dias × R$ ${taxaEsc.toFixed(4)}/dia</div>
+          </div>
+          <div style="flex:1;background:var(--green-lt);border:1px solid #bbf7d0;border-radius:6px;padding:10px 14px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Custo Reescoramento</div>
+            <div style="font-family:var(--display);font-size:16px;font-weight:700">${fmt(custoReesc)}</div>
+            <div style="font-size:11px;color:var(--ink-soft)">${diasReesc} dias × R$ ${taxaReesc.toFixed(4)}/dia</div>
+          </div>
+          <div style="flex:1;background:#fafafa;border:1px solid var(--rule);border-radius:6px;padding:10px 14px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Total por Pavimento</div>
+            <div style="font-family:var(--display);font-size:16px;font-weight:700">${fmt(custoEsc+custoReesc)}</div>
+            <div style="font-size:11px;color:var(--ink-soft)">${total} dias no total</div>
+          </div>
+        </div>
 
-async function adicionarLaje(){
-  if(!obra)return;
-  const payload={obra_id:obra.id,nome:`Laje ${lajesCache.length+1}`,pavimento:'',concretagem:null,dias_esc:parseInt(v('pd-esc'))||3,ini_reesc:parseInt(v('pd-inireesc'))||7,dur_reesc:parseInt(v('pd-durreesc'))||28,ordem:lajesCache.length};
-  const{data,error}=await db.from('lajes').insert(payload).select().single();
-  if(error){toast('Erro: '+error.message,'error');return;}
-  lajesCache.push(data);
-  let list=g('lajes-list');
-  if(!list){
-    g('content-area').querySelector('.alert-amber')?.remove();
-    list=document.createElement('div'); list.id='lajes-list';
-    g('content-area').querySelector('.btn-add').insertAdjacentElement('beforebegin',list);
-  }
-  list.insertAdjacentHTML('beforeend',renderLajeItem(data));
-  toast('Laje adicionada!','success');
-}
+        <!-- TABS PEÇAS -->
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('${t.id}','esc')" id="tab-esc-${t.id}">🔵 Escoramento (${(t.pecas_escoramento||[]).length} peças)</div>
+          <div class="tab" onclick="switchTab('${t.id}','reesc')" id="tab-reesc-${t.id}">🟢 Reescoramento (${(t.pecas_reescoramento||[]).length} peças)</div>
+        </div>
 
-async function salvarLaje(id){
-  const payload={nome:v(`lf-nome-${id}`),pavimento:v(`lf-pav-${id}`),concretagem:v(`lf-concret-${id}`)||null,dias_esc:parseInt(v(`lf-esc-${id}`))||3,ini_reesc:parseInt(v(`lf-inireesc-${id}`))||7,dur_reesc:parseInt(v(`lf-durreesc-${id}`))||28};
-  const{error}=await db.from('lajes').update(payload).eq('id',id);
-  if(error){toast('Erro: '+error.message,'error');return;}
-  const idx=lajesCache.findIndex(l=>l.id===id);
-  if(idx>=0)Object.assign(lajesCache[idx],payload);
-  toast('Laje salva!','success');
-  renderLajes();
-}
+        <!-- PEÇAS ESCORAMENTO -->
+        <div class="tab-panel active" id="panel-esc-${t.id}">
+          ${renderTabelaPecas(t,'pecas_escoramento')}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-add btn-sm" onclick="abrirAddPeca('${t.id}','pecas_escoramento')">+ Da lista base (78 peças)</button>
+            <button class="btn btn-ghost btn-sm" onclick="adicionarPecaCustom('${t.id}','pecas_escoramento')">+ Item personalizado</button>
+          </div>
+        </div>
 
-async function deletarLaje(id){
-  if(!confirm('Remover esta laje?'))return;
-  await db.from('lajes').delete().eq('id',id);
-  lajesCache=lajesCache.filter(l=>l.id!==id);
-  g(`li-${id}`)?.remove();
-  toast('Laje removida','success');
-}
-
-// ── PEÇAS ─────────────────────────────────────────────────
-async function renderPecas(){
-  if(!obra){semObra();return;}
-  loading();
-  const[{data:tipos},{data:log}]=await Promise.all([
-    db.from('tipos_laje').select('*, pecas(*)').eq('obra_id',obra.id).order('created_at'),
-    db.from('logistica').select('*').eq('obra_id',obra.id).maybeSingle(),
-  ]);
-  tiposCache=tipos||[];
-  const antes=log?.dias_antes??3, depois=log?.dias_depois??5;
-  g('content-area').innerHTML=`
-    <div class="page-title">Peças & Custos</div>
-    <div class="page-sub">Grupos de peças por tipo de laje e valores diários.</div>
-    <div class="card"><div class="card-head"><span class="card-head-title">⏱ Tempo Ocioso (Logística)</span></div><div class="card-body">
-      <div class="fg fg2">
-        <div class="field"><label>Peças chegam X dias ANTES do ciclo</label><input type="number" id="log-antes" value="${antes}" min="0"></div>
-        <div class="field"><label>Peças saem X dias DEPOIS do ciclo</label><input type="number" id="log-depois" value="${depois}" min="0"></div>
+        <!-- PEÇAS REESCORAMENTO -->
+        <div class="tab-panel" id="panel-reesc-${t.id}">
+          ${renderTabelaPecas(t,'pecas_reescoramento')}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-add btn-sm" onclick="abrirAddPeca('${t.id}','pecas_reescoramento')">+ Da lista base (78 peças)</button>
+            <button class="btn btn-ghost btn-sm" onclick="adicionarPecaCustom('${t.id}','pecas_reescoramento')">+ Item personalizado</button>
+          </div>
+        </div>
       </div>
-      <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="salvarLogistica('${log?.id||''}')">💾 Salvar logística</button></div>
-      <div class="alert alert-amber" style="margin-top:12px;margin-bottom:0"><span>⚠️</span><span>Período locado mas <strong>não utilizado</strong> — custo ocioso exibido separado no resumo.</span></div>
-    </div></div>
-    <div id="tipos-list">${tiposCache.map(renderTipoCard).join('')}</div>
-    <button class="btn btn-add" style="width:100%;justify-content:center;padding:12px;margin-top:4px" onclick="adicionarTipo()">+ Adicionar Grupo de Peças</button>
-    <div style="margin-top:20px;display:flex;gap:10px">
-      <button class="btn btn-ghost" onclick="nav('lajes')">← Lajes</button>
-      <button class="btn btn-ghost" onclick="nav('resumo')">Ver Resumo →</button>
     </div>`;
 }
 
-function renderTipoCard(t){
-  const total=(t.pecas||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0);
-  return `<div class="card" id="tc-${t.id}" style="margin-bottom:14px">
-    <div class="card-head">
-      <input type="text" id="tn-${t.id}" value="${t.nome||''}" style="border:none;font-family:var(--display);font-size:13px;font-weight:700;outline:none;background:transparent;flex:1" onblur="salvarTipoNome('${t.id}')">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">R$ ${total.toFixed(3)}/dia</span>
-        <button class="btn btn-danger btn-sm" onclick="deletarTipo('${t.id}')">✕</button>
-      </div>
-    </div>
-    <div>
-      <table class="tbl">
-        <thead><tr><th>Descrição</th><th>Qtd</th><th>Valor/Dia (R$)</th><th>Subtotal/Dia</th><th></th></tr></thead>
-        <tbody id="pb-${t.id}">${(t.pecas||[]).map(p=>renderPecaRow(p,t.id)).join('')}</tbody>
-        <tfoot><tr><td colspan="3">Total diário</td><td class="num">R$ ${total.toFixed(3)}</td><td></td></tr></tfoot>
-      </table>
-      <div style="padding:10px 14px"><button class="btn btn-add btn-sm" onclick="adicionarPeca('${t.id}')">+ Peça</button></div>
-    </div>
-  </div>`;
+function renderTabelaPecas(t,tabela){
+  const pecas=t[tabela]||[];
+  if(!pecas.length)return`<div class="alert alert-amber" style="margin-bottom:8px"><span>⚠️</span><span>Nenhuma peça adicionada ainda.</span></div>`;
+  const total=pecas.reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0);
+  return`<div class="tbl-wrap"><table class="tbl">
+    <thead><tr>
+      <th>Código</th><th>Descrição</th><th>Qtd</th><th>Valor/Dia (R$)</th><th>Subtotal/Dia</th><th>Peso Total (kg)</th><th></th>
+    </tr></thead>
+    <tbody id="pb-${tabela}-${t.id}">
+      ${pecas.map(p=>`<tr id="pr-${tabela}-${p.id}">
+        <td class="mono">${p.item_codigo||'—'}</td>
+        <td style="font-size:12px">${p.descricao}${p.personalizado?'<span class="chip chip-amber" style="margin-left:5px">custom</span>':''}</td>
+        <td><input class="ii" type="number" id="pq-${p.id}" value="${p.quantidade||0}" style="width:65px" onblur="salvarPeca('${p.id}','${tabela}','${t.id}')"></td>
+        <td class="num">R$ ${Number(p.valor_dia||0).toFixed(6)}</td>
+        <td class="num" id="ps-${p.id}">R$ ${((p.quantidade||0)*(p.valor_dia||0)).toFixed(4)}</td>
+        <td class="num">${((p.quantidade||0)*(p.peso_unit||0)).toFixed(2)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deletarPeca('${p.id}','${tabela}','${t.id}')">✕</button></td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot><tr>
+      <td colspan="4">Total diário</td>
+      <td class="num">R$ ${total.toFixed(4)}</td>
+      <td class="num">${pecas.reduce((s,p)=>s+(p.quantidade||0)*(p.peso_unit||0),0).toFixed(2)} kg</td>
+      <td></td>
+    </tr></tfoot>
+  </table></div>`;
 }
 
-function renderPecaRow(p,tid){
-  return `<tr id="pr-${p.id}">
-    <td><input class="ii" type="text" id="pd-desc-${p.id}" value="${p.descricao||''}" placeholder="Ex: Escora Plus Fêmea" onblur="salvarPeca('${p.id}','${tid}')"></td>
-    <td><input class="ii" type="number" id="pd-qtd-${p.id}" value="${p.quantidade||''}" placeholder="0" style="width:80px" onblur="salvarPeca('${p.id}','${tid}')"></td>
-    <td><input class="ii" type="number" id="pd-vd-${p.id}" value="${p.valor_dia||''}" placeholder="0.000" step="0.001" onblur="salvarPeca('${p.id}','${tid}')"></td>
-    <td class="num" id="ps-${p.id}">R$ ${((p.quantidade||0)*(p.valor_dia||0)).toFixed(2)}</td>
-    <td><button class="btn btn-danger btn-sm" onclick="deletarPeca('${p.id}','${tid}')">✕</button></td>
-  </tr>`;
+function switchTab(tipoId,aba){
+  ['esc','reesc'].forEach(a=>{
+    g(`tab-${a}-${tipoId}`)?.classList.toggle('active',a===aba);
+    g(`panel-${a}-${tipoId}`)?.classList.toggle('active',a===aba);
+  });
 }
 
-async function salvarLogistica(logId){
-  const payload={obra_id:obra.id,dias_antes:parseInt(v('log-antes'))||0,dias_depois:parseInt(v('log-depois'))||0};
-  const{error}=logId?await db.from('logistica').update(payload).eq('id',logId):await db.from('logistica').insert(payload);
+function toggleTipo(id){g(`tb-${id}`)?.classList.toggle('collapsed');}
+
+function novoTipo(){
+  g('modal-tipo-title').textContent='Novo Tipo de Pavimento';g('mt-id').value='';
+  g('mt-nome').value='';g('mt-desc').value='';
+  g('mt-log-antes').value=3;g('mt-dias-exec').value=30;g('mt-dias-apos').value=3;
+  g('mt-log-mov').value=3;g('mt-dur-reesc').value=21;g('mt-log-depois').value=3;
+  abrirModal('modal-tipo');
+}
+
+async function editarTipo(id){
+  const t=tiposCache.find(x=>x.id===id);if(!t)return;
+  g('modal-tipo-title').textContent='Editar Tipo';g('mt-id').value=t.id;
+  g('mt-nome').value=t.nome||'';g('mt-desc').value=t.descricao||'';
+  g('mt-log-antes').value=t.log_antes||3;g('mt-dias-exec').value=t.dias_exec||30;
+  g('mt-dias-apos').value=t.dias_apos_concret||3;g('mt-log-mov').value=t.log_movimentacao||3;
+  g('mt-dur-reesc').value=t.dur_reesc||21;g('mt-log-depois').value=t.log_depois||3;
+  abrirModal('modal-tipo');
+}
+
+async function salvarTipo(){
+  const nome=v('mt-nome').trim();if(!nome){toast('Informe o nome','error');return;}
+  const btn=g('btn-salvar-tipo');btn.disabled=true;btn.textContent='Salvando...';
+  const payload={obra_id:obra.id,nome,descricao:v('mt-desc'),log_antes:parseInt(v('mt-log-antes'))||3,dias_exec:parseInt(v('mt-dias-exec'))||30,dias_apos_concret:parseInt(v('mt-dias-apos'))||3,log_movimentacao:parseInt(v('mt-log-mov'))||3,dur_reesc:parseInt(v('mt-dur-reesc'))||21,log_depois:parseInt(v('mt-log-depois'))||3};
+  const id=v('mt-id');let error;
+  if(id){({error}=await db.from('tipos_pavimento').update(payload).eq('id',id));}
+  else{({error}=await db.from('tipos_pavimento').insert(payload));}
+  btn.disabled=false;btn.textContent='Salvar Tipo';
   if(error){toast('Erro: '+error.message,'error');return;}
-  toast('Logística salva!','success');
+  toast('Tipo salvo!','success');fecharModal('modal-tipo');renderTipos();
 }
-
-async function adicionarTipo(){
-  if(!obra)return;
-  const{data,error}=await db.from('tipos_laje').insert({obra_id:obra.id,nome:`Tipo ${tiposCache.length+1}`}).select('*, pecas(*)').single();
-  if(error){toast('Erro: '+error.message,'error');return;}
-  tiposCache.push(data);
-  g('tipos-list').insertAdjacentHTML('beforeend',renderTipoCard(data));
-  toast('Grupo adicionado!','success');
-}
-
-async function salvarTipoNome(id){await db.from('tipos_laje').update({nome:v(`tn-${id}`)}).eq('id',id);}
 
 async function deletarTipo(id){
-  if(!confirm('Remover grupo e peças?'))return;
-  await db.from('tipos_laje').delete().eq('id',id);
-  tiposCache=tiposCache.filter(t=>t.id!==id);
-  g(`tc-${id}`)?.remove();
-  toast('Grupo removido','success');
+  if(!confirm('Remover este tipo e todas as suas peças?'))return;
+  await db.from('tipos_pavimento').delete().eq('id',id);
+  toast('Removido','success');renderTipos();
 }
 
-async function adicionarPeca(tipoId){
-  const{data,error}=await db.from('pecas').insert({tipo_id:tipoId,descricao:'',quantidade:0,valor_dia:0}).select().single();
+// ═══════════════════════════════════════════════════
+// PEÇAS
+// ═══════════════════════════════════════════════════
+function abrirAddPeca(tipoId,tabela){
+  addPecaContext={tipoId,tabela};
+  pecasSelecionadas.clear();
+  g('filtro-peca').value='';
+  renderListaPecasModal(PECAS_BASE);
+  abrirModal('modal-add-peca');
+}
+
+function renderListaPecasModal(lista){
+  const tipo=tiposCache.find(t=>t.id===addPecaContext.tipoId);
+  const jaAdicionados=new Set((tipo?.[addPecaContext.tabela]||[]).map(p=>p.item_codigo));
+  g('lista-pecas-modal').innerHTML=lista.map(p=>`
+    <div class="select-peca-item" onclick="togglePecaSelect('${p.item}',this)">
+      <input type="checkbox" id="ck-${p.item}" ${pecasSelecionadas.has(p.item)?'checked':''} ${jaAdicionados.has(p.item)?'disabled':''} onclick="event.stopPropagation()">
+      <div style="flex:1">
+        <div class="select-peca-nome">${p.desc} ${jaAdicionados.has(p.item)?'<span class="chip chip-gray">já adicionado</span>':''}</div>
+        <div class="select-peca-codigo">${p.item}</div>
+      </div>
+      <div class="select-peca-vd">R$ ${p.vd.toFixed(6)}/dia</div>
+    </div>`).join('');
+}
+
+function togglePecaSelect(item,el){
+  const cb=g(`ck-${item}`);if(cb?.disabled)return;
+  if(pecasSelecionadas.has(item)){pecasSelecionadas.delete(item);if(cb)cb.checked=false;}
+  else{pecasSelecionadas.add(item);if(cb)cb.checked=true;}
+}
+
+function filtrarPecas(){
+  const q=v('filtro-peca').toLowerCase();
+  const filtradas=PECAS_BASE.filter(p=>p.desc.toLowerCase().includes(q)||p.item.includes(q));
+  renderListaPecasModal(filtradas);
+}
+
+async function confirmarAddPecas(){
+  if(!pecasSelecionadas.size){toast('Selecione ao menos uma peça','error');return;}
+  const btn=g('btn-confirmar-pecas');btn.disabled=true;btn.textContent='Adicionando...';
+  const{tipoId,tabela}=addPecaContext;
+  const inserts=Array.from(pecasSelecionadas).map(item=>{
+    const p=PECAS_BASE.find(x=>x.item===item);
+    return{tipo_id:tipoId,item_codigo:p.item,descricao:p.desc,valor_dia:p.vd,peso_unit:p.peso,quantidade:0,personalizado:false};
+  });
+  const{error}=await db.from(tabela).insert(inserts);
+  btn.disabled=false;btn.textContent='Adicionar Selecionadas';
   if(error){toast('Erro: '+error.message,'error');return;}
+  toast(`${inserts.length} peça(s) adicionada(s)!`,'success');
+  fecharModal('modal-add-peca');renderTipos();
+}
+
+async function adicionarPecaCustom(tipoId,tabela){
+  const desc=prompt('Nome da peça personalizada:');if(!desc)return;
+  const vdStr=prompt('Valor por dia (R$):');if(!vdStr)return;
+  const vd=parseFloat(vdStr.replace(',','.'));
+  const{error}=await db.from(tabela).insert({tipo_id:tipoId,descricao:desc,valor_dia:vd||0,quantidade:0,personalizado:true});
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Peça adicionada!','success');renderTipos();
+}
+
+async function salvarPeca(id,tabela,tipoId){
+  const qtd=parseInt(g(`pq-${id}`)?.value)||0;
   const tipo=tiposCache.find(t=>t.id===tipoId);
-  if(tipo)tipo.pecas.push(data);
-  g(`pb-${tipoId}`)?.insertAdjacentHTML('beforeend',renderPecaRow(data,tipoId));
+  const peca=(tipo?.[tabela]||[]).find(p=>p.id===id);
+  const vd=peca?.valor_dia||0;
+  await db.from(tabela).update({quantidade:qtd}).eq('id',id);
+  const sub=g(`ps-${id}`);if(sub)sub.textContent=`R$ ${(qtd*vd).toFixed(4)}`;
+  if(peca)peca.quantidade=qtd;
 }
 
-async function salvarPeca(id,tipoId){
-  const qtd=parseInt(v(`pd-qtd-${id}`))||0, vd=parseFloat(v(`pd-vd-${id}`))||0;
-  await db.from('pecas').update({descricao:v(`pd-desc-${id}`),quantidade:qtd,valor_dia:vd}).eq('id',id);
-  const sub=g(`ps-${id}`); if(sub)sub.textContent=`R$ ${(qtd*vd).toFixed(2)}`;
-}
-
-async function deletarPeca(id,tipoId){
-  await db.from('pecas').delete().eq('id',id);
-  g(`pr-${id}`)?.remove();
+async function deletarPeca(id,tabela,tipoId){
+  if(!confirm('Remover esta peça?'))return;
+  await db.from(tabela).delete().eq('id',id);
+  g(`pr-${tabela}-${id}`)?.remove();
   const tipo=tiposCache.find(t=>t.id===tipoId);
-  if(tipo)tipo.pecas=tipo.pecas.filter(p=>p.id!==id);
+  if(tipo&&tipo[tabela])tipo[tabela]=tipo[tabela].filter(p=>p.id!==id);
+  toast('Peça removida','success');
 }
 
-// ── RESUMO ────────────────────────────────────────────────
-async function renderResumo(){
+// ═══════════════════════════════════════════════════
+// PAVIMENTOS
+// ═══════════════════════════════════════════════════
+async function renderPavimentos(){
   if(!obra){semObra();return;}
   loading();
-  const[{data:lajes},{data:tipos},{data:log}]=await Promise.all([
-    db.from('lajes').select('*').eq('obra_id',obra.id).order('ordem'),
-    db.from('tipos_laje').select('*, pecas(*)').eq('obra_id',obra.id),
-    db.from('logistica').select('*').eq('obra_id',obra.id).maybeSingle(),
+  const[{data:tipos},{data:pavs}]=await Promise.all([
+    db.from('tipos_pavimento').select('id,nome,cor').eq('obra_id',obra.id),
+    db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
   ]);
-  const ld=lajes||[], td=tipos||[];
-  const logA=log?.dias_antes??3, logD=log?.dias_depois??5;
-  const taxa=td.length>0?td[0].pecas.reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0):0;
-  let rows=[],totE=0,totR=0,totO=0,totC=0,totCC=0,totCO=0;
-  ld.forEach(l=>{
-    const dc=(l.dias_esc||3)+(l.ini_reesc||7)+(l.dur_reesc||28);
-    const dO=logA+logD, cC=dc*taxa, cO=dO*taxa;
-    totE+=l.dias_esc||3; totR+=l.dur_reesc||28; totO+=dO; totC+=dc; totCC+=cC; totCO+=cO;
-    rows.push({l,dc,dO,cC,cO});
-  });
-  const vct=obra.valor_total||0, saldo=vct-totCC, pct=vct?Math.min(100,(totCC/vct*100)):0;
-  let sC='green',sL='Dentro do orçamento',sD='Custo previsto abaixo do contrato.';
-  if(saldo<0){sC='red';sL='Estouro de contrato';sD='Custo supera o contrato.';}
-  else if(totCO>totCC*0.25){sC='red';sL='Alto custo ocioso';sD='Tempo ocioso > 25% do ciclo.';}
-  else if(saldo<vct*0.1){sC='amber';sL='Saldo baixo';sD='Saldo abaixo de 10%.';}
-  const maxC=Math.max(...rows.map(r=>r.cC+r.cO),1);
-  g('content-area').innerHTML=`
-    <div class="page-title">Resumo & Análise</div>
-    <div class="page-sub">${obra.nome} · Contrato ${obra.contrato||'—'}</div>
-    <div class="semaforo"><div class="semaforo-dot ${sC}"></div><div><span class="semaforo-label">${sL}</span><span class="semaforo-desc">— ${sD}</span></div></div>
-    <div class="kpi-row">
-      <div class="kpi-box"><div class="kpi-label">Lajes</div><div class="kpi-val">${ld.length}</div><div class="kpi-sub">de ${obra.total_lajes||'—'} previstas</div></div>
-      <div class="kpi-box amber"><div class="kpi-label">Custo Ciclos</div><div class="kpi-val" style="font-size:16px">${fmt(totCC)}</div><div class="kpi-sub">${totC} dias ativos</div></div>
-      <div class="kpi-box red"><div class="kpi-label">Custo Ocioso</div><div class="kpi-val" style="font-size:16px">${fmt(totCO)}</div><div class="kpi-sub">${totO} dias ociosos</div></div>
-      <div class="kpi-box green"><div class="kpi-label">Saldo Contratual</div><div class="kpi-val" style="font-size:16px;color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div><div class="kpi-sub">${pct.toFixed(1)}% estimado</div></div>
-    </div>
-    <div class="result-block">
-      <h3>Previsão Financeira</h3>
-      <div class="result-row"><span class="result-key">Valor Total Contrato</span><span class="result-val">${fmt(vct)}</span></div>
-      <div class="result-row"><span class="result-key">Frete</span><span class="result-val">${fmt(obra.frete)}</span></div>
-      <div class="result-row"><span class="result-key">Custo ciclos</span><span class="result-val">${fmt(totCC)}</span></div>
-      <div class="result-row"><span class="result-key">Custo tempo ocioso</span><span class="result-val vred">${fmt(totCO)}</span></div>
-      <div class="result-row"><span class="result-key">Total Geral Previsto</span><span class="result-val highlight">${fmt(totCC+totCO)}</span></div>
-      <div class="result-row"><span class="result-key">Saldo Contratual</span><span class="result-val ${saldo>=0?'vgreen':'vred'}">${fmt(saldo)}</span></div>
-      <div class="prog-wrap"><div class="prog-bar" style="width:${pct.toFixed(1)}%"></div></div>
-      <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-top:4px">${pct.toFixed(1)}% do contrato estimado</div>
-    </div>
-    <div class="card"><div class="card-head"><span class="card-head-title">📋 Detalhamento por Laje</span></div>
-      <div class="tbl-wrap"><table class="tbl">
-        <thead><tr><th>Laje</th><th>Pavimento</th><th>Concretagem</th><th>Esc.(d)</th><th>Reesc.(d)</th><th>Ocioso(d)</th><th>Total(d)</th><th>Custo Ciclo</th><th>Custo Ocioso</th></tr></thead>
-        <tbody>${rows.map(({l,dc,dO,cC,cO})=>`<tr>
-          <td><strong>${l.nome||'—'}</strong></td><td>${l.pavimento||'—'}</td>
-          <td style="font-family:var(--mono);font-size:12px">${fmtD(l.concretagem)}</td>
-          <td class="num">${l.dias_esc||3}d</td><td class="num">${l.dur_reesc||28}d</td>
-          <td class="num" style="color:var(--amber)">${dO}d</td><td class="num">${dc}d</td>
-          <td class="num">${fmt(cC)}</td><td class="num" style="color:var(--red)">${fmt(cO)}</td>
-        </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px">Nenhuma laje</td></tr>'}
-        </tbody>
-        <tfoot><tr><td colspan="3">TOTAL</td><td class="num">${totE}d</td><td class="num">${totR}d</td><td class="num">${totO}d</td><td class="num">${totC}d</td><td class="num">${fmt(totCC)}</td><td class="num">${fmt(totCO)}</td></tr></tfoot>
-      </table></div>
-    </div>
-    <div class="card"><div class="card-head">
-      <span class="card-head-title">📊 Composição do Custo</span>
-      <span style="font-size:11px;color:var(--ink-soft)">
-        <span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:10px;height:10px;background:#1d4ed8;border-radius:2px;display:inline-block"></span>Ciclo</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#fbbf24;border-radius:2px;display:inline-block"></span>Ocioso</span>
-      </span>
-    </div><div class="card-body">
-      ${rows.map(({l,cC,cO})=>{const t=cC+cO,pC=(cC/maxC*88).toFixed(1),pO=(cO/maxC*88).toFixed(1);return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="width:120px;font-size:11px;color:var(--ink-soft);text-align:right;flex-shrink:0;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome}</div>
-        <div style="flex:1;display:flex;height:18px;border-radius:3px;overflow:hidden;gap:1px">
-          <div style="width:${pC}%;background:#1d4ed8;height:100%"></div>
-          <div style="width:${pO}%;background:#fbbf24;height:100%"></div>
+  tiposCache=tipos||[];pavimentosCache=pavs||[];
+
+  let html=`
+    <div class="page-title">Pavimentos</div>
+    <div class="page-sub">Cadastre cada pavimento vinculado ao seu tipo. Os parâmetros de ciclo herdam do tipo, mas podem ser personalizados.</div>
+    ${!tiposCache.length?'<div class="alert alert-amber"><span>⚠️</span><span>Crie pelo menos um <strong>Tipo de Pavimento</strong> antes de cadastrar pavimentos.</span></div>':''}
+    <div style="margin-bottom:14px">
+      <button class="btn btn-primary" onclick="novoPavimento()" ${!tiposCache.length?'disabled':''}>+ Adicionar Pavimento</button>
+    </div>`;
+
+  if(pavimentosCache.length){
+    // Agrupar por tipo
+    const grupos={};
+    pavimentosCache.forEach(p=>{
+      const tid=p.tipo_id||'sem-tipo';
+      if(!grupos[tid])grupos[tid]=[];
+      grupos[tid].push(p);
+    });
+    Object.entries(grupos).forEach(([tid,pavs])=>{
+      const tipo=tiposCache.find(t=>t.id===tid);
+      html+=`<div style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${tipo?.cor||'#9ca3af'}"></div>
+          <span style="font-family:var(--display);font-size:13px;font-weight:700">${tipo?.nome||'Sem tipo'}</span>
+          <span class="chip chip-gray">${pavs.length} pavimento(s)</span>
         </div>
-        <div style="width:90px;font-family:var(--mono);font-size:11px;text-align:right">${fmt(t)}</div>
-      </div>`;}).join('')||'<p style="color:var(--ink-soft);font-size:13px">Nenhuma laje.</p>'}
-    </div></div>
-    <div style="margin-top:8px"><button class="btn btn-ghost" onclick="nav('pecas')">← Peças</button></div>`;
+        ${pavs.map(p=>renderPavItem(p,tipo)).join('')}
+      </div>`;
+    });
+  }else{
+    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhum pavimento cadastrado ainda.</span></div>`;
+  }
+
+  html+=`<div style="margin-top:16px;display:flex;gap:10px">
+    <button class="btn btn-ghost" onclick="nav('tipos')">← Tipos</button>
+    <button class="btn btn-ghost" onclick="nav('cronograma')">→ Cronograma</button>
+  </div>`;
+  g('content-area').innerHTML=html;
 }
 
-// ── ADMIN ─────────────────────────────────────────────────
+function renderPavItem(p,tipo){
+  const diasEscPad=((tipo?.log_antes||3)+(tipo?.dias_exec||30)+(tipo?.dias_apos_concret||3)+(tipo?.log_movimentacao||3));
+  const diasEsc=p.dias_esc_custom||diasEscPad;
+  return `
+    <div class="pav-item" id="pav-${p.id}">
+      <div class="pav-item-head" onclick="togglePav('${p.id}')">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">#${p.numero||'?'}</span>
+        <span style="font-family:var(--display);font-size:13px;font-weight:700;flex:1">${p.nome}</span>
+        ${p.data_concretagem?`<span class="chip chip-blue">Concret: ${fmtD(p.data_concretagem)}</span>`:'<span class="chip chip-amber">sem data</span>'}
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft);margin:0 10px">Esc: ${diasEsc}d</span>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarPavimento('${p.id}')">✕</button>
+      </div>
+      <div class="pav-item-body collapsed" id="pavb-${p.id}">
+        <div class="fg fg3" style="gap:10px">
+          <div class="field"><label>Nome / Identificação</label>
+            <input type="text" id="pn-nome-${p.id}" value="${p.nome||''}" placeholder="Ex: 5º Pavimento">
+          </div>
+          <div class="field"><label>Número</label>
+            <input type="number" id="pn-num-${p.id}" value="${p.numero||''}">
+          </div>
+          <div class="field"><label>Tipo</label>
+            <select id="pn-tipo-${p.id}">
+              ${tiposCache.map(t=>`<option value="${t.id}" ${t.id===p.tipo_id?'selected':''}>${t.nome}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Data Início</label>
+            <input type="date" id="pn-inicio-${p.id}" value="${p.data_inicio||''}">
+          </div>
+          <div class="field"><label>Data Concretagem</label>
+            <input type="date" id="pn-concret-${p.id}" value="${p.data_concretagem||''}">
+          </div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-lt)">
+          <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:8px">Customização do Ciclo (deixe em branco para usar padrão do tipo)</div>
+          <div class="fg fg3" style="gap:10px">
+            <div class="field"><label>Log. antes (dias)</label><input type="number" id="pn-la-${p.id}" value="${p.log_antes_custom||''}" placeholder="Padrão do tipo"></div>
+            <div class="field"><label>Duração exec. (dias)</label><input type="number" id="pn-de-${p.id}" value="${p.dias_exec_custom||''}" placeholder="Padrão do tipo"></div>
+            <div class="field"><label>Dias após concret.</label><input type="number" id="pn-da-${p.id}" value="${p.dias_apos_concret_custom||''}" placeholder="Padrão do tipo"></div>
+            <div class="field"><label>Log. movimentação</label><input type="number" id="pn-lm-${p.id}" value="${p.log_movimentacao_custom||''}" placeholder="Padrão do tipo"></div>
+            <div class="field"><label>Duração reesc. mín.</label><input type="number" id="pn-dr-${p.id}" value="${p.dur_reesc_custom||''}" placeholder="Padrão do tipo"></div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-success btn-sm" onclick="salvarPavimento('${p.id}')">💾 Salvar</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function togglePav(id){g(`pavb-${id}`)?.classList.toggle('collapsed');}
+
+async function novoPavimento(){
+  if(!tiposCache.length){toast('Crie um tipo de pavimento primeiro','error');return;}
+  const nome=`Pavimento ${pavimentosCache.length+1}`;
+  const{data,error}=await db.from('pavimentos').insert({
+    obra_id:obra.id,tipo_id:tiposCache[0].id,nome,numero:pavimentosCache.length+1,ordem:pavimentosCache.length
+  }).select().single();
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Pavimento adicionado!','success');renderPavimentos();
+}
+
+async function salvarPavimento(id){
+  const payload={
+    nome:g(`pn-nome-${id}`)?.value||'',
+    numero:parseInt(g(`pn-num-${id}`)?.value)||null,
+    tipo_id:g(`pn-tipo-${id}`)?.value||null,
+    data_inicio:g(`pn-inicio-${id}`)?.value||null,
+    data_concretagem:g(`pn-concret-${id}`)?.value||null,
+    log_antes_custom:parseInt(g(`pn-la-${id}`)?.value)||null,
+    dias_exec_custom:parseInt(g(`pn-de-${id}`)?.value)||null,
+    dias_apos_concret_custom:parseInt(g(`pn-da-${id}`)?.value)||null,
+    log_movimentacao_custom:parseInt(g(`pn-lm-${id}`)?.value)||null,
+    dur_reesc_custom:parseInt(g(`pn-dr-${id}`)?.value)||null,
+  };
+  const{error}=await db.from('pavimentos').update(payload).eq('id',id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Pavimento salvo!','success');renderPavimentos();
+}
+
+async function deletarPavimento(id){
+  if(!confirm('Remover este pavimento?'))return;
+  await db.from('pavimentos').delete().eq('id',id);
+  toast('Removido','success');renderPavimentos();
+}
+
+// ═══════════════════════════════════════════════════
+// CRONOGRAMA & CICLOS
+// ═══════════════════════════════════════════════════
+async function renderCronograma(){
+  if(!obra){semObra();return;}
+  loading();
+  const[{data:tipos},{data:pavs}]=await Promise.all([
+    db.from('tipos_pavimento').select('*').eq('obra_id',obra.id),
+    db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
+  ]);
+  tiposCache=tipos||[];pavimentosCache=pavs||[];
+
+  // Calcular ciclos
+  const ciclos=calcularCiclos(pavimentosCache,tiposCache);
+
+  // Alertas
+  const hoje=new Date().toISOString().slice(0,10);
+  const alertas=ciclos.filter(c=>{
+    if(!c.fimReesc)return false;
+    const diff=diffDias(hoje,c.fimReesc);
+    return diff>=0&&diff<=7;
+  });
+
+  let html=`
+    <div class="page-title">Cronograma & Ciclos</div>
+    <div class="page-sub">Visão automática dos ciclos de escoramento e reescoramento com base nas datas de concretagem.</div>`;
+
+  if(alertas.length){
+    html+=`<div class="alert alert-red"><span>🚨</span><div><strong>Alertas de Desmobilização:</strong><br>
+      ${alertas.map(c=>`${c.nome}: reesc. termina em ${fmtD(c.fimReesc)} (${diffDias(hoje,c.fimReesc)}d)`).join('<br>')}
+    </div></div>`;
+  }
+
+  const semDatas=ciclos.filter(c=>!c.dataConcret);
+  if(semDatas.length){
+    html+=`<div class="alert alert-amber"><span>⚠️</span><span>${semDatas.length} pavimento(s) sem data de concretagem. Informe as datas em <strong>Pavimentos</strong>.</span></div>`;
+  }
+
+  html+=`
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">📅 Cronograma de Ciclos</span>
+        <span style="font-size:11px;color:var(--ink-soft)">${ciclos.filter(c=>c.dataConcret).length} de ${ciclos.length} com datas</span>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Pavimento</th><th>Tipo</th><th>Início</th><th>Concretagem</th>
+          <th>Fim Esc.</th><th>Início Reesc.</th><th>Fim Reesc.</th>
+          <th>Dias Esc.</th><th>Dias Reesc.</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${ciclos.map(c=>{
+            const status=calcStatus(c,hoje);
+            return`<tr>
+              <td><strong>${c.nome}</strong></td>
+              <td>${c.tipoNome?`<span class="chip chip-gray">${c.tipoNome}</span>`:'—'}</td>
+              <td class="mono">${fmtD(c.dataInicio)}</td>
+              <td class="mono">${fmtD(c.dataConcret)}</td>
+              <td class="mono">${fmtD(c.fimEsc)}</td>
+              <td class="mono">${fmtD(c.iniReesc)}</td>
+              <td class="mono ${c.fimReesc&&diffDias(hoje,c.fimReesc)<=3?'style="color:var(--red);font-weight:700"':''}">${fmtD(c.fimReesc)}</td>
+              <td class="num">${c.diasEsc||'—'}d</td>
+              <td class="num">${c.diasReesc||'—'}d</td>
+              <td><span class="chip ${status.cls}">${status.label}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="nav('pavimentos')">← Pavimentos</button>
+      <button class="btn btn-ghost" onclick="nav('custos')">→ Análise de Custo</button>
+    </div>`;
+  g('content-area').innerHTML=html;
+}
+
+function calcularCiclos(pavs,tipos){
+  return pavs.map((p,idx)=>{
+    const tipo=tipos.find(t=>t.id===p.tipo_id)||{};
+    const logAntes=p.log_antes_custom??tipo.log_antes??3;
+    const diasExec=p.dias_exec_custom??tipo.dias_exec??30;
+    const diasApos=p.dias_apos_concret_custom??tipo.dias_apos_concret??3;
+    const logMov=p.log_movimentacao_custom??tipo.log_movimentacao??3;
+    const durReescMin=p.dur_reesc_custom??tipo.dur_reesc??21;
+    const logDepois=tipo.log_depois??3;
+
+    const diasEsc=logAntes+diasExec+diasApos+logMov;
+
+    // Data início do escoramento
+    const dataInicio=p.data_inicio||null;
+    const dataConcret=p.data_concretagem||null;
+
+    // Fim do escoramento = concret + diasApos + logMov
+    const fimEsc=dataConcret?addDias(dataConcret,diasApos+logMov):null;
+
+    // Início reescoramento = fim escoramento
+    const iniReesc=fimEsc;
+
+    // Fim reescoramento = MAX(iniReesc + 21d, data concret da laje+2)
+    let fimReesc=iniReesc?addDias(iniReesc,durReescMin):null;
+    const lajeMais2=pavs[idx+2];
+    if(lajeMais2?.data_concretagem&&fimReesc){
+      if(new Date(lajeMais2.data_concretagem)>new Date(fimReesc)){
+        fimReesc=lajeMais2.data_concretagem;
+      }
+    }
+
+    const diasReescReal=fimReesc&&iniReesc?diffDias(iniReesc,fimReesc):durReescMin;
+
+    return{
+      id:p.id,nome:p.nome,tipoNome:tipo.nome,
+      dataInicio,dataConcret,fimEsc,iniReesc,fimReesc,
+      diasEsc,diasReesc:diasReescReal,logDepois,
+    };
+  });
+}
+
+function calcStatus(c,hoje){
+  if(!c.dataConcret)return{cls:'chip-gray',label:'Sem data'};
+  if(hoje<(c.dataInicio||c.dataConcret))return{cls:'chip-blue',label:'Aguardando'};
+  if(hoje<=c.fimEsc)return{cls:'chip-amber',label:'Em escoramento'};
+  if(c.iniReesc&&hoje<=c.fimReesc)return{cls:'chip-green',label:'Em reescoramento'};
+  return{cls:'chip-gray',label:'Desmobilizado'};
+}
+
+// ═══════════════════════════════════════════════════
+// ANÁLISE DE CUSTO
+// ═══════════════════════════════════════════════════
+async function renderCustos(){
+  if(!obra){semObra();return;}
+  loading();
+  const[{data:tipos},{data:pavs}]=await Promise.all([
+    db.from('tipos_pavimento').select('*, pecas_escoramento(*), pecas_reescoramento(*)').eq('obra_id',obra.id),
+    db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
+  ]);
+  tiposCache=tipos||[];pavimentosCache=pavs||[];
+
+  const ciclos=calcularCiclos(pavs||[],tipos||[]);
+  const hoje=new Date().toISOString().slice(0,10);
+
+  // Calcular custo por pavimento
+  let totalEsc=0,totalReesc=0,totalGeral=0;
+  const rows=ciclos.map(c=>{
+    const tipo=tiposCache.find(t=>t.id===(pavs.find(p=>p.id===c.id)?.tipo_id));
+    const taxaEsc=tipo?(tipo.pecas_escoramento||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0):0;
+    const taxaReesc=tipo?(tipo.pecas_reescoramento||[]).reduce((s,p)=>s+(p.quantidade||0)*(p.valor_dia||0),0):0;
+    const custoEsc=taxaEsc*(c.diasEsc||0);
+    const custoReesc=taxaReesc*(c.diasReesc||0);
+    const custo=custoEsc+custoReesc;
+    totalEsc+=custoEsc;totalReesc+=custoReesc;totalGeral+=custo;
+    return{...c,taxaEsc,taxaReesc,custoEsc,custoReesc,custo};
+  });
+
+  const vct=obra.valor_total||0;
+  const saldo=vct-totalGeral;
+  const pct=vct?Math.min(100,(totalGeral/vct*100)):0;
+  let sC='green',sL='Dentro do orçamento',sD='Custo previsto abaixo do contrato.';
+  if(saldo<0){sC='red';sL='Estouro';sD='Custo supera o contrato.';}
+  else if(saldo<vct*0.1){sC='amber';sL='Saldo baixo';sD='Saldo abaixo de 10%.';}
+
+  const maxC=Math.max(...rows.map(r=>r.custo),1);
+
+  g('content-area').innerHTML=`
+    <div class="page-title">Análise de Custo</div>
+    <div class="page-sub">Custo calculado automaticamente com base nos tipos de pavimento, peças e ciclos.</div>
+
+    <div class="semaforo">
+      <div class="sem-dot ${sC}"></div>
+      <div><span style="font-family:var(--display);font-size:13px;font-weight:700">${sL}</span>
+        <span style="font-size:11px;color:var(--ink-soft);margin-left:6px">— ${sD}</span></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-box"><div class="kpi-label">Pavimentos</div><div class="kpi-val">${rows.length}</div><div class="kpi-sub">com ciclos calculados</div></div>
+      <div class="kpi-box amber"><div class="kpi-label">Custo Escoramento</div><div class="kpi-val" style="font-size:15px">${fmt(totalEsc)}</div></div>
+      <div class="kpi-box green"><div class="kpi-label">Custo Reescoramento</div><div class="kpi-val" style="font-size:15px">${fmt(totalReesc)}</div></div>
+      <div class="kpi-box ${saldo>=0?'':'red'}"><div class="kpi-label">Saldo Contratual</div><div class="kpi-val" style="font-size:15px;color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div></div>
+    </div>
+
+    <div class="result-block">
+      <h3>Previsão Financeira — ${obra.nome}</h3>
+      <div class="result-row"><span class="result-key">Valor Total Contrato</span><span class="result-val">${fmt(vct)}</span></div>
+      <div class="result-row"><span class="result-key">Frete</span><span class="result-val">${fmt(obra.frete)}</span></div>
+      <div class="result-row"><span class="result-key">Custo total escoramento</span><span class="result-val">${fmt(totalEsc)}</span></div>
+      <div class="result-row"><span class="result-key">Custo total reescoramento</span><span class="result-val">${fmt(totalReesc)}</span></div>
+      <div class="result-row"><span class="result-key">Total Geral Previsto</span><span class="result-val highlight">${fmt(totalGeral)}</span></div>
+      <div class="result-row"><span class="result-key">Saldo Contratual</span><span class="result-val ${saldo>=0?'vgreen':'vred'}">${fmt(saldo)}</span></div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${pct.toFixed(1)}%"></div></div>
+      <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">${pct.toFixed(1)}% do contrato estimado</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">💰 Custo Detalhado por Pavimento</span></div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Pavimento</th><th>Tipo</th><th>Dias Esc.</th><th>Taxa Esc./dia</th><th>Custo Esc.</th>
+          <th>Dias Reesc.</th><th>Taxa Reesc./dia</th><th>Custo Reesc.</th><th>Total</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`<tr>
+            <td><strong>${r.nome}</strong></td>
+            <td>${r.tipoNome?`<span class="chip chip-gray">${r.tipoNome}</span>`:'—'}</td>
+            <td class="num">${r.diasEsc||'—'}d</td>
+            <td class="num">R$ ${r.taxaEsc.toFixed(4)}</td>
+            <td class="num">${fmt(r.custoEsc)}</td>
+            <td class="num">${r.diasReesc||'—'}d</td>
+            <td class="num">R$ ${r.taxaReesc.toFixed(4)}</td>
+            <td class="num">${fmt(r.custoReesc)}</td>
+            <td class="num" style="font-weight:700">${fmt(r.custo)}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="4">TOTAL</td>
+          <td class="num">${fmt(totalEsc)}</td>
+          <td colspan="2"></td>
+          <td class="num">${fmt(totalReesc)}</td>
+          <td class="num">${fmt(totalGeral)}</td>
+        </tr></tfoot>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">📊 Distribuição de Custo</span>
+        <span style="font-size:11px;color:var(--ink-soft)">
+          <span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px"><span style="width:10px;height:10px;background:#1d4ed8;border-radius:2px;display:inline-block"></span>Escoramento</span>
+          <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#15803d;border-radius:2px;display:inline-block"></span>Reescoramento</span>
+        </span>
+      </div>
+      <div class="card-body">
+        ${rows.map(r=>{
+          const pE=(r.custoEsc/maxC*88).toFixed(1),pR=(r.custoReesc/maxC*88).toFixed(1);
+          return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+            <div style="width:130px;font-size:11px;color:var(--ink-soft);text-align:right;flex-shrink:0;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nome}</div>
+            <div style="flex:1;display:flex;height:16px;border-radius:3px;overflow:hidden;gap:1px">
+              <div style="width:${pE}%;background:#1d4ed8;height:100%"></div>
+              <div style="width:${pR}%;background:#15803d;height:100%"></div>
+            </div>
+            <div style="width:100px;font-family:var(--mono);font-size:11px;text-align:right">${fmt(r.custo)}</div>
+          </div>`;
+        }).join('')||'<p style="color:var(--ink-soft);font-size:13px">Nenhum pavimento com dados.</p>'}
+      </div>
+    </div>
+    <div style="margin-top:8px"><button class="btn btn-ghost" onclick="nav('cronograma')">← Cronograma</button></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════════
 async function renderAdmin(){
   if(!user?.isAdmin){g('content-area').innerHTML='<div class="alert alert-red" style="margin:20px"><span>🚫</span><span>Acesso restrito.</span></div>';return;}
   loading();
@@ -750,12 +1277,12 @@ async function renderAdmin(){
     db.from('profiles').select('*').order('created_at'),
     db.from('obras').select('*').order('created_at',{ascending:false}),
   ]);
-  const users=profiles||[], obras=todasObras||[];
-  const opu={};
-  obras.forEach(o=>{if(!opu[o.user_id])opu[o.user_id]=[];opu[o.user_id].push(o);});
+  const users=profiles||[],obras=todasObras||[];
+  const opu={};obras.forEach(o=>{if(!opu[o.user_id])opu[o.user_id]=[];opu[o.user_id].push(o);});
   const totC=obras.reduce((s,o)=>s+(o.valor_total||0),0);
+
   g('content-area').innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
       <div class="page-title">🔐 Painel Admin</div>
       <span class="chip chip-blue">👑 ${user.email}</span>
     </div>
@@ -763,25 +1290,24 @@ async function renderAdmin(){
     <div class="kpi-row">
       <div class="kpi-box"><div class="kpi-label">Usuários</div><div class="kpi-val">${users.length}</div></div>
       <div class="kpi-box amber"><div class="kpi-label">Total Obras</div><div class="kpi-val">${obras.length}</div></div>
-      <div class="kpi-box green"><div class="kpi-label">Valor Total Contratos</div><div class="kpi-val" style="font-size:16px">${fmt(totC)}</div></div>
+      <div class="kpi-box green"><div class="kpi-label">Valor Total Contratos</div><div class="kpi-val" style="font-size:15px">${fmt(totC)}</div></div>
     </div>
     <div class="card"><div class="card-head">
       <span class="card-head-title">👥 Usuários</span>
-      <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-user')">+ Novo Usuário</button>
+      <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-user')">+ Novo</button>
     </div>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>E-mail</th><th>Perfil</th><th>Obras</th><th>Desde</th><th>Ações</th></tr></thead>
+      <thead><tr><th>E-mail</th><th>Perfil</th><th>Obras</th><th>Desde</th><th></th></tr></thead>
       <tbody>${users.map(u=>`<tr>
         <td>${u.email}</td>
         <td><span class="chip ${u.is_admin?'chip-blue':'chip-gray'}">${u.is_admin?'👑 Admin':'Usuário'}</span></td>
         <td class="num">${(opu[u.id]||[]).length}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
-        <td style="display:flex;gap:6px">
-          ${!u.is_admin?`<button class="btn btn-ghost btn-sm" onclick="tornarAdmin('${u.id}')">👑 Admin</button>`:''}
-          ${u.id!==user.id?`<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.email}')">✕</button>`:'<span style="font-size:11px;color:var(--ink-soft)">Você</span>'}
+        <td class="mono">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+        <td style="display:flex;gap:5px">
+          ${!u.is_admin?`<button class="btn btn-ghost btn-sm" onclick="tornarAdmin('${u.id}')">👑</button>`:''}
+          ${u.id!==user.id?`<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.email}')">✕</button>`:'<span style="font-size:11px;color:var(--ink-soft)">você</span>'}
         </td>
-      </tr>`).join('')}
-      </tbody>
+      </tr>`).join('')}</tbody>
     </table></div></div>
     <div class="card"><div class="card-head"><span class="card-head-title">🏗️ Todas as Obras</span></div>
     <div class="tbl-wrap"><table class="tbl">
@@ -791,51 +1317,51 @@ async function renderAdmin(){
         <td style="font-size:12px;color:var(--ink-soft)">${u?.email||'—'}</td>
         <td class="num">${o.contrato||'—'}</td>
         <td class="num">${fmt(o.valor_total)}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="verObraAdmin('${o.id}')">👁 Ver</button></td>
-      </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:20px">Nenhuma obra</td></tr>'}
+        <td class="mono">${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="verObraAdmin('${o.id}')">👁</button></td>
+      </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:20px">Nenhuma</td></tr>'}
       </tbody>
     </table></div></div>`;
 }
 
 async function criarUsuario(){
-  const email=g('nu-email').value.trim(), senha=g('nu-senha').value;
-  const isAdm=g('nu-admin').checked, erro=g('nu-erro'), btn=g('btn-criar-user');
+  const email=g('nu-email').value.trim(),senha=g('nu-senha').value;
+  const isAdm=g('nu-admin').checked,erro=g('nu-erro'),btn=g('btn-criar-user');
   erro.textContent='';
   if(!email||!senha){erro.textContent='Preencha e-mail e senha.';return;}
   if(senha.length<6){erro.textContent='Senha mínima: 6 caracteres.';return;}
-  btn.disabled=true; btn.textContent='Criando...';
+  btn.disabled=true;btn.textContent='Criando...';
   const{data,error}=await db.auth.signUp({email,password:senha});
-  btn.disabled=false; btn.textContent='Criar Usuário';
+  btn.disabled=false;btn.textContent='Criar';
   if(error){erro.textContent='Erro: '+error.message;return;}
   if(isAdm&&data?.user)await db.from('profiles').upsert({id:data.user.id,email,is_admin:true});
-  fecharModal('modal-novo-user');
-  toast('Usuário criado!','success');
-  renderAdmin();
+  fecharModal('modal-novo-user');toast('Usuário criado!','success');renderAdmin();
 }
 
-async function tornarAdmin(userId){
+async function tornarAdmin(id){
   if(!confirm('Tornar admin?'))return;
-  await db.from('profiles').update({is_admin:true}).eq('id',userId);
-  toast('Agora é admin!','success'); renderAdmin();
+  await db.from('profiles').update({is_admin:true}).eq('id',id);
+  toast('Feito!','success');renderAdmin();
 }
 
-async function deletarUsuario(userId,email){
+async function deletarUsuario(id,email){
   if(!confirm(`Remover ${email}?`))return;
-  await db.from('obras').delete().eq('user_id',userId);
-  await db.from('profiles').delete().eq('id',userId);
-  toast(`${email} removido.`,'success'); renderAdmin();
+  await db.from('obras').delete().eq('user_id',id);
+  await db.from('profiles').delete().eq('id',id);
+  toast('Removido','success');renderAdmin();
 }
 
-async function verObraAdmin(obraId){
-  const{data:o}=await db.from('obras').select('*').eq('id',obraId).single();
+async function verObraAdmin(id){
+  const{data:o}=await db.from('obras').select('*').eq('id',id).single();
   if(!o)return;
-  obra=o; g('sb-obra-nome').textContent=o.nome;
-  toast(`Visualizando: ${o.nome}`,'success'); nav('projeto');
+  obra=o;g('sb-obra-nome').textContent=o.nome;
+  toast(`Visualizando: ${o.nome}`,'success');nav('tipos');
 }
 
-// ── INIT ──────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', checarSessao);
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',checarSessao);
 </script>
 </body>
 </html>
