@@ -250,14 +250,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
       <div class="field"><label>Nome da Obra *</label><input type="text" id="mo-nome" placeholder="Ex: Edifício Alpha"></div>
       <div class="field"><label>Nº Contrato</label><input type="text" id="mo-contrato"></div>
       <div class="field"><label>Fornecedor</label><input type="text" id="mo-fornecedor"></div>
-      <div class="field"><label>Data Início</label><input type="date" id="mo-inicio"></div>
-      <div class="field"><label>Nº Pavimentos</label><input type="number" id="mo-pav" min="1"></div>
-      <div class="field"><label>Nº Total Lajes</label><input type="number" id="mo-lajes" min="1"></div>
-      <div class="field"><label>Jogos</label>
-        <select id="mo-jogos"><option value="1">1 jogo</option><option value="2">2 jogos</option><option value="3">3 jogos</option></select>
-      </div>
       <div class="field"><label>Valor Total Contrato (R$)</label><input type="number" id="mo-vtotal" step="0.01"></div>
-      <div class="field"><label>Frete (R$)</label><input type="number" id="mo-frete" step="0.01"></div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
       <button class="btn btn-ghost" onclick="fecharModal('modal-obra')">Cancelar</button>
@@ -535,7 +528,7 @@ async function renderObras(){
 
 function novaObra(){
   g('modal-obra-title').textContent='Nova Obra';g('mo-id').value='';
-  ['mo-nome','mo-contrato','mo-fornecedor','mo-inicio','mo-pav','mo-lajes','mo-vtotal','mo-frete'].forEach(id=>{const e=g(id);if(e)e.value='';});
+  ['mo-nome','mo-contrato','mo-fornecedor','mo-vtotal'].forEach(id=>{const e=g(id);if(e)e.value='';});
   g('mo-jogos').value='1';abrirModal('modal-obra');
 }
 
@@ -543,16 +536,15 @@ async function editarObra(id){
   const{data:o}=await db.from('obras').select('*').eq('id',id).single();
   if(!o)return;
   g('modal-obra-title').textContent='Editar Obra';g('mo-id').value=o.id;
-  g('mo-nome').value=o.nome||'';g('mo-contrato').value=o.contrato||'';g('mo-fornecedor').value=o.fornecedor||'';
-  g('mo-inicio').value=o.inicio||'';g('mo-pav').value=o.pavimentos||'';g('mo-lajes').value=o.total_lajes||'';
-  g('mo-jogos').value=o.jogos||1;g('mo-vtotal').value=o.valor_total||'';g('mo-frete').value=o.frete||'';
+  g('mo-nome').value=o.nome||'';g('mo-contrato').value=o.contrato||'';
+  g('mo-fornecedor').value=o.fornecedor||'';g('mo-vtotal').value=o.valor_total||'';
   abrirModal('modal-obra');
 }
 
 async function salvarObra(){
   const nome=v('mo-nome').trim();if(!nome){toast('Informe o nome','error');return;}
   const btn=g('btn-salvar-obra');btn.disabled=true;btn.textContent='Salvando...';
-  const payload={user_id:user.id,nome,contrato:v('mo-contrato'),fornecedor:v('mo-fornecedor'),inicio:v('mo-inicio')||null,pavimentos:parseInt(v('mo-pav'))||null,total_lajes:parseInt(v('mo-lajes'))||null,jogos:parseInt(v('mo-jogos'))||1,valor_total:parseFloat(v('mo-vtotal'))||null,frete:parseFloat(v('mo-frete'))||null,updated_at:new Date().toISOString()};
+  const payload={user_id:user.id,nome,contrato:v('mo-contrato'),fornecedor:v('mo-fornecedor'),valor_total:parseFloat(v('mo-vtotal'))||null,updated_at:new Date().toISOString()};
   const obraId=v('mo-id');let error,data;
   if(obraId){({error}=await db.from('obras').update(payload).eq('id',obraId));}
   else{({data,error}=await db.from('obras').insert(payload).select().single());if(data){obra=data;g('sb-obra-nome').textContent=obra.nome;}}
@@ -894,40 +886,96 @@ async function renderPavimentos(){
   if(!obra){semObra();return;}
   loading();
   const[{data:tipos},{data:pavs}]=await Promise.all([
-    db.from('tipos_pavimento').select('id,nome,cor').eq('obra_id',obra.id),
+    db.from('tipos_pavimento').select('*').eq('obra_id',obra.id),
     db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
   ]);
   tiposCache=tipos||[];pavimentosCache=pavs||[];
 
+  // Calcular datas automáticas (início = 1d após concretagem anterior)
+  const pavsComDatas=calcularDatasSequencia(pavimentosCache,tiposCache);
+
   let html=`
     <div class="page-title">Pavimentos</div>
-    <div class="page-sub">Cadastre cada pavimento vinculado ao seu tipo. Os parâmetros de ciclo herdam do tipo, mas podem ser personalizados.</div>
-    ${!tiposCache.length?'<div class="alert alert-amber"><span>⚠️</span><span>Crie pelo menos um <strong>Tipo de Pavimento</strong> antes de cadastrar pavimentos.</span></div>':''}
-    <div style="margin-bottom:14px">
+    <div class="page-sub">Pavimentos em ordem de execução. A data de início de cada um é calculada automaticamente (1 dia após a concretagem do anterior).</div>
+    ${!tiposCache.length?'<div class="alert alert-amber"><span>⚠️</span><span>Crie pelo menos um <strong>Tipo de Pavimento</strong> antes.</span></div>':''}
+
+    <!-- PARÂMETROS GLOBAIS -->
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">⚙️ Parâmetros Padrão (aplicados a todos)</span></div>
+      <div class="card-body">
+        <div class="fg fg4" style="gap:10px;margin-bottom:10px">
+          <div class="field"><label>Log. antes (dias)</label><input type="number" id="global-la" value="${tiposCache[0]?.log_antes??3}" min="0"><span class="field-hint">Peças chegam antes</span></div>
+          <div class="field"><label>Dias após concret.</label><input type="number" id="global-da" value="${tiposCache[0]?.dias_apos_concret??3}" min="0"><span class="field-hint">Cura antes de mover</span></div>
+          <div class="field"><label>Log. movimentação (dias)</label><input type="number" id="global-lm" value="${tiposCache[0]?.log_movimentacao??3}" min="0"><span class="field-hint">Peças vão para próxima</span></div>
+          <div class="field"><label>Reesc. mín. (dias)</label><input type="number" id="global-dr" value="${tiposCache[0]?.dur_reesc??21}" min="1"><span class="field-hint">Mín 21d ou +2 lajes</span></div>
+        </div>
+        <div class="alert alert-info" style="margin-bottom:0"><span>ℹ️</span><span>Esses valores são o padrão. Cada pavimento pode ter parâmetros individuais se necessário.</span></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center">
       <button class="btn btn-primary" onclick="novoPavimento()" ${!tiposCache.length?'disabled':''}>+ Adicionar Pavimento</button>
+      <span style="font-size:12px;color:var(--ink-soft)">${pavsComDatas.length} pavimento(s) cadastrado(s)</span>
     </div>`;
 
-  if(pavimentosCache.length){
-    // Agrupar por tipo
-    const grupos={};
-    pavimentosCache.forEach(p=>{
-      const tid=p.tipo_id||'sem-tipo';
-      if(!grupos[tid])grupos[tid]=[];
-      grupos[tid].push(p);
+  if(pavsComDatas.length){
+    html+='<div id="pavimentos-list">';
+    pavsComDatas.forEach((p,idx)=>{
+      const tipo=tiposCache.find(t=>t.id===p.tipo_id);
+      const diasEsc=calcDiasEsc(p,tipo);
+      const dataInicioCalc=p.dataInicioCalc;
+      html+=`
+        <div class="pav-item" id="pav-${p.id}">
+          <div class="pav-item-head" onclick="togglePav('${p.id}')">
+            <div style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:${tipo?.cor||'#9ca3af'};color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;flex-shrink:0">${idx+1}</div>
+            <span style="font-family:var(--display);font-size:13px;font-weight:700;flex:1">${p.nome}</span>
+            ${tipo?`<span class="chip chip-gray">${tipo.nome}</span>`:''}
+            ${dataInicioCalc?`<span class="chip chip-blue" title="Início calculado">▶ ${fmtD(dataInicioCalc)}</span>`:''}
+            ${p.data_concretagem?`<span class="chip chip-green">Concret: ${fmtD(p.data_concretagem)}</span>`:'<span class="chip chip-amber">sem data</span>'}
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarPavimento('${p.id}')">✕</button>
+          </div>
+          <div class="pav-item-body collapsed" id="pavb-${p.id}">
+            <!-- CAMPOS PRINCIPAIS -->
+            <div class="fg fg3" style="gap:10px;margin-bottom:12px">
+              <div class="field"><label>Nome / Identificação</label>
+                <input type="text" id="pn-nome-${p.id}" value="${p.nome||''}" placeholder="Ex: Térreo, G2, Tipo A 5º">
+              </div>
+              <div class="field"><label>Tipo de Pavimento</label>
+                <select id="pn-tipo-${p.id}">
+                  ${tiposCache.map(t=>`<option value="${t.id}" ${t.id===p.tipo_id?'selected':''}>${t.nome}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field"><label>Data Concretagem</label>
+                <input type="date" id="pn-concret-${p.id}" value="${p.data_concretagem||''}"
+                  onchange="propagarDatasSequencia('${p.id}',this.value)">
+                <span class="field-hint">Preencha em ordem. O início do próximo é calculado automaticamente.</span>
+              </div>
+            </div>
+            <!-- INÍCIO CALCULADO -->
+            ${dataInicioCalc?`<div class="alert alert-info" style="margin-bottom:12px">
+              <span>📅</span><span>Início calculado: <strong>${fmtD(dataInicioCalc)}</strong> (1 dia após concretagem do pavimento anterior)</span>
+            </div>`:''}
+            <!-- CUSTOMIZAÇÃO INDIVIDUAL -->
+            <div style="padding-top:10px;border-top:1px solid var(--rule-lt)">
+              <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:8px">
+                Customização Individual (deixe em branco para usar o padrão)
+              </div>
+              <div class="fg fg4" style="gap:10px">
+                <div class="field"><label>Log. antes (dias)</label><input type="number" id="pn-la-${p.id}" value="${p.log_antes_custom??''}" placeholder="${tiposCache[0]?.log_antes??3}"></div>
+                <div class="field"><label>Dias após concret.</label><input type="number" id="pn-da-${p.id}" value="${p.dias_apos_concret_custom??''}" placeholder="${tiposCache[0]?.dias_apos_concret??3}"></div>
+                <div class="field"><label>Log. movimentação</label><input type="number" id="pn-lm-${p.id}" value="${p.log_movimentacao_custom??''}" placeholder="${tiposCache[0]?.log_movimentacao??3}"></div>
+                <div class="field"><label>Reesc. mín. (dias)</label><input type="number" id="pn-dr-${p.id}" value="${p.dur_reesc_custom??''}" placeholder="${tiposCache[0]?.dur_reesc??21}"></div>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <button class="btn btn-success btn-sm" onclick="salvarPavimento('${p.id}')">💾 Salvar</button>
+            </div>
+          </div>
+        </div>`;
     });
-    Object.entries(grupos).forEach(([tid,pavs])=>{
-      const tipo=tiposCache.find(t=>t.id===tid);
-      html+=`<div style="margin-bottom:6px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px">
-          <div style="width:10px;height:10px;border-radius:50%;background:${tipo?.cor||'#9ca3af'}"></div>
-          <span style="font-family:var(--display);font-size:13px;font-weight:700">${tipo?.nome||'Sem tipo'}</span>
-          <span class="chip chip-gray">${pavs.length} pavimento(s)</span>
-        </div>
-        ${pavs.map(p=>renderPavItem(p,tipo)).join('')}
-      </div>`;
-    });
+    html+='</div>';
   }else{
-    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhum pavimento cadastrado ainda.</span></div>`;
+    html+=`<div class="alert alert-info"><span>ℹ️</span><span>Nenhum pavimento. Adicione em ordem (térreo → garagem → tipo A...).</span></div>`;
   }
 
   html+=`<div style="margin-top:16px;display:flex;gap:10px">
@@ -937,62 +985,53 @@ async function renderPavimentos(){
   g('content-area').innerHTML=html;
 }
 
-function renderPavItem(p,tipo){
-  const diasEscPad=((tipo?.log_antes||3)+(tipo?.dias_exec||30)+(tipo?.dias_apos_concret||3)+(tipo?.log_movimentacao||3));
-  const diasEsc=p.dias_esc_custom||diasEscPad;
-  return `
-    <div class="pav-item" id="pav-${p.id}">
-      <div class="pav-item-head" onclick="togglePav('${p.id}')">
-        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">#${p.numero||'?'}</span>
-        <span style="font-family:var(--display);font-size:13px;font-weight:700;flex:1">${p.nome}</span>
-        ${p.data_concretagem?`<span class="chip chip-blue">Concret: ${fmtD(p.data_concretagem)}</span>`:'<span class="chip chip-amber">sem data</span>'}
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft);margin:0 10px">Esc: ${diasEsc}d</span>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarPavimento('${p.id}')">✕</button>
-      </div>
-      <div class="pav-item-body collapsed" id="pavb-${p.id}">
-        <div class="fg fg3" style="gap:10px">
-          <div class="field"><label>Nome / Identificação</label>
-            <input type="text" id="pn-nome-${p.id}" value="${p.nome||''}" placeholder="Ex: 5º Pavimento">
-          </div>
-          <div class="field"><label>Número</label>
-            <input type="number" id="pn-num-${p.id}" value="${p.numero||''}">
-          </div>
-          <div class="field"><label>Tipo</label>
-            <select id="pn-tipo-${p.id}">
-              ${tiposCache.map(t=>`<option value="${t.id}" ${t.id===p.tipo_id?'selected':''}>${t.nome}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field"><label>Data Início</label>
-            <input type="date" id="pn-inicio-${p.id}" value="${p.data_inicio||''}">
-          </div>
-          <div class="field"><label>Data Concretagem</label>
-            <input type="date" id="pn-concret-${p.id}" value="${p.data_concretagem||''}">
-          </div>
-        </div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-lt)">
-          <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin-bottom:8px">Customização do Ciclo (deixe em branco para usar padrão do tipo)</div>
-          <div class="fg fg3" style="gap:10px">
-            <div class="field"><label>Log. antes (dias)</label><input type="number" id="pn-la-${p.id}" value="${p.log_antes_custom||''}" placeholder="Padrão do tipo"></div>
-            <div class="field"><label>Duração exec. (dias)</label><input type="number" id="pn-de-${p.id}" value="${p.dias_exec_custom||''}" placeholder="Padrão do tipo"></div>
-            <div class="field"><label>Dias após concret.</label><input type="number" id="pn-da-${p.id}" value="${p.dias_apos_concret_custom||''}" placeholder="Padrão do tipo"></div>
-            <div class="field"><label>Log. movimentação</label><input type="number" id="pn-lm-${p.id}" value="${p.log_movimentacao_custom||''}" placeholder="Padrão do tipo"></div>
-            <div class="field"><label>Duração reesc. mín.</label><input type="number" id="pn-dr-${p.id}" value="${p.dur_reesc_custom||''}" placeholder="Padrão do tipo"></div>
-          </div>
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-success btn-sm" onclick="salvarPavimento('${p.id}')">💾 Salvar</button>
-        </div>
-      </div>
-    </div>`;
+// Calcula dias de escoramento de um pavimento
+function calcDiasEsc(p,tipo){
+  const la=p.log_antes_custom??tipo?.log_antes??3;
+  const da=p.dias_apos_concret_custom??tipo?.dias_apos_concret??3;
+  const lm=p.log_movimentacao_custom??tipo?.log_movimentacao??3;
+  // dias_exec = diff entre data_inicio e data_concretagem (se ambas existirem)
+  let de=30;
+  if(p.dataInicioCalc&&p.data_concretagem){
+    de=Math.max(1,diffDias(p.dataInicioCalc,p.data_concretagem));
+  }
+  return la+de+da+lm;
+}
+
+// Calcula data de início de cada pavimento em sequência
+function calcularDatasSequencia(pavs,tipos){
+  return pavs.map((p,idx)=>{
+    const anterior=pavs[idx-1];
+    let dataInicioCalc=p.data_inicio||null;
+    if(idx>0&&anterior?.data_concretagem){
+      dataInicioCalc=addDias(anterior.data_concretagem,1);
+    }
+    return{...p,dataInicioCalc};
+  });
+}
+
+// Quando usuário preenche data de concretagem, calcula início do próximo
+function propagarDatasSequencia(pavId,dataConcret){
+  const idx=pavimentosCache.findIndex(p=>p.id===pavId);
+  if(idx<0||!dataConcret)return;
+  const proximo=pavimentosCache[idx+1];
+  if(!proximo)return;
+  const dataInicioProximo=addDias(dataConcret,1);
+  const el=g(`pn-inicio-${proximo.id}`);
+  if(el){el.value=dataInicioProximo;el.style.background='#eff6ff';}
+  // Mostrar info visual
+  const infoEl=g(`inicio-info-${proximo.id}`);
+  if(infoEl)infoEl.textContent=`Início calculado: ${fmtD(dataInicioProximo)}`;
 }
 
 function togglePav(id){g(`pavb-${id}`)?.classList.toggle('collapsed');}
 
 async function novoPavimento(){
   if(!tiposCache.length){toast('Crie um tipo de pavimento primeiro','error');return;}
-  const nome=`Pavimento ${pavimentosCache.length+1}`;
+  const ordem=pavimentosCache.length;
+  const nome=`Pavimento ${ordem+1}`;
   const{data,error}=await db.from('pavimentos').insert({
-    obra_id:obra.id,tipo_id:tiposCache[0].id,nome,numero:pavimentosCache.length+1,ordem:pavimentosCache.length
+    obra_id:obra.id,tipo_id:tiposCache[0].id,nome,numero:ordem+1,ordem
   }).select().single();
   if(error){toast('Erro: '+error.message,'error');return;}
   toast('Pavimento adicionado!','success');renderPavimentos();
@@ -1000,20 +1039,25 @@ async function novoPavimento(){
 
 async function salvarPavimento(id){
   const payload={
-    nome:g(`pn-nome-${id}`)?.value||'',
-    numero:parseInt(g(`pn-num-${id}`)?.value)||null,
+    nome:g(`pn-nome-${id}`)?.value?.trim()||'',
     tipo_id:g(`pn-tipo-${id}`)?.value||null,
-    data_inicio:g(`pn-inicio-${id}`)?.value||null,
     data_concretagem:g(`pn-concret-${id}`)?.value||null,
     log_antes_custom:parseInt(g(`pn-la-${id}`)?.value)||null,
-    dias_exec_custom:parseInt(g(`pn-de-${id}`)?.value)||null,
     dias_apos_concret_custom:parseInt(g(`pn-da-${id}`)?.value)||null,
     log_movimentacao_custom:parseInt(g(`pn-lm-${id}`)?.value)||null,
     dur_reesc_custom:parseInt(g(`pn-dr-${id}`)?.value)||null,
   };
+  // Calcular e salvar data_inicio automaticamente
+  const idx=pavimentosCache.findIndex(p=>p.id===id);
+  if(idx>0){
+    const anterior=pavimentosCache[idx-1];
+    if(anterior?.data_concretagem){
+      payload.data_inicio=addDias(anterior.data_concretagem,1);
+    }
+  }
   const{error}=await db.from('pavimentos').update(payload).eq('id',id);
   if(error){toast('Erro: '+error.message,'error');return;}
-  toast('Pavimento salvo!','success');renderPavimentos();
+  toast('Salvo!','success');renderPavimentos();
 }
 
 async function deletarPavimento(id){
@@ -1098,20 +1142,27 @@ async function renderCronograma(){
 }
 
 function calcularCiclos(pavs,tipos){
-  return pavs.map((p,idx)=>{
+  // Calcular data_inicio de cada pavimento pela sequência
+  const pavsSeq=calcularDatasSequencia(pavs,tipos);
+
+  return pavsSeq.map((p,idx)=>{
     const tipo=tipos.find(t=>t.id===p.tipo_id)||{};
     const logAntes=p.log_antes_custom??tipo.log_antes??3;
-    const diasExec=p.dias_exec_custom??tipo.dias_exec??30;
     const diasApos=p.dias_apos_concret_custom??tipo.dias_apos_concret??3;
     const logMov=p.log_movimentacao_custom??tipo.log_movimentacao??3;
     const durReescMin=p.dur_reesc_custom??tipo.dur_reesc??21;
     const logDepois=tipo.log_depois??3;
 
-    const diasEsc=logAntes+diasExec+diasApos+logMov;
-
-    // Data início do escoramento
-    const dataInicio=p.data_inicio||null;
+    const dataInicio=p.dataInicioCalc||p.data_inicio||null;
     const dataConcret=p.data_concretagem||null;
+
+    // Dias de execução = diff entre início e concretagem
+    let diasExec=30;
+    if(dataInicio&&dataConcret){
+      diasExec=Math.max(1,diffDias(dataInicio,dataConcret));
+    }
+
+    const diasEsc=logAntes+diasExec+diasApos+logMov;
 
     // Fim do escoramento = concret + diasApos + logMov
     const fimEsc=dataConcret?addDias(dataConcret,diasApos+logMov):null;
@@ -1119,7 +1170,7 @@ function calcularCiclos(pavs,tipos){
     // Início reescoramento = fim escoramento
     const iniReesc=fimEsc;
 
-    // Fim reescoramento = MAX(iniReesc + 21d, data concret da laje+2)
+    // Fim reescoramento = MAX(iniReesc + durReescMin, data concret da laje+2)
     let fimReesc=iniReesc?addDias(iniReesc,durReescMin):null;
     const lajeMais2=pavs[idx+2];
     if(lajeMais2?.data_concretagem&&fimReesc){
