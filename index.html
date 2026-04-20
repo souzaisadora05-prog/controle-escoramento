@@ -444,17 +444,39 @@ async function renderEtapa1(){
       <div class="step-num">1</div>
       <div class="step-info">
         <div class="step-title">Dados da Obra</div>
-        <div class="step-sub">Informações básicas do contrato de locação.</div>
+        <div class="step-sub">Informações básicas do contrato e critério de controle tecnológico do concreto.</div>
       </div>
     </div>
+
     <div class="card"><div class="card-body">
       <div class="fg fg2" style="gap:14px">
         <div class="field"><label>Nome da Obra</label><input type="text" id="e1-nome" value="${o.nome||''}"></div>
         <div class="field"><label>Nº Contrato</label><input type="text" id="e1-contrato" value="${o.contrato||''}"></div>
         <div class="field"><label>Fornecedor</label><input type="text" id="e1-fornecedor" value="${o.fornecedor||''}"></div>
         <div class="field"><label>Valor Total do Contrato (R$)</label><input type="number" id="e1-vtotal" value="${o.valor_total||''}" step="0.01" placeholder="Ex: 576023.40"></div>
+        <div class="field">
+          <label>% mínima do fck para desforma</label>
+          <input type="number" id="e1-pct" value="${o.pct_desforma||75}" min="50" max="100" step="1" style="font-family:var(--mono);font-size:16px">
+          <span class="field-hint">Definida pelo calculista estrutural. Valor típico: 75% (NBR 15696)</span>
+        </div>
       </div>
     </div></div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">📋 O que é a % mínima para desforma?</span></div>
+      <div class="card-body" style="font-size:13px;line-height:1.8;color:var(--ink-mid)">
+        <p style="margin-bottom:10px">Antes de retirar o escoramento, a laje precisa atingir uma <strong>resistência mínima do concreto</strong>. Esse critério é definido pelo projetista estrutural no projeto de formas e está vinculado ao <strong>fck do projeto</strong>.</p>
+        <div class="alert alert-info" style="margin-bottom:10px">
+          <span>📐</span>
+          <div><strong>NBR 15696 — Fôrmas e escoramentos para estruturas de concreto:</strong> A estrutura deve ser capaz de suportar o peso próprio e as cargas de execução antes da desforma. O critério usual é atingir <strong>75% do fck</strong>, salvo especificação diferente do calculista.</div>
+        </div>
+        <div class="alert alert-amber">
+          <span>⚠️</span>
+          <div><strong>Atenção:</strong> Nunca retire o escoramento apenas pelo prazo em dias sem um ensaio de controle tecnológico. O laudo de rompimento do corpo de prova é a prova técnica que garante a segurança da estrutura.</div>
+        </div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:10px">
       <button class="btn btn-primary" onclick="salvarEtapa1()">💾 Salvar</button>
       <button class="btn btn-ghost" onclick="nav('etapa2')">Próximo: Parâmetros →</button>
@@ -463,7 +485,7 @@ async function renderEtapa1(){
 
 async function salvarEtapa1(){
   if(!obra)return;
-  const payload={nome:v('e1-nome'),contrato:v('e1-contrato'),fornecedor:v('e1-fornecedor'),valor_total:parseFloat(v('e1-vtotal'))||null,updated_at:new Date().toISOString()};
+  const payload={nome:v('e1-nome'),contrato:v('e1-contrato'),fornecedor:v('e1-fornecedor'),valor_total:parseFloat(v('e1-vtotal'))||null,pct_desforma:parseFloat(v('e1-pct'))||75,updated_at:new Date().toISOString()};
   const{error}=await db.from('obras').update(payload).eq('id',obra.id);
   if(error){toast('Erro: '+error.message,'error');return;}
   Object.assign(obra,payload);g('sb-obra-nome').textContent=obra.nome;
@@ -475,55 +497,98 @@ async function salvarEtapa1(){
 // ═══════════════════════════════════════════
 async function renderEtapa2(){
   if(!obra){semObra();return;}
-  // Buscar parâmetros salvos (usa tipos_pavimento com nome='_params')
   const{data:params}=await db.from('tipos_pavimento').select('*').eq('obra_id',obra.id).eq('nome','_params').maybeSingle();
 
   const X=params?.log_antes??3;
-  const Y=params?.dias_apos_concret??3;
   const Z=params?.dur_reesc??21;
   const T=params?.log_movimentacao??3;
+  const DR=params?.dias_exec??5; // dias do primeiro rompimento
 
   g('content-area').innerHTML=`
     <div class="step-header">
       <div class="step-num">2</div>
       <div class="step-info">
         <div class="step-title">Parâmetros de Cálculo</div>
-        <div class="step-sub">Defina os dias padrão usados em todos os cálculos de escoramento.</div>
+        <div class="step-sub">Configure os prazos de logística e o protocolo de controle tecnológico do concreto.</div>
       </div>
     </div>
-    <div class="card"><div class="card-body">
-      <div class="fg fg2" style="gap:16px">
-        <div class="field">
-          <label>X — Dias para mobilizar material (logística antes)</label>
-          <input type="number" id="e2-X" value="${X}" min="0" style="font-size:16px;font-family:var(--mono)">
-          <span class="field-hint">Dias que as peças chegam à obra antes do início da execução</span>
-        </div>
-        <div class="field">
-          <label>Y — Dias de escoramento após a concretagem</label>
-          <input type="number" id="e2-Y" value="${Y}" min="1" style="font-size:16px;font-family:var(--mono)">
-          <span class="field-hint">Escoramento termina Y dias após a concretagem da laje</span>
-        </div>
-        <div class="field">
-          <label>Z — Duração mínima do reescoramento (dias)</label>
-          <input type="number" id="e2-Z" value="${Z}" min="1" style="font-size:16px;font-family:var(--mono)">
-          <span class="field-hint">Mínimo de dias de reescoramento (normalmente 21 dias)</span>
-        </div>
-        <div class="field">
-          <label>T — Dias para desmobilizar material (logística depois)</label>
-          <input type="number" id="e2-T" value="${T}" min="0" style="font-size:16px;font-family:var(--mono)">
-          <span class="field-hint">Dias para mover as peças para a próxima laje após o escoramento</span>
-        </div>
-      </div>
-    </div></div>
 
-    <div class="card"><div class="card-head"><span class="card-head-title">📐 Como esses parâmetros são usados</span></div>
-    <div class="card-body">
-      <div style="font-size:13px;line-height:2;color:var(--ink-mid)">
-        <div>🔵 <strong>Escoramento</strong> = começa 1 dia após a concretagem da laje anterior → termina <strong>C + Y dias</strong></div>
-        <div>🟢 <strong>Reescoramento</strong> = começa 1 dia após Y → termina na concretagem da laje <strong>+2 posições</strong> na sequência (ou Z dias, o que for maior)</div>
-        <div>⚠️ Quando o reesc. terminar pelo <strong>Z (mínimo)</strong>, não pela laje +2 → exibido em <span style="color:var(--red);font-weight:700">vermelho</span> no cronograma</div>
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">🔧 Logística de Materiais</span></div>
+      <div class="card-body">
+        <div class="fg fg2" style="gap:16px">
+          <div class="field">
+            <label>X — Dias de mobilização antes do início</label>
+            <input type="number" id="e2-X" value="${X}" min="0" style="font-family:var(--mono);font-size:15px">
+            <span class="field-hint">Quantos dias antes as peças precisam estar na obra</span>
+          </div>
+          <div class="field">
+            <label>T — Dias de desmobilização após o escoramento</label>
+            <input type="number" id="e2-T" value="${T}" min="0" style="font-family:var(--mono);font-size:15px">
+            <span class="field-hint">Dias para mover as peças para a próxima laje</span>
+          </div>
+          <div class="field">
+            <label>Z — Duração mínima do reescoramento (dias)</label>
+            <input type="number" id="e2-Z" value="${Z}" min="1" style="font-family:var(--mono);font-size:15px">
+            <span class="field-hint">Mínimo de reescoramento. Referência: 21 dias (NBR 15696)</span>
+          </div>
+        </div>
       </div>
-    </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">🧪 Protocolo de Controle Tecnológico</span></div>
+      <div class="card-body">
+        <div class="fg fg2" style="gap:16px;margin-bottom:14px">
+          <div class="field">
+            <label>Dias após concretagem para o 1º rompimento</label>
+            <input type="number" id="e2-DR" value="${DR}" min="1" max="28" style="font-family:var(--mono);font-size:15px">
+            <span class="field-hint">Prazo padrão da sua obra para romper o primeiro CP. Ex: 5, 7 ou 14 dias</span>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-bottom:10px">
+          <span>🧪</span>
+          <div>
+            <strong>Como funciona o controle tecnológico no sistema:</strong><br>
+            1. O sistema estima a data de rompimento = <strong>concretagem + X dias</strong><br>
+            2. Quando você lançar o laudo real, informa a <strong>resistência medida (MPa)</strong><br>
+            3. O sistema calcula: <strong>resistência ÷ fck</strong> e compara com a % mínima definida<br>
+            4. Se aprovado ✅ → usa a data do laudo como gatilho para desforma<br>
+            5. Se reprovado ❌ → aguarda novo ensaio (você informa a nova data e resultado)
+          </div>
+        </div>
+        <div class="alert alert-green">
+          <span>💡</span>
+          <div>
+            <strong>Exemplo prático (NBR 12655):</strong> fck 40 MPa, critério 75% → resistência mínima = <strong>30 MPa</strong>.
+            Laudo ao 5º dia: 32,3 MPa → ✅ aprovado! O escoramento pode ser retirado com segurança.
+            Sem laudo: o sistema usa os ${DR} dias como estimativa.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">📐 Fluxo do Ciclo de Escoramento</span></div>
+      <div class="card-body" style="font-size:13px;line-height:1.9;color:var(--ink-mid)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-family:var(--display);font-weight:700;margin-bottom:8px;color:var(--accent)">🔵 Escoramento (100%)</div>
+            <div>Suporta 100% do peso do concreto fresco, fôrmas e operários. Permanece até a laje atingir resistência para se autossuportar.</div>
+            <div style="margin-top:8px;padding:8px 10px;background:var(--accent-lt);border-radius:5px;font-size:12px">
+              <strong>Gatilho de saída:</strong> Laudo aprovado (≥ % mínima do fck) ou prazo padrão de ${DR} dias.
+            </div>
+          </div>
+          <div>
+            <div style="font-family:var(--display);font-weight:700;margin-bottom:8px;color:var(--green)">🟢 Reescoramento (50%)</div>
+            <div>Não sustenta a laje — ela já tem resistência. Serve para <strong>dividir com a laje abaixo</strong> o peso das concretagens dos pavimentos superiores.</div>
+            <div style="margin-top:8px;padding:8px 10px;background:var(--green-lt);border-radius:5px;font-size:12px">
+              <strong>Gatilho de saída:</strong> Concretagem da laje +2 (Z mínimo de ${Z} dias garantido).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div style="display:flex;gap:10px">
       <button class="btn btn-ghost" onclick="nav('etapa1')">← Voltar</button>
@@ -534,7 +599,7 @@ async function renderEtapa2(){
 
 async function salvarEtapa2(paramsId){
   if(!obra)return;
-  const payload={obra_id:obra.id,nome:'_params',log_antes:parseInt(v('e2-X'))||3,dias_apos_concret:parseInt(v('e2-Y'))||3,dur_reesc:parseInt(v('e2-Z'))||21,log_movimentacao:parseInt(v('e2-T'))||3};
+  const payload={obra_id:obra.id,nome:'_params',log_antes:parseInt(v('e2-X'))||3,dur_reesc:parseInt(v('e2-Z'))||21,log_movimentacao:parseInt(v('e2-T'))||3,dias_exec:parseInt(v('e2-DR'))||5};
   let error;
   if(paramsId){({error}=await db.from('tipos_pavimento').update(payload).eq('id',paramsId));}
   else{({error}=await db.from('tipos_pavimento').insert(payload));}
@@ -548,71 +613,126 @@ async function salvarEtapa2(paramsId){
 async function renderEtapa3(){
   if(!obra){semObra();return;}
   loading();
-  const{data:pavs}=await db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem');
+  const[{data:pavs},{data:params}]=await Promise.all([
+    db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
+    db.from('tipos_pavimento').select('*').eq('obra_id',obra.id).eq('nome','_params').maybeSingle(),
+  ]);
   pavimentos=pavs||[];
+  const DR=params?.dias_exec??5;
+  const pctMin=obra.pct_desforma||75;
 
   let html=`
     <div class="step-header">
       <div class="step-num">3</div>
       <div class="step-info">
-        <div class="step-title">Pavimentos</div>
-        <div class="step-sub">Cadastre em ordem de execução. A data de início é calculada automaticamente (1 dia após concretagem do anterior).</div>
+        <div class="step-title">Pavimentos & Ensaios</div>
+        <div class="step-sub">Cadastre em ordem sequencial. Informe o fck de cada laje e lance os laudos de rompimento.</div>
       </div>
     </div>
+
     <div class="alert alert-info"><span>ℹ️</span>
-      <span>Preencha a <strong>data de concretagem (C)</strong> de cada pavimento. O início do próximo é calculado automaticamente.</span>
+      <div>
+        <strong>Como preencher:</strong> Cadastre os pavimentos em ordem de execução (Térreo → G2 → G3...).
+        A data de início de cada um é calculada automaticamente (1 dia após a concretagem do anterior).
+        Quando tiver o laudo de rompimento, informe a resistência — o sistema calcula se pode desformar.
+      </div>
     </div>
-    <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center">
+
+    <div style="margin-bottom:14px">
       <button class="btn btn-primary" onclick="adicionarPavimento()">+ Adicionar Pavimento</button>
     </div>`;
 
   if(!pavimentos.length){
-    html+=`<div class="alert alert-amber"><span>⚠️</span><span>Nenhum pavimento ainda. Adicione em ordem (ex: Térreo, G2, G3, Lazer, Tipo A 5º...)</span></div>`;
+    html+=`<div class="alert alert-amber"><span>⚠️</span><span>Nenhum pavimento. Adicione em ordem (ex: Térreo, G2, G3, Lazer, Tipo A 5º...)</span></div>`;
   }else{
-    // Calcular data início automática
     const pavComDatas=calcSeqDatas(pavimentos);
-    html+=`<div class="card" style="margin-bottom:0">
-      <div class="card-head"><span class="card-head-title">📋 Lista de Pavimentos (em ordem)</span></div>
-      <div style="padding:0">
-        <table class="tbl">
+    html+=`<div class="card">
+      <div class="card-head">
+        <span class="card-head-title">📋 Lista de Pavimentos</span>
+        <span style="font-size:11px;color:var(--ink-soft)">Critério de desforma: <strong>${pctMin}% do fck</strong></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl" style="min-width:900px">
           <thead><tr>
-            <th style="width:36px">#</th>
-            <th>Nome do Pavimento</th>
-            <th>Área Forma Pilares (m²)</th>
-            <th>Área Forma Viga (m²)</th>
-            <th>Área Forma Laje (m²)</th>
+            <th>#</th>
+            <th>Pavimento</th>
+            <th>Área Pilares (m²)</th>
+            <th>Área Vigas (m²)</th>
+            <th>Área Laje (m²)</th>
             <th>Vol. Concreto (m³)</th>
+            <th>fck (MPa)</th>
             <th>Início (calc.)</th>
             <th>Concretagem (C)</th>
-            <th style="width:36px"></th>
+            <th>Est. Rompimento</th>
+            <th>Laudo</th>
+            <th></th>
           </tr></thead>
-          <tbody id="pavimentos-tbody">`;
+          <tbody>`;
 
     pavComDatas.forEach((p,idx)=>{
+      const fck=p.fck_laje||'';
+      const estRomp=p.data_concretagem?fmtD(addD(p.data_concretagem,DR)):'—';
+      // Verificar laudo
+      const resist=p.resistencia_mpa||null;
+      const fckVal=parseFloat(fck)||0;
+      const pctAtingida=resist&&fckVal?(resist/fckVal*100):null;
+      const laudoOk=pctAtingida!==null&&pctAtingida>=pctMin;
+      const laudoBadge=resist?
+        (laudoOk?
+          `<span class="chip chip-green">✅ ${resist} MPa (${pctAtingida.toFixed(0)}%)</span>`:
+          `<span class="chip chip-red">❌ ${resist} MPa (${pctAtingida.toFixed(0)}%)</span>`
+        ):`<span class="chip chip-gray">Sem laudo</span>`;
+
       html+=`<tr id="pav-tr-${p.id}">
         <td class="num" style="color:var(--ink-soft);font-weight:700">${idx+1}</td>
-        <td><input class="ii" type="text" id="pn-${p.id}" value="${p.nome||''}" placeholder="Ex: Térreo" onblur="salvarCampoPav('${p.id}','nome',this.value)"></td>
-        <td><input class="ii" type="number" id="pp-${p.id}" value="${p.area_pilares||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_pilares',this.value)"></td>
-        <td><input class="ii" type="number" id="pv-${p.id}" value="${p.area_vigas||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_vigas',this.value)"></td>
-        <td><input class="ii" type="number" id="pl-${p.id}" value="${p.area_laje||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_laje',this.value)"></td>
-        <td><input class="ii" type="number" id="pvc-${p.id}" value="${p.volume_concreto||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','volume_concreto',this.value)"></td>
-        <td class="dt" style="color:var(--accent);font-family:var(--mono);font-size:11px">${p.dataInicioCalc?fmtD(p.dataInicioCalc):'—'}</td>
+        <td><input class="ii" type="text" id="pn-${p.id}" value="${p.nome||''}" placeholder="Ex: Térreo" onblur="salvarCampoPav('${p.id}','nome',this.value)" style="min-width:100px"></td>
+        <td><input class="ii" type="number" id="pp-${p.id}" value="${p.area_pilares||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_pilares',this.value)" style="width:70px"></td>
+        <td><input class="ii" type="number" id="pv-${p.id}" value="${p.area_vigas||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_vigas',this.value)" style="width:70px"></td>
+        <td><input class="ii" type="number" id="pl-${p.id}" value="${p.area_laje||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','area_laje',this.value)" style="width:70px"></td>
+        <td><input class="ii" type="number" id="pvc-${p.id}" value="${p.volume_concreto||''}" placeholder="0.00" step="0.01" onblur="salvarCampoPav('${p.id}','volume_concreto',this.value)" style="width:70px"></td>
+        <td><input class="ii" type="number" id="pfck-${p.id}" value="${fck}" placeholder="Ex: 40" step="1" onblur="salvarCampoPav('${p.id}','fck_laje',this.value)" style="width:60px;font-weight:700"></td>
+        <td style="color:var(--accent);font-family:var(--mono);font-size:11px;white-space:nowrap">${p.dataInicioCalc?fmtD(p.dataInicioCalc):'—'}</td>
         <td><input class="ii-date" type="date" id="pc-${p.id}" value="${p.data_concretagem||''}" onchange="salvarConcretagem('${p.id}',this.value)"></td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);white-space:nowrap">${estRomp}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${laudoBadge}
+            <button class="btn btn-ghost btn-sm" onclick="abrirLaudo('${p.id}','${p.nome||'Pavimento'}','${fck}')">🧪</button>
+          </div>
+        </td>
         <td><button class="btn btn-danger btn-sm" onclick="deletarPav('${p.id}')">✕</button></td>
       </tr>`;
     });
 
     html+=`</tbody>
           <tfoot><tr>
-            <td></td>
-            <td>TOTAL</td>
+            <td></td><td>TOTAL</td>
             <td class="num">${pavimentos.reduce((s,p)=>s+(parseFloat(p.area_pilares)||0),0).toFixed(2)}</td>
             <td class="num">${pavimentos.reduce((s,p)=>s+(parseFloat(p.area_vigas)||0),0).toFixed(2)}</td>
             <td class="num">${pavimentos.reduce((s,p)=>s+(parseFloat(p.area_laje)||0),0).toFixed(2)}</td>
             <td class="num">${pavimentos.reduce((s,p)=>s+(parseFloat(p.volume_concreto)||0),0).toFixed(2)}</td>
-            <td colspan="3"></td>
+            <td colspan="6"></td>
           </tr></tfoot>
         </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">🧪 Como lançar um laudo de rompimento</span></div>
+      <div class="card-body" style="font-size:13px;color:var(--ink-mid);line-height:1.8">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <strong>1. Clique no botão 🧪</strong> na linha do pavimento<br>
+            <strong>2. Informe</strong> a data do rompimento e a resistência medida (MPa)<br>
+            <strong>3. O sistema calcula</strong> automaticamente se atingiu ${pctMin}% do fck<br>
+            <strong>4. Se aprovado ✅</strong> → essa data vira o gatilho de desforma no cronograma<br>
+            <strong>5. Se reprovado ❌</strong> → lance um novo ensaio quando disponível
+          </div>
+          <div class="alert alert-amber" style="margin:0">
+            <span>📋</span>
+            <div><strong>NBR 12655 — Concreto de cimento Portland:</strong> O controle tecnológico deve ser feito por corpos de prova cilíndricos (15×30 cm) moldados no momento da concretagem e rompidos em laboratório acreditado. Os resultados são a base técnica para a liberação do escoramento.</div>
+          </div>
+        </div>
       </div>
     </div>`;
   }
@@ -620,6 +740,30 @@ async function renderEtapa3(){
   html+=`<div style="margin-top:16px;display:flex;gap:10px">
     <button class="btn btn-ghost" onclick="nav('etapa2')">← Parâmetros</button>
     <button class="btn btn-ghost" onclick="nav('cronograma')">Ver Cronograma →</button>
+  </div>
+
+  <!-- MODAL LAUDO -->
+  <div class="modal-overlay" id="modal-laudo">
+    <div class="modal-box" style="max-width:440px">
+      <div class="modal-title">🧪 Lançar Laudo de Rompimento</div>
+      <input type="hidden" id="laudo-pav-id">
+      <div style="margin-bottom:12px;padding:10px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px;font-family:var(--mono);font-size:12px" id="laudo-pav-info"></div>
+      <div class="fg fg2" style="gap:12px;margin-bottom:14px">
+        <div class="field">
+          <label>Data do Rompimento</label>
+          <input type="date" id="laudo-data">
+        </div>
+        <div class="field">
+          <label>Resistência Medida (MPa)</label>
+          <input type="number" id="laudo-resist" step="0.1" placeholder="Ex: 32.3">
+        </div>
+      </div>
+      <div id="laudo-resultado" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-laudo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarLaudo()">💾 Salvar Laudo</button>
+      </div>
+    </div>
   </div>`;
 
   g('content-area').innerHTML=html;
@@ -637,6 +781,44 @@ function calcSeqDatas(pavs){
   });
 }
 
+// Abre modal de laudo
+function abrirLaudo(pavId,pavNome,fck){
+  g('laudo-pav-id').value=pavId;
+  const pctMin=obra.pct_desforma||75;
+  const resistMin=fck?(parseFloat(fck)*pctMin/100).toFixed(1):'—';
+  g('laudo-pav-info').innerHTML=`${pavNome} · fck: <strong>${fck||'?'} MPa</strong> · Mínimo para desforma: <strong>${resistMin} MPa</strong> (${pctMin}%)`;
+  g('laudo-data').value='';
+  g('laudo-resist').value='';
+  g('laudo-resultado').innerHTML='';
+  // Listener para calcular em tempo real
+  g('laudo-resist').oninput=()=>calcularLaudoPreview(parseFloat(fck)||0,pctMin);
+  abrirModal('modal-laudo');
+}
+
+function calcularLaudoPreview(fck,pctMin){
+  const resist=parseFloat(v('laudo-resist'))||0;
+  if(!resist||!fck)return;
+  const pct=(resist/fck*100);
+  const ok=pct>=pctMin;
+  g('laudo-resultado').innerHTML=ok?
+    `<div class="alert alert-green"><span>✅</span><div><strong>APROVADO!</strong> ${resist} MPa = ${pct.toFixed(1)}% do fck (mínimo: ${pctMin}%). O escoramento pode ser retirado.</div></div>`:
+    `<div class="alert alert-red"><span>❌</span><div><strong>REPROVADO.</strong> ${resist} MPa = ${pct.toFixed(1)}% do fck (mínimo: ${pctMin}%). Aguarde novo ensaio.</div></div>`;
+}
+
+async function salvarLaudo(){
+  const pavId=v('laudo-pav-id');
+  const dataLaudo=v('laudo-data');
+  const resist=parseFloat(v('laudo-resist'))||null;
+  if(!dataLaudo||!resist){toast('Preencha data e resistência','error');return;}
+  const{error}=await db.from('pavimentos').update({data_laudo:dataLaudo,resistencia_mpa:resist}).eq('id',pavId);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  const idx=pavimentos.findIndex(p=>p.id===pavId);
+  if(idx>=0){pavimentos[idx].data_laudo=dataLaudo;pavimentos[idx].resistencia_mpa=resist;}
+  toast('Laudo salvo!','success');
+  fecharModal('modal-laudo');
+  renderEtapa3();
+}
+
 async function adicionarPavimento(){
   if(!obra)return;
   const ordem=pavimentos.length;
@@ -648,6 +830,7 @@ async function adicionarPavimento(){
 async function salvarCampoPav(id,campo,valor){
   const upd={};
   if(campo==='nome')upd.nome=valor;
+  else if(campo==='fck_laje')upd.fck_laje=parseFloat(valor)||null;
   else upd[campo]=parseFloat(valor)||null;
   await db.from('pavimentos').update(upd).eq('id',id);
   const idx=pavimentos.findIndex(p=>p.id===id);
@@ -690,45 +873,37 @@ async function renderCronograma(){
   pavimentos=pavs||[];
 
   const X=params?.log_antes??3;
-  const Y=params?.dias_apos_concret??3;
   const Z=params?.dur_reesc??21;
   const T=params?.log_movimentacao??3;
+  const DR=params?.dias_exec??5;
+  const pctMin=obra.pct_desforma||75;
 
   const hoje=new Date().toISOString().slice(0,10);
   const pavComDatas=calcSeqDatas(pavimentos);
 
   // ── CALCULAR CICLOS ──────────────────────────────
-  // REGRA CORRETA DA ESCADINHA:
+  // Fim do escoramento:
+  //   → Se tem laudo APROVADO: usa data_laudo (controle tecnológico real)
+  //   → Se não tem laudo: usa C + DR dias (estimativa)
   //
   // fimReesc(N) = MAX de:
-  //   A) iniReesc(N) + Z - 1          → mínimo Z dias de reesc
-  //   B) C(N+2) + 1 dia               → se existe laje +2, termina 1d após ela concretar
-  //
-  // Para os 2 ÚLTIMOS (sem laje +2), a regra B não existe.
-  // MAS a escadinha garante: fimReesc(N) >= fimReesc(N+1)
-  // porque C(N) < C(N+1) → iniReesc(N) < iniReesc(N+1)
-  // → fimReescPorZ(N) < fimReescPorZ(N+1)
-  // LOGO: para os penúltimos sem laje +2, o fimReesc deles
-  // é naturalmente menor — EXCETO que precisamos garantir que
-  // o reesc do G3 não termina antes de o Lazer ter sido concretado
-  // + Z dias.
-  //
-  // REGRA FINAL CORRETA:
-  // fimReesc(N) = MAX(
-  //   iniReesc(N) + Z - 1,            → Z mínimo
-  //   C(N+2) + 1,                     → 1d após laje +2 (se existir)
-  //   C(N+1) + Y + 1 + Z - 1         → Z dias após fim do esc da laje +1 (se existir)
-  // )
-  //
-  // Simplificando: o reesc de N não termina antes que a laje N+1
-  // complete seu próprio escoramento (Y dias) + Z dias de reesc.
+  //   A) iniReesc(N) + Z - 1          → mínimo Z dias
+  //   B) C(N+2) + 1 dia               → 1d após laje +2 concretar
+  //   C) fimReesc(N+1) por Z          → escadinha: Z dias após iniReesc da laje +1
 
   const ciclos = pavComDatas.map((p,idx)=>{
     const dataInicio = p.dataInicioCalc||p.data_inicio||null;
     const C = p.data_concretagem||null;
 
-    // Escoramento: dataInicio → C + Y
-    const fimEsc = C ? addD(C, Y) : null;
+    // Verificar laudo aprovado
+    const fckLaje = parseFloat(p.fck_laje)||0;
+    const resistLaudo = parseFloat(p.resistencia_mpa)||0;
+    const pctAtingida = fckLaje&&resistLaudo ? (resistLaudo/fckLaje*100) : 0;
+    const laudoAprovado = pctAtingida >= pctMin && p.data_laudo;
+    const temEstimativa = !laudoAprovado;
+
+    // Fim do escoramento
+    const fimEsc = laudoAprovado ? p.data_laudo : (C ? addD(C, DR) : null);
     const iniReesc = fimEsc ? addD(fimEsc, 1) : null;
 
     // Laje +1 e +2
@@ -739,18 +914,10 @@ async function renderCronograma(){
 
     // Candidatos para fim do reesc
     let candidatos = [];
-
-    // A: mínimo Z dias
     if(iniReesc) candidatos.push({fim: addD(iniReesc, Z-1), crit:'z'});
-
-    // B: 1 dia após concretagem da laje +2 (regra principal)
     if(cMais2) candidatos.push({fim: addD(cMais2, 1), crit:'laje2'});
-
-    // C: Z dias após o início do reesc da laje +1
-    // (garante que o reesc de N não termina antes que laje+1 complete Z dias de reesc)
-    // fimReesc(N+1) por Z = C(N+1) + Y + 1 (iniReesc) + Z - 1
     if(cMais1){
-      const iniReescMais1 = addD(addD(cMais1, Y), 1);
+      const iniReescMais1 = addD(addD(cMais1, DR), 1);
       const fimReescMais1porZ = addD(iniReescMais1, Z-1);
       candidatos.push({fim: fimReescMais1porZ, crit:'laje1z'});
     }
@@ -780,7 +947,7 @@ async function renderCronograma(){
     const diasParaFim = fimReesc ? diffD(hoje, fimReesc) : null;
     const alertaFim = diasParaFim !== null && diasParaFim >= 0 && diasParaFim <= 5 && status === 'reesc';
 
-    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,reescPorMais2,lajeMais2,criterioReesc,diasEsc,diasReesc,status,alertaFim,diasParaFim};
+    return{p,idx,dataInicio,C,fimEsc,iniReesc,fimReesc,reescPorMais2,lajeMais2,criterioReesc,diasEsc,diasReesc,status,alertaFim,diasParaFim,laudoAprovado,temEstimativa,pctAtingida};
   });
 
   // Alertas urgentes
@@ -790,7 +957,7 @@ async function renderCronograma(){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div>
         <div style="font-family:var(--display);font-size:20px;font-weight:700">Cronograma & Ciclos</div>
-        <div style="font-size:12px;color:var(--ink-soft)">${obra.nome} · X=${X}d · Y=${Y}d · Z=${Z}d · T=${T}d</div>
+        <div style="font-size:12px;color:var(--ink-soft)">${obra.nome} · X=${X}d · Z=${Z}d · T=${T}d · Rompimento: ${DR}d · Desforma: ${pctMin}% fck</div>
       </div>
     </div>`;
 
@@ -832,7 +999,8 @@ async function renderCronograma(){
       <th>Pavimento</th>
       <th>Início Exec.</th>
       <th>Concretagem (C)</th>
-      <th>Fim Esc. (C+${Y}d)</th>
+      <th>Controle Tecnológico</th>
+      <th>Fim Escoramento</th>
       <th>Início Reesc.</th>
       <th>Fim Reesc.</th>
       <th>Critério</th>
@@ -867,6 +1035,16 @@ async function renderCronograma(){
       c.criterioReesc==='laje1z' ? `<span class="chip chip-amber">📅+Z Laje +1</span>` :
       `<span class="chip chip-red">⏱ Z mín. (${Z}d)</span>`;
 
+    // Badge do controle tecnológico
+    const fckLaje=parseFloat(c.p.fck_laje)||0;
+    const resistLaudo=parseFloat(c.p.resistencia_mpa)||0;
+    const pctAtingBadge=fckLaje&&resistLaudo?(resistLaudo/fckLaje*100).toFixed(0):null;
+    const controleBadge = c.laudoAprovado ?
+      `<span class="chip chip-green" title="${c.p.resistencia_mpa} MPa em ${fmtD(c.p.data_laudo)}">✅ ${c.p.resistencia_mpa} MPa (${pctAtingBadge}%)</span>` :
+      c.temEstimativa && C ?
+      `<span class="chip chip-amber">⏳ Est. ${fmtD(addD(C,DR))}</span>` :
+      `<span class="chip chip-gray">Sem laudo</span>`;
+
     // Linha com destaque
     const rowBg = alertaFim ? 'background:#fef2f2' :
       status==='esc_antes'||status==='esc_apos' ? 'background:#eff6ff' :
@@ -874,12 +1052,16 @@ async function renderCronograma(){
 
     html+=`<tr style="${rowBg}">
       <td class="num" style="color:var(--ink-soft);font-weight:700">${idx+1}</td>
-      <td class="nome">${p.nome}</td>
+      <td class="nome">${p.nome}${fckLaje?`<br><span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft)">fck ${fckLaje} MPa</span>`:''}
+      </td>
       <td class="dt">${fmtD(dataInicio)}</td>
       <td class="dt" style="font-weight:700">${fmtD(C)}</td>
-      <td class="dt">${fmtD(fimEsc)}</td>
+      <td>${controleBadge}</td>
+      <td class="dt" style="${c.temEstimativa&&C?'color:var(--amber);font-style:italic':''}">
+        ${fmtD(fimEsc)}${c.temEstimativa&&C?'<br><span style="font-size:10px;color:var(--amber)">(estimado)</span>':''}
+      </td>
       <td class="dt">${fmtD(iniReesc)}</td>
-      <td class="dt" style="${c.criterioReesc!=='laje'&&C?'color:var(--red);font-weight:700':''}${alertaFim?';background:#fee2e2':''}">${fmtD(fimReesc)}</td>
+      <td class="dt" style="${c.criterioReesc!=='laje2'&&C?'color:var(--red);font-weight:700':''}${alertaFim?';background:#fee2e2':''}">${fmtD(fimReesc)}</td>
       <td>${criterio}</td>
       <td class="num">${diasEsc!=null?diasEsc+'d':'—'}</td>
       <td class="num">${diasReesc!=null?diasReesc+'d':'—'}</td>
