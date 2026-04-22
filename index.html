@@ -125,7 +125,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
 /* CRONOGRAMA TABLE */
 .crono-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
 .crono-tbl th{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:6px 6px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap;cursor:help;overflow:hidden;text-overflow:ellipsis}
-.crono-tbl td{padding:5px 6px;border-bottom:1px solid var(--rule-lt);vertical-align:middle;overflow:hidden}
+.crono-tbl td{padding:5px 6px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
 .crono-tbl tr:hover td{background:var(--rule-lt)}
 .crono-tbl td.num{text-align:right;font-family:var(--mono);font-size:11px}
 .crono-tbl td.dt{font-family:var(--mono);font-size:11px;white-space:nowrap}
@@ -1007,19 +1007,19 @@ async function renderCronograma(){
 
   <div class="card"><div class="tbl-wrap"><table class="crono-tbl">
     <colgroup>
-      <col style="width:28px">
-      <col style="width:100px">
+      <col style="width:26px">
+      <col style="width:95px">
+      <col style="width:75px">
       <col style="width:80px">
-      <col style="width:90px">
-      <col style="width:110px">
-      <col style="width:85px">
+      <col style="width:105px">
+      <col style="width:78px">
+      <col style="width:75px">
       <col style="width:80px">
-      <col style="width:80px">
-      <col style="width:90px">
-      <col style="width:58px">
-      <col style="width:65px">
-      <col style="width:100px">
-      <col style="width:100px">
+      <col style="width:82px">
+      <col style="width:50px">
+      <col style="width:55px">
+      <col style="width:105px">
+      <col style="width:108px">
     </colgroup>
     <thead><tr>
       <th title="Ordem sequencial de execução dos pavimentos">#</th>
@@ -1072,22 +1072,38 @@ async function renderCronograma(){
       `<span class="chip chip-gray">Sem laudo</span>`;
 
     // Linha com destaque
-    const rowBg = alertaFim ? 'background:#fef2f2' :
-      status==='esc_antes'||status==='esc_apos' ? 'background:#eff6ff' :
-      status==='reesc' ? 'background:#f0fdf4' : '';
+    const rowBg =
+      status==='ok'                              ? 'background:#dcfce7' :
+      status==='reesc'                           ? 'background:#fefce8' :
+      (status==='esc_antes'||status==='esc_apos')? 'background:#fff7ed' :
+                                                   'background:#ffffff';
+
+    const estim = c.temEstimativa && C;
+    const dtFmt = (dt, futuro) => {
+      if(!dt) return '—';
+      const isFut = futuro && dt > hoje;
+      return isFut
+        ? `<span style="color:var(--amber);font-style:italic">${fmtD(dt)}<br><span style="font-size:10px">(estimado)</span></span>`
+        : fmtD(dt);
+    };
+
+    const cFuturo = C && C > hoje;
+    const concretCell = C
+      ? (cFuturo
+          ? `<span style="font-weight:700;color:var(--amber);font-style:italic">${fmtD(C)}<br><span style="font-size:10px">(estimado)</span></span>`
+          : `<span style="font-weight:700">${fmtD(C)}</span>`)
+      : '—';
 
     html+=`<tr style="${rowBg}">
       <td class="num" style="color:var(--ink-soft);font-weight:700">${idx+1}</td>
       <td class="nome">${p.nome}${fckLaje?`<br><span style="font-family:var(--mono);font-size:10px;color:var(--ink-soft)">fck ${fckLaje} MPa</span>`:''}
       </td>
       <td class="dt">${fmtD(dataInicio)}</td>
-      <td class="dt" style="font-weight:700">${fmtD(C)}</td>
+      <td class="dt">${concretCell}</td>
       <td>${controleBadge}</td>
-      <td class="dt" style="${c.temEstimativa&&C?'color:var(--amber);font-style:italic':''}">
-        ${fmtD(fimEsc)}${c.temEstimativa&&C?'<br><span style="font-size:10px;color:var(--amber)">(estimado)</span>':''}
-      </td>
-      <td class="dt">${fmtD(iniReesc)}</td>
-      <td class="dt" style="${c.criterioReesc!=='laje2'&&C?'color:var(--red);font-weight:700':''}${alertaFim?';background:#fee2e2':''}">${fmtD(fimReesc)}</td>
+      <td class="dt">${dtFmt(fimEsc, estim)}</td>
+      <td class="dt">${dtFmt(iniReesc, estim)}</td>
+      <td class="dt"${alertaFim?' style="background:#fee2e2"':''}>${dtFmt(fimReesc, estim)}</td>
       <td>${criterio}</td>
       <td class="num">${diasEsc!=null?diasEsc+'d':'—'}</td>
       <td class="num">${diasReesc!=null?diasReesc+'d':'—'}</td>
