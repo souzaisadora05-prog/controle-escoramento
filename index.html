@@ -110,8 +110,8 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
 /* TABLE */
 .tbl-wrap{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap}
-.tbl td{padding:8px 10px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
+.tbl th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:6px 6px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap;cursor:help;overflow:hidden;text-overflow:ellipsis}
+.tbl td{padding:5px 6px;border-bottom:1px solid var(--rule-lt);vertical-align:middle;overflow:hidden}
 .tbl tr:last-child td{border-bottom:none}
 .tbl td.num{text-align:right;font-family:var(--mono);font-size:12px}
 .tbl td.mono{font-family:var(--mono);font-size:11px}
@@ -649,19 +649,33 @@ async function renderEtapa3(){
         <span style="font-size:11px;color:var(--ink-soft)">Critério de desforma: <strong>${pctMin}% do fck</strong></span>
       </div>
       <div style="overflow-x:auto">
-        <table class="tbl" style="min-width:900px">
+        <table class="tbl" style="min-width:800px;table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:32px">
+            <col style="width:110px">
+            <col style="width:68px">
+            <col style="width:68px">
+            <col style="width:68px">
+            <col style="width:72px">
+            <col style="width:56px">
+            <col style="width:82px">
+            <col style="width:110px">
+            <col style="width:82px">
+            <col style="width:140px">
+            <col style="width:32px">
+          </colgroup>
           <thead><tr>
-            <th>#</th>
-            <th>Pavimento</th>
-            <th>Área Pilares (m²)</th>
-            <th>Área Vigas (m²)</th>
-            <th>Área Laje (m²)</th>
-            <th>Vol. Concreto (m³)</th>
-            <th>fck (MPa)</th>
-            <th>Início (calc.)</th>
-            <th>Concretagem (C)</th>
-            <th>Est. Rompimento</th>
-            <th>Laudo</th>
+            <th title="Ordem de execução dos pavimentos">#</th>
+            <th title="Nome do pavimento (ex: Térreo, G2, Tipo...)">Pavimento</th>
+            <th title="Área de fôrma dos pilares em metros quadrados (m²)">Pilares m²</th>
+            <th title="Área de fôrma das vigas em metros quadrados (m²)">Vigas m²</th>
+            <th title="Área de fôrma da laje em metros quadrados (m²)">Laje m²</th>
+            <th title="Volume de concreto consumido neste pavimento em metros cúbicos (m³)">Concreto m³</th>
+            <th title="Resistência característica do concreto especificada em projeto (MPa)">fck MPa</th>
+            <th title="Data de início calculada automaticamente: 1 dia após a concretagem do pavimento anterior">Início calc.</th>
+            <th title="Data real em que o concreto foi lançado neste pavimento">Concretagem</th>
+            <th title="Data estimada para o ensaio de rompimento do corpo de prova, com base nos parâmetros definidos">Est. Rompimento</th>
+            <th title="Resultado do laudo de ensaio de rompimento. Indica se o concreto atingiu a resistência mínima para desforma (% do fck configurada)">Laudo Rompimento</th>
             <th></th>
           </tr></thead>
           <tbody>`;
@@ -1015,7 +1029,7 @@ async function renderCronograma(){
     // Status Escoramento
     const statusEsc =
       status==='esc_antes' ? `<span class="bar-esc" style="opacity:.6">⬛ Executando</span>` :
-      status==='esc_apos'  ? `<span class="bar-esc">🔵 Cura (${Y}d)</span>` :
+      status==='esc_apos'  ? `<span class="bar-esc">🔵 Cura (${DR}d)</span>` :
       (status==='reesc'||status==='ok') ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
       C ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
       `<span class="bar-aguard">Aguardando</span>`;
