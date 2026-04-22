@@ -322,13 +322,19 @@ async function checarSessao(){
   try{const{data:{session}}=await db.auth.getSession();if(session?.user)iniciarApp(session.user);}
   catch(e){console.error(e);}
 }
-function iniciarApp(u){
+async function iniciarApp(u){
   user=u;
   g('screen-login').style.display='none';
   g('screen-app').style.display='block';
   g('topbar-email').textContent=u.email;
   verificarAdmin();
-  nav('obras');
+  const savedId=localStorage.getItem('obra_id');
+  if(savedId){
+    const{data:o}=await db.from('obras').select('*').eq('id',savedId).single();
+    if(o){obra=o;g('sb-obra-nome').textContent=o.nome;}
+    else{localStorage.removeItem('obra_id');}
+  }
+  nav(obra?'cronograma':'obras');
 }
 async function verificarAdmin(){
   try{
@@ -419,14 +425,15 @@ async function salvarObraDB(payload){
 async function selecionarObra(id){
   const{data:o}=await db.from('obras').select('*').eq('id',id).single();
   if(!o)return;
-  obra=o;g('sb-obra-nome').textContent=o.nome;
+  obra=o;localStorage.setItem('obra_id',o.id);
+  g('sb-obra-nome').textContent=o.nome;
   toast(`"${o.nome}" selecionada`,'success');nav('etapa1');
 }
 
 async function deletarObra(id){
   if(!confirm('Deletar esta obra e todos os dados?'))return;
   await db.from('obras').delete().eq('id',id);
-  if(obra?.id===id){obra=null;g('sb-obra-nome').textContent='—';}
+  if(obra?.id===id){obra=null;g('sb-obra-nome').textContent='—';localStorage.removeItem('obra_id');}
   toast('Removida','success');renderObras();
 }
 
@@ -1045,7 +1052,8 @@ async function renderCronograma(){
     const statusEsc =
       status==='esc_antes' ? `<span class="bar-esc" style="opacity:.7">Em Montagem</span>` :
       status==='esc_apos'  ? `<span class="bar-esc">Ag. Resistência</span>` :
-      (status==='reesc'||status==='ok') ? `<span class="chip chip-green" style="font-size:10px">Desformado</span>` :
+      status==='reesc'     ? `<span class="chip chip-green" style="font-size:10px">Desformado</span>` :
+      status==='ok'        ? `<span class="chip chip-green" style="font-size:10px">Concluído</span>` :
       `<span class="bar-aguard">Não Iniciado</span>`;
 
     const statusReesc =
