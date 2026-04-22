@@ -295,10 +295,7 @@ function toast(msg,type=''){
 function loading(){g('content-area').innerHTML='<div class="loading"><div class="spinner"></div></div>';}
 function fecharModal(id){g(id).classList.remove('open');}
 function abrirModal(id){g(id).classList.add('open');}
-function semObra(){
-  g('content-area').innerHTML=`<div class="alert alert-amber" style="margin-top:20px"><span>⚠️</span>
-    <span>Selecione uma obra em <strong>Minhas Obras</strong> primeiro.</span></div>`;
-}
+function semObra(){nav('obras');}
 
 // ═══════════════════════════════════════════
 // AUTH
@@ -677,10 +674,11 @@ async function renderEtapa3(){
       const fckVal=parseFloat(fck)||0;
       const pctAtingida=resist&&fckVal?(resist/fckVal*100):null;
       const laudoOk=pctAtingida!==null&&pctAtingida>=pctMin;
+      const pctStr=pctAtingida!==null?`${pctAtingida.toFixed(0)}%`:'fck não definido';
       const laudoBadge=resist?
         (laudoOk?
-          `<span class="chip chip-green">✅ ${resist} MPa (${pctAtingida.toFixed(0)}%)</span>`:
-          `<span class="chip chip-red">❌ ${resist} MPa (${pctAtingida.toFixed(0)}%)</span>`
+          `<span class="chip chip-green">✅ ${resist} MPa (${pctStr})</span>`:
+          `<span class="chip chip-red">❌ ${resist} MPa (${pctStr})</span>`
         ):`<span class="chip chip-gray">Sem laudo</span>`;
 
       html+=`<tr id="pav-tr-${p.id}">
