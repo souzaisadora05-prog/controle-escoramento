@@ -914,11 +914,12 @@ async function renderCronograma(){
     const dataInicio = p.dataInicioCalc||p.data_inicio||null;
     const C = p.data_concretagem||null;
 
-    // Verificar laudo aprovado
+    // Verificar laudo aprovado — laudo só é válido se a data for posterior à concretagem
     const fckLaje = parseFloat(p.fck_laje)||0;
     const resistLaudo = parseFloat(p.resistencia_mpa)||0;
     const pctAtingida = fckLaje&&resistLaudo ? (resistLaudo/fckLaje*100) : 0;
-    const laudoAprovado = pctAtingida >= pctMin && p.data_laudo;
+    const laudoValido = p.data_laudo && (!C || p.data_laudo >= C);
+    const laudoAprovado = pctAtingida >= pctMin && laudoValido;
     const temEstimativa = !laudoAprovado;
 
     // Fim do escoramento
@@ -1061,7 +1062,8 @@ async function renderCronograma(){
       status==='reesc' && c.criterioReesc==='laje1z' ? `<span class="bar-reesc" style="background:#b45309">Em Reescoramento</span>` :
       status==='reesc'                                ? `<span class="bar-reesc alerta">Em Reescoramento</span>` :
       status==='ok' ? `<span class="chip chip-green" style="font-size:10px">Concluído</span>` :
-      (status==='esc_antes'||status==='esc_apos') ? `<span class="bar-aguard">Ag. Desforma</span>` :
+      status==='esc_apos'  ? `<span class="bar-aguard">Ag. Desforma</span>` :
+      status==='esc_antes' ? `<span class="bar-aguard">Não Iniciado</span>` :
       `<span class="bar-aguard">Não Iniciado</span>`;
 
     const criterio = !C ? '—' :
