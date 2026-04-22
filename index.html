@@ -998,11 +998,11 @@ async function renderCronograma(){
   </div>
 
   <div class="legenda">
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Esc. (executando)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (em cura — aguardando laudo)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>🟢 Reesc. pela laje +2</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#b45309"></div>🟡 Reesc. Z dias após laje +1</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>🔴 Reesc. Z mínimo (último)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Escoramento em montagem (pré-concretagem)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Escoramento — concreto em cura, aguardando controle tecnológico</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>🟢 Reescoramento — liberado pela concretagem da laje +2 (critério mais favorável)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#b45309"></div>🟡 Reescoramento — prazo Z dias após reesc. da laje +1 (escadinha)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>🔴 Reescoramento — prazo mínimo Z dias isolado (último pavimento)</div>
   </div>
 
   <div class="card"><div class="tbl-wrap"><table class="crono-tbl">
@@ -1022,19 +1022,19 @@ async function renderCronograma(){
       <col style="width:100px">
     </colgroup>
     <thead><tr>
-      <th title="Ordem de execução dos pavimentos">#</th>
-      <th title="Nome do pavimento">Pavimento</th>
-      <th title="Data de início da montagem do escoramento (calculada: 1 dia após concretagem do pavimento anterior)">Início Esc.</th>
-      <th title="Data real em que o concreto foi lançado neste pavimento">Concretagem</th>
-      <th title="Resultado do ensaio de rompimento do corpo de prova. Se aprovado, define a data real de fim do escoramento">Controle Tec.</th>
-      <th title="Data em que o escoramento pode ser removido: aprovação do laudo (real) ou estimativa de C + dias do parâmetro DR">Fim Escoramento</th>
-      <th title="Data de início do reescoramento: 1 dia após o fim do escoramento">Início Reesc.</th>
-      <th title="Data de fim do reescoramento, calculada pelo critério mais restritivo: Z mínimo, laje +2 ou escadinha laje +1">Fim Reesc.</th>
-      <th title="Critério que definiu o fim do reescoramento: Laje+2 (ideal), +Z Laje+1 (intermediário) ou Z mínimo (último pavimento)">Critério</th>
-      <th title="Total de dias com escoramento montado (do início até a concretagem)">Dias Esc.</th>
-      <th title="Total de dias com reescoramento montado (do início ao fim do reesc.)">Dias Reesc.</th>
-      <th title="Situação atual do escoramento: Aguardando, Executando (pré-concreto), Em Cura (pós-concreto) ou Concluído">Status Esc.</th>
-      <th title="Situação atual do reescoramento: Aguardando, Em reescoramento ou Concluído">Status Reesc.</th>
+      <th title="Ordem sequencial de execução dos pavimentos">#</th>
+      <th title="Identificação do pavimento conforme projeto">Pavimento</th>
+      <th title="Data de início da montagem do escoramento. Calculada como 1 dia após a concretagem do pavimento anterior (NBR 14931)">Início Montagem</th>
+      <th title="Data de concretagem da laje — marco C do ciclo de escoramento (NBR 14931 / NBR 12655)">Concretagem (C)</th>
+      <th title="Controle tecnológico do concreto conforme NBR 12655: ensaio de compressão de corpo de prova cilíndrico. Define a data real de desforma quando a resistência atinge o percentual do fck exigido">Controle Tecnológico</th>
+      <th title="Data de desforma: retirada do escoramento. Determinada pelo laudo de ensaio aprovado (controle real) ou estimada por C + prazo de rompimento (DR). Conforme NBR 6118 item 18.3">Desforma</th>
+      <th title="Data de início do reescoramento: 1 dia após a desforma. O reescoramento redistribui as cargas das concretagens superiores (NBR 6118 item 18.3.3)">Início Reesc.</th>
+      <th title="Data de término do reescoramento, calculada pelo critério mais restritivo entre: prazo mínimo Z dias, concretagem da laje +2 ou escadinha com laje +1 (NBR 6118)">Término Reesc.</th>
+      <th title="Critério normativo que determinou o término do reescoramento: Laje +2 = concretagem 2 pavimentos acima (mais favorável) | +Z Laje +1 = Z dias após reesc. da laje seguinte | Z mín. = prazo mínimo isolado (último pavimento)">Critério (NBR)</th>
+      <th title="Duração total do escoramento em dias: da montagem até a concretagem (fase pré-resistência)">Dias Esc.</th>
+      <th title="Duração total do reescoramento em dias: do início ao término. Não pode ser inferior ao prazo mínimo Z definido nos parâmetros">Dias Reesc.</th>
+      <th title="Situação atual do escoramento: Não Iniciado | Em Montagem (pré-concretagem) | Ag. Resistência (concreto em cura, aguardando controle tecnológico) | Desformado">Situação Esc.</th>
+      <th title="Situação atual do reescoramento: Não Iniciado | Ag. Desforma (aguardando liberação do escoramento) | Em Reescoramento | Concluído">Situação Reesc.</th>
     </tr></thead>
     <tbody>`;
 
@@ -1043,19 +1043,18 @@ async function renderCronograma(){
 
     // Status Escoramento
     const statusEsc =
-      status==='esc_antes' ? `<span class="bar-esc" style="opacity:.6">⬛ Executando</span>` :
-      status==='esc_apos'  ? `<span class="bar-esc">🔵 Cura (${DR}d)</span>` :
-      (status==='reesc'||status==='ok') ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
-      C ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
-      `<span class="bar-aguard">Aguardando</span>`;
+      status==='esc_antes' ? `<span class="bar-esc" style="opacity:.7">Em Montagem</span>` :
+      status==='esc_apos'  ? `<span class="bar-esc">Ag. Resistência</span>` :
+      (status==='reesc'||status==='ok') ? `<span class="chip chip-green" style="font-size:10px">Desformado</span>` :
+      `<span class="bar-aguard">Não Iniciado</span>`;
 
     const statusReesc =
-      status==='reesc' && c.criterioReesc==='laje2'  ? `<span class="bar-reesc">🟢 Em reesc.</span>` :
-      status==='reesc' && c.criterioReesc==='laje1z' ? `<span class="bar-reesc" style="background:#b45309">🟡 Em reesc.</span>` :
-      status==='reesc'                                ? `<span class="bar-reesc alerta">🔴 Em reesc.</span>` :
-      status==='ok' ? `<span class="chip chip-green" style="font-size:10px">✓ Concluído</span>` :
-      (status==='esc_antes'||status==='esc_apos') ? `<span class="bar-aguard">Aguarda esc.</span>` :
-      `<span class="bar-aguard">Aguardando</span>`;
+      status==='reesc' && c.criterioReesc==='laje2'  ? `<span class="bar-reesc">Em Reescoramento</span>` :
+      status==='reesc' && c.criterioReesc==='laje1z' ? `<span class="bar-reesc" style="background:#b45309">Em Reescoramento</span>` :
+      status==='reesc'                                ? `<span class="bar-reesc alerta">Em Reescoramento</span>` :
+      status==='ok' ? `<span class="chip chip-green" style="font-size:10px">Concluído</span>` :
+      (status==='esc_antes'||status==='esc_apos') ? `<span class="bar-aguard">Ag. Desforma</span>` :
+      `<span class="bar-aguard">Não Iniciado</span>`;
 
     const criterio = !C ? '—' :
       c.criterioReesc==='laje2'  ? `<span class="chip chip-green">📅 ${c.lajeMais2?.nome||'Laje +2'}</span>` :
