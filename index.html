@@ -123,9 +123,9 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
 .ii-date:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(29,78,216,.1)}
 
 /* CRONOGRAMA TABLE */
-.crono-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.crono-tbl th{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap}
-.crono-tbl td{padding:8px 10px;border-bottom:1px solid var(--rule-lt);vertical-align:middle}
+.crono-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.crono-tbl th{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:6px 6px;text-align:left;background:#fafafa;border-bottom:1px solid var(--rule);white-space:nowrap;cursor:help;overflow:hidden;text-overflow:ellipsis}
+.crono-tbl td{padding:5px 6px;border-bottom:1px solid var(--rule-lt);vertical-align:middle;overflow:hidden}
 .crono-tbl tr:hover td{background:var(--rule-lt)}
 .crono-tbl td.num{text-align:right;font-family:var(--mono);font-size:11px}
 .crono-tbl td.dt{font-family:var(--mono);font-size:11px;white-space:nowrap}
@@ -951,7 +951,7 @@ async function renderCronograma(){
 
     let status = 'aguard';
     if(!C){ status = 'aguard'; }
-    else if(hoje < C){ status = 'esc_antes'; }
+    else if(hoje < C){ status = (dataInicio && hoje >= dataInicio) ? 'esc_antes' : 'aguard'; }
     else if(hoje >= C && fimEsc && hoje <= fimEsc){ status = 'esc_apos'; }
     else if(iniReesc && fimReesc && hoje >= iniReesc && hoje <= fimReesc){ status = 'reesc'; }
     else if(fimReesc && hoje > fimReesc){ status = 'ok'; }
@@ -999,27 +999,42 @@ async function renderCronograma(){
 
   <div class="legenda">
     <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8;opacity:.5"></div>Esc. (executando)</div>
-    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (cura Y dias)</div>
+    <div class="legenda-item"><div class="legenda-dot" style="background:#1d4ed8"></div>Esc. (em cura — aguardando laudo)</div>
     <div class="legenda-item"><div class="legenda-dot" style="background:#15803d"></div>🟢 Reesc. pela laje +2</div>
     <div class="legenda-item"><div class="legenda-dot" style="background:#b45309"></div>🟡 Reesc. Z dias após laje +1</div>
     <div class="legenda-item"><div class="legenda-dot" style="background:#b91c1c"></div>🔴 Reesc. Z mínimo (último)</div>
   </div>
 
   <div class="card"><div class="tbl-wrap"><table class="crono-tbl">
+    <colgroup>
+      <col style="width:28px">
+      <col style="width:100px">
+      <col style="width:80px">
+      <col style="width:90px">
+      <col style="width:110px">
+      <col style="width:85px">
+      <col style="width:80px">
+      <col style="width:80px">
+      <col style="width:90px">
+      <col style="width:58px">
+      <col style="width:65px">
+      <col style="width:100px">
+      <col style="width:100px">
+    </colgroup>
     <thead><tr>
-      <th>#</th>
-      <th>Pavimento</th>
-      <th>Início Exec.</th>
-      <th>Concretagem (C)</th>
-      <th>Controle Tecnológico</th>
-      <th>Fim Escoramento</th>
-      <th>Início Reesc.</th>
-      <th>Fim Reesc.</th>
-      <th>Critério</th>
-      <th>Dias Esc.</th>
-      <th>Dias Reesc.</th>
-      <th>Status Esc.</th>
-      <th>Status Reesc.</th>
+      <th title="Ordem de execução dos pavimentos">#</th>
+      <th title="Nome do pavimento">Pavimento</th>
+      <th title="Data de início da montagem do escoramento (calculada: 1 dia após concretagem do pavimento anterior)">Início Esc.</th>
+      <th title="Data real em que o concreto foi lançado neste pavimento">Concretagem</th>
+      <th title="Resultado do ensaio de rompimento do corpo de prova. Se aprovado, define a data real de fim do escoramento">Controle Tec.</th>
+      <th title="Data em que o escoramento pode ser removido: aprovação do laudo (real) ou estimativa de C + dias do parâmetro DR">Fim Escoramento</th>
+      <th title="Data de início do reescoramento: 1 dia após o fim do escoramento">Início Reesc.</th>
+      <th title="Data de fim do reescoramento, calculada pelo critério mais restritivo: Z mínimo, laje +2 ou escadinha laje +1">Fim Reesc.</th>
+      <th title="Critério que definiu o fim do reescoramento: Laje+2 (ideal), +Z Laje+1 (intermediário) ou Z mínimo (último pavimento)">Critério</th>
+      <th title="Total de dias com escoramento montado (do início até a concretagem)">Dias Esc.</th>
+      <th title="Total de dias com reescoramento montado (do início ao fim do reesc.)">Dias Reesc.</th>
+      <th title="Situação atual do escoramento: Aguardando, Executando (pré-concreto), Em Cura (pós-concreto) ou Concluído">Status Esc.</th>
+      <th title="Situação atual do reescoramento: Aguardando, Em reescoramento ou Concluído">Status Reesc.</th>
     </tr></thead>
     <tbody>`;
 
