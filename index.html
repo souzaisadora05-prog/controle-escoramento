@@ -250,6 +250,44 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
 </div>
 <input type="file" id="input-pdf" accept=".pdf" style="display:none" onchange="processarLaudoPDF(event)">
 
+<!-- MODAL IMPORTAÇÃO PDF -->
+<div class="modal-overlay" id="modal-pdf-import">
+  <div class="modal-box" style="max-width:580px;max-height:82vh;display:flex;flex-direction:column">
+    <div class="modal-title">📄 Importar Laudo de Rompimento (PDF)</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px" id="pdf-import-count"></div>
+    <div id="pdf-import-body" style="overflow-y:auto;flex:1;padding-right:4px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--rule);padding-top:12px">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-pdf-import')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarImportacaoPDF()">✅ Confirmar Importação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LAUDO -->
+<div class="modal-overlay" id="modal-laudo">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-title" id="laudo-modal-title">🧪 Lançar Laudo de Rompimento</div>
+    <input type="hidden" id="laudo-pav-id">
+    <div style="margin-bottom:12px;padding:10px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px;font-family:var(--mono);font-size:12px" id="laudo-pav-info"></div>
+    <div class="fg fg2" style="gap:12px;margin-bottom:14px">
+      <div class="field">
+        <label>Data do Rompimento</label>
+        <input type="date" id="laudo-data">
+      </div>
+      <div class="field">
+        <label>Resistência Medida (MPa)</label>
+        <input type="number" id="laudo-resist" step="0.1" placeholder="Ex: 32.3">
+      </div>
+    </div>
+    <div id="laudo-resultado" style="margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-danger" id="btn-remover-laudo" style="display:none;margin-right:auto" onclick="excluirLaudo()">🗑 Remover Laudo</button>
+      <button class="btn btn-ghost" onclick="fecharModal('modal-laudo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLaudo()">💾 Salvar Laudo</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO USUÁRIO -->
 <div class="modal-overlay" id="modal-novo-user">
   <div class="modal-box">
@@ -771,43 +809,7 @@ async function renderEtapa3(){
     <button class="btn btn-ghost" onclick="nav('cronograma')">Ver Cronograma →</button>
   </div>
 
-  <!-- MODAL IMPORTAÇÃO PDF -->
-  <div class="modal-overlay" id="modal-pdf-import">
-    <div class="modal-box" style="max-width:580px;max-height:82vh;display:flex;flex-direction:column">
-      <div class="modal-title">📄 Importar Laudo de Rompimento (PDF)</div>
-      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px" id="pdf-import-count"></div>
-      <div id="pdf-import-body" style="overflow-y:auto;flex:1;padding-right:4px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--rule);padding-top:12px">
-        <button class="btn btn-ghost" onclick="fecharModal('modal-pdf-import')">Cancelar</button>
-        <button class="btn btn-primary" onclick="confirmarImportacaoPDF()">✅ Confirmar Importação</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL LAUDO -->
-  <div class="modal-overlay" id="modal-laudo">
-    <div class="modal-box" style="max-width:440px">
-      <div class="modal-title" id="laudo-modal-title">🧪 Lançar Laudo de Rompimento</div>
-      <input type="hidden" id="laudo-pav-id">
-      <div style="margin-bottom:12px;padding:10px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px;font-family:var(--mono);font-size:12px" id="laudo-pav-info"></div>
-      <div class="fg fg2" style="gap:12px;margin-bottom:14px">
-        <div class="field">
-          <label>Data do Rompimento</label>
-          <input type="date" id="laudo-data">
-        </div>
-        <div class="field">
-          <label>Resistência Medida (MPa)</label>
-          <input type="number" id="laudo-resist" step="0.1" placeholder="Ex: 32.3">
-        </div>
-      </div>
-      <div id="laudo-resultado" style="margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="btn btn-danger" id="btn-remover-laudo" style="display:none;margin-right:auto" onclick="excluirLaudo()">🗑 Remover Laudo</button>
-        <button class="btn btn-ghost" onclick="fecharModal('modal-laudo')">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarLaudo()">💾 Salvar Laudo</button>
-      </div>
-    </div>
-  </div>`;
+`;
 
   g('content-area').innerHTML=html;
 }
@@ -1075,7 +1077,7 @@ async function confirmarImportacaoPDF(){
   if(importados){
     toast(`${importados} laudo${importados>1?'s':''} importado${importados>1?'s':''}!`,'success');
     fecharModal('modal-pdf-import');
-    renderEtapa3();
+    if(_importPavId)renderControle();else renderEtapa3();
   }else{
     toast('Selecione ao menos um pavimento e um rompimento.','error');
   }
@@ -1137,6 +1139,7 @@ async function renderControle(){
     db.from('ensaios_cp').select('*').eq('obra_id',obra.id).order('data_rompimento')
   ]);
   if(!pavs){g('content-area').innerHTML='<div class="alert alert-amber"><span>⚠️</span><span>Erro ao carregar dados.</span></div>';return;}
+  pavimentos=pavs;
 
   const pctMin=obra.pct_desforma||75;
   const DR=params?.dias_exec??5;
