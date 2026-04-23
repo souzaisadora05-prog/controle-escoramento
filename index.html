@@ -248,6 +248,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
     </div>
   </div>
 </div>
+<input type="file" id="input-pdf" accept=".pdf" style="display:none" onchange="processarLaudoPDF(event)">
 
 <!-- MODAL NOVO USUÁRIO -->
 <div class="modal-overlay" id="modal-novo-user">
@@ -652,7 +653,6 @@ async function renderEtapa3(){
     <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="adicionarPavimento()">+ Adicionar Pavimento</button>
       <button class="btn btn-ghost" onclick="abrirImportacaoPDF()" title="Importar laudos de rompimento de um PDF no padrão do laboratório">📄 Importar Laudo PDF</button>
-      <input type="file" id="input-pdf" accept=".pdf" style="display:none" onchange="processarLaudoPDF(event)">
     </div>`;
 
   if(!pavimentos.length){
