@@ -239,6 +239,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
       <div class="sb-item" onclick="nav('etapa2')" id="nav-etapa2"><span class="ic">2️⃣</span> Parâmetros</div>
       <div class="sb-item" onclick="nav('etapa3')" id="nav-etapa3"><span class="ic">3️⃣</span> Pavimentos</div>
       <div class="sb-sec">Análise</div>
+      <div class="sb-item" onclick="nav('controle')" id="nav-controle"><span class="ic">🧪</span> Controle Tecnológico</div>
       <div class="sb-item" onclick="nav('cronograma')" id="nav-cronograma"><span class="ic">📅</span> Cronograma</div>
       <div class="sb-item" onclick="nav('admin')" id="nav-admin" style="display:none"><span class="ic">🔐</span> Admin</div>
     </div>
@@ -350,7 +351,7 @@ async function verificarAdmin(){
 function nav(p){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   g(`nav-${p}`)?.classList.add('active');
-  const pages={obras:renderObras,etapa1:renderEtapa1,etapa2:renderEtapa2,etapa3:renderEtapa3,cronograma:renderCronograma,admin:renderAdmin};
+  const pages={obras:renderObras,etapa1:renderEtapa1,etapa2:renderEtapa2,etapa3:renderEtapa3,controle:renderControle,cronograma:renderCronograma,admin:renderAdmin};
   pages[p]?.();
 }
 
@@ -1105,6 +1106,139 @@ async function deletarPav(id){
 
 // ═══════════════════════════════════════════
 // CRONOGRAMA
+// ═══════════════════════════════════════════
+// CONTROLE TECNOLÓGICO DO CONCRETO
+// ═══════════════════════════════════════════
+async function renderControle(){
+  if(!obra){semObra();return;}
+  loading();
+  const[{data:pavs},{data:params}]=await Promise.all([
+    db.from('pavimentos').select('*').eq('obra_id',obra.id).order('ordem'),
+    db.from('tipos_pavimento').select('*').eq('obra_id',obra.id).eq('nome','_params').maybeSingle()
+  ]);
+  if(!pavs){g('content-area').innerHTML='<div class="alert alert-amber"><span>⚠️</span><span>Erro ao carregar dados.</span></div>';return;}
+
+  const pctMin=obra.pct_desforma||75;
+  const DR=params?.dias_exec??5;
+  const hoje=new Date().toISOString().split('T')[0];
+
+  // Estatísticas
+  const comLaudo=pavs.filter(p=>p.data_laudo&&p.resistencia_mpa);
+  const aprovados=comLaudo.filter(p=>{const fck=parseFloat(p.fck_laje)||0;return fck&&(p.resistencia_mpa/fck*100)>=pctMin;});
+  const reprovados=comLaudo.filter(p=>{const fck=parseFloat(p.fck_laje)||0;return !fck||(p.resistencia_mpa/fck*100)<pctMin;});
+  const semLaudo=pavs.filter(p=>!p.data_laudo||!p.resistencia_mpa);
+
+  let rows='';
+  pavs.forEach((p,idx)=>{
+    const fck=parseFloat(p.fck_laje)||0;
+    const resist=p.resistencia_mpa||null;
+    const pctAting=resist&&fck?resist/fck*100:null;
+    const aprovado=pctAting!==null&&pctAting>=pctMin;
+    const estRomp=p.data_concretagem?addD(p.data_concretagem,DR):null;
+    const idadeDias=p.data_laudo&&p.data_concretagem?diffD(p.data_concretagem,p.data_laudo):null;
+    const resistMin=fck?(fck*pctMin/100).toFixed(1):null;
+    const atrasado=!p.data_laudo&&estRomp&&estRomp<hoje;
+
+    // Status badge
+    const statusBadge=!p.data_laudo
+      ?(atrasado?`<span class="chip chip-red">⚠️ Atrasado</span>`:`<span class="chip chip-gray">⏳ Pendente</span>`)
+      :aprovado?`<span class="chip chip-green">✅ Aprovado</span>`:`<span class="chip chip-red">❌ Reprovado</span>`;
+
+    const rowBg=!p.data_laudo?'':'background:'+(aprovado?'#f0fdf4':'#fef2f2');
+
+    // Barra de progresso visual
+    const barPct=pctAting!==null?Math.min(pctAting,120):0;
+    const barColor=aprovado?'var(--green)':pctAting!==null?'var(--red)':'var(--rule)';
+    const progresso=pctAting!==null
+      ?`<div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:8px;background:var(--rule-lt);border-radius:4px;overflow:hidden;min-width:60px">
+            <div style="width:${(barPct/120*100).toFixed(0)}%;height:100%;background:${barColor};border-radius:4px;transition:width .3s"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${barColor};white-space:nowrap">${pctAting.toFixed(0)}%</span>
+        </div>`
+      :`<span style="color:var(--ink-soft);font-size:12px">—</span>`;
+
+    // Destaque data do ensaio: laranja se mais tarde que o estimado
+    const corData=p.data_laudo&&estRomp&&p.data_laudo>estRomp?'color:var(--amber)':'';
+
+    rows+=`<tr style="${rowBg}">
+      <td class="num" style="color:var(--ink-soft);font-weight:700">${idx+1}</td>
+      <td style="font-weight:600;white-space:nowrap">${p.nome||'—'}</td>
+      <td style="font-family:var(--mono);font-size:13px;font-weight:700;text-align:center">${fck||'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${p.data_concretagem?fmtD(p.data_concretagem):'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--ink-soft)">${estRomp?fmtD(estRomp):'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;${corData}">${p.data_laudo?fmtD(p.data_laudo):'—'}</td>
+      <td style="font-family:var(--mono);font-size:12px;text-align:center">${idadeDias!==null?idadeDias+'d':'—'}</td>
+      <td style="font-family:var(--mono);font-size:13px;font-weight:700;text-align:right;color:${aprovado?'var(--green)':resist?'var(--red)':'inherit'}">${resist?resist.toFixed(1)+' MPa':'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-soft)">${resistMin?resistMin+' MPa':'—'}</td>
+      <td style="min-width:130px">${progresso}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  });
+
+  g('content-area').innerHTML=`
+    <div class="step-header">
+      <div class="step-num" style="background:var(--green);font-size:20px">🧪</div>
+      <div class="step-info">
+        <div class="step-title">Controle Tecnológico do Concreto</div>
+        <div class="step-sub">Ensaios de rompimento por pavimento — NBR 12655:2022 · NBR 5739:2018 · Critério de desforma: ${pctMin}% do fck</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+      <div style="background:#fff;border:1px solid var(--rule);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:var(--display)">${pavs.length}</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px">Total de Lajes</div>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:var(--display);color:var(--accent)">${comLaudo.length}</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:2px">Com Ensaio</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:var(--display);color:var(--green)">${aprovados.length}</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">✅ Aprovados</div>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:var(--display);color:var(--red)">${reprovados.length}</div>
+        <div style="font-size:11px;color:var(--red);margin-top:2px">❌ Reprovados</div>
+      </div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:var(--display);color:var(--amber)">${semLaudo.length}</div>
+        <div style="font-size:11px;color:var(--amber);margin-top:2px">⏳ Pendentes</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">📊 Resultados por Laje</span>
+        <span style="font-size:11px;color:var(--ink-soft)">Critério de aprovação: resist. medida ≥ ${pctMin}% do fck (NBR 14931:2023 §12.2)</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="crono-tbl" style="width:100%;min-width:940px">
+          <thead><tr>
+            <th>#</th>
+            <th>Laje / Pavimento</th>
+            <th title="Resistência característica de projeto (fck) — NBR 6118">fck proj. (MPa)</th>
+            <th title="Data de concretagem da laje">Concretagem</th>
+            <th title="Estimativa do 1º ensaio: concretagem + ${DR} dias (parâmetro DR da obra)">Est. 1º Ensaio</th>
+            <th title="Data real do rompimento do corpo-de-prova no laboratório (NBR 5739:2018)">Data Ensaio</th>
+            <th title="Idade do concreto no rompimento: data ensaio − data concretagem">Idade (dias)</th>
+            <th title="Resistência à compressão medida no ensaio (NBR 5739:2018)">Resist. Medida</th>
+            <th title="Resistência mínima para desforma: ${pctMin}% do fck (NBR 14931:2023 §12.2)">Limite Desforma</th>
+            <th title="Percentual do fck atingido. Verde = aprovado, Vermelho = reprovado">% fck atingido</th>
+            <th title="Aprovado: resist. ≥ limite · Reprovado: resist. < limite · Pendente: sem ensaio · Atrasado: est. já passou">Status</th>
+          </tr></thead>
+          <tbody>${rows||'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-soft)">Nenhum pavimento cadastrado.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="nav('etapa3')">← Pavimentos</button>
+      <button class="btn btn-ghost" onclick="nav('cronograma')">Ver Cronograma →</button>
+    </div>`;
+}
+
 // ═══════════════════════════════════════════
 async function renderCronograma(){
   if(!obra){semObra();return;}
