@@ -794,7 +794,12 @@ function calcSeqDatas(pavs){
     if(idx===0){dataInicioCalc=p.data_inicio||null;}
     else{
       const ant=pavs[idx-1];
-      if(ant.data_concretagem)dataInicioCalc=addD(ant.data_concretagem,1);
+      if(ant.data_concretagem){
+        const calc=addD(ant.data_concretagem,1);
+        // só usa a data calculada se for antes da concretagem do pavimento atual
+        if(!p.data_concretagem||calc<=p.data_concretagem) dataInicioCalc=calc;
+        else dataInicioCalc=p.data_inicio||null;
+      }
     }
     return{...p,dataInicioCalc};
   });
@@ -926,9 +931,12 @@ async function renderCronograma(){
     const fimEsc = laudoAprovado ? p.data_laudo : (C ? addD(C, DR) : null);
     const iniReesc = fimEsc ? addD(fimEsc, 1) : null;
 
-    // Laje +1 e +2
-    const lajeMais1 = pavComDatas[idx+1]||null;
-    const lajeMais2 = pavComDatas[idx+2]||null;
+    // Laje +1 e +2: filtra apenas pavimentos concretados APÓS o atual (ordem cronológica)
+    const pavsApos = C
+      ? pavComDatas.filter((pav,i) => i!==idx && pav.data_concretagem && pav.data_concretagem > C)
+      : pavComDatas.slice(idx+1);
+    const lajeMais1 = pavsApos[0]||null;
+    const lajeMais2 = pavsApos[1]||null;
     const cMais1 = lajeMais1?.data_concretagem||null;
     const cMais2 = lajeMais2?.data_concretagem||null;
 
