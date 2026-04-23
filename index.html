@@ -724,7 +724,8 @@ async function renderEtapa3(){
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             ${laudoBadge}
-            <button class="btn btn-ghost btn-sm" onclick="abrirLaudo('${p.id}','${p.nome||'Pavimento'}','${fck}','${p.data_laudo||''}','${p.resistencia_mpa||''}')">🧪</button>
+            <button class="btn btn-ghost btn-sm" onclick="abrirLaudo('${p.id}','${p.nome||'Pavimento'}','${fck}','${p.data_laudo||''}','${p.resistencia_mpa||''}')" title="Lançar laudo manualmente">🧪</button>
+            <button class="btn btn-ghost btn-sm" onclick="abrirImportacaoPDFPav('${p.id}')" title="Importar laudo via PDF">📄</button>
           </div>
         </td>
         <td><button class="btn btn-danger btn-sm" onclick="deletarPav('${p.id}')">✕</button></td>
@@ -881,7 +882,19 @@ async function excluirLaudo(){
 // ═══════════════════════════════════════════
 // IMPORTAÇÃO DE LAUDO PDF
 // ═══════════════════════════════════════════
+let _importPavId=null; // null = global, string = pavimento específico
+
 function abrirImportacaoPDF(){
+  _importPavId=null;
+  _iniciarImportPDF();
+}
+
+function abrirImportacaoPDFPav(pavId){
+  _importPavId=pavId;
+  _iniciarImportPDF();
+}
+
+function _iniciarImportPDF(){
   if(typeof pdfjsLib==='undefined'){toast('Biblioteca PDF não carregada. Recarregue a página.','error');return;}
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   g('input-pdf').click();
@@ -894,29 +907,42 @@ async function processarLaudoPDF(event){
   toast('Lendo PDF...','info');
   try{
     const buf=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
     let linhas=[];
     for(let i=1;i<=pdf.numPages;i++){
       const page=await pdf.getPage(i);
       const content=await page.getTextContent();
-      // Agrupar itens por posição Y (linha) e ordenar por X (coluna)
-      const byY={};
-      for(const item of content.items){
-        const y=Math.round(item.transform[5]/3)*3;
-        if(!byY[y])byY[y]=[];
-        byY[y].push({x:item.transform[4],str:item.str});
+      // Filtrar itens com texto e ordenar por Y desc, X asc
+      const items=content.items
+        .filter(it=>it.str&&it.str.trim())
+        .sort((a,b)=>{
+          const dy=b.transform[5]-a.transform[5];
+          return Math.abs(dy)>2?dy:a.transform[4]-b.transform[4];
+        });
+      // Agrupar em linhas com tolerância de 8px (evita split de mesma linha)
+      const rows=[];
+      let curRow=null;
+      for(const it of items){
+        const y=it.transform[5];
+        if(!curRow||Math.abs(curRow.y-y)>8){
+          curRow={y,items:[]};
+          rows.push(curRow);
+        }
+        curRow.items.push({x:it.transform[4],str:it.str});
       }
-      const pageLinhas=Object.entries(byY)
-        .sort(([ya],[yb])=>Number(yb)-Number(ya))
-        .map(([,itens])=>itens.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' '));
+      const pageLinhas=rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' '));
       linhas.push(...pageLinhas);
     }
     const grupos=parsearLaudo(linhas);
-    if(!grupos.length){toast('Nenhum dado de rompimento encontrado. Verifique o formato do PDF.','error');return;}
+    if(!grupos.length){
+      console.log('[PDF debug] Linhas extraídas:',linhas.slice(0,40));
+      toast('Nenhum dado de rompimento encontrado. Verifique o formato do PDF.','error');
+      return;
+    }
     renderPreviewImportacao(grupos);
     abrirModal('modal-pdf-import');
   }catch(err){
-    console.error(err);
+    console.error('[PDF erro]',err);
     toast('Erro ao ler PDF: '+(err.message||err),'error');
   }
 }
@@ -933,22 +959,28 @@ function parsearLaudo(linhas){
   const resultados=[];
   let curMoldagem=null,curEstrutura=null,curFck=null;
   for(const linha of linhas){
-    if(!/\bAHF\s+\d{4}/i.test(linha))continue;
-    // Linha completa tem data de moldagem seguida de horário HH:MM
-    const fullM=linha.match(/(\d{2}\/\d{2}\/\d{2})\s+\d{2}:\d{2}/);
+    const l=linha.trim();
+    if(!l)continue;
+    // Aceita AHF com 3-5 dígitos e possíveis espaços extras
+    if(!/AHF\s*\d{3,5}/i.test(l))continue;
+    // Linha completa: data de moldagem seguida de horário HH:MM
+    const fullM=l.match(/(\d{2}\/\d{2}\/\d{2})\s+\d{2}:\d{2}/);
     if(fullM){
       curMoldagem=parseDateBR2(fullM[1]);
-      // Estrutura: texto após o fck que contém "Laje" ou "Pavimento"
-      const estM=linha.match(/([\d.]+)\s+(Laje[^"'\r\n]+)/i);
-      if(estM){curFck=parseFloat(estM[1]);curEstrutura=estM[2].trim().replace(/\s+/g,' ');}
+      // Estrutura: número decimal (fck) seguido de "Laje / Nº Pavimento"
+      const estM=l.match(/(\d+[.,]\d+)\s+(Laje\s*[/]\s*\d+\s*[oOº°]?\s*Pavimento[^"'\r\n]*)/i);
+      if(estM){
+        curFck=parseFloat(estM[1].replace(',','.'));
+        curEstrutura=estM[2].trim().replace(/\s+/g,' ');
+      }
     }
-    // Data de rompimento: DD/MM/YY NÃO seguido de HH:MM, depois idade e resistência
-    const rompM=linha.match(/(\d{2}\/\d{2}\/\d{2})(?!\s+\d{2}:\d{2})\s+(\d{1,3})\s+([\d,.]+)\s+[NRCnrc]/);
+    // Data de rompimento: DD/MM/YY NÃO seguida de HH:MM → idade (1-3 dig) → resistência → [NRC]
+    const rompM=l.match(/(\d{2}\/\d{2}\/\d{2})(?!\s*\d{2}:\d{2})\s+(\d{1,3})\s+([\d]+[.,][\d]+)\s+[NRCnrc]/);
     if(!rompM||!curMoldagem||!curEstrutura)continue;
     const rompiData=parseDateBR2(rompM[1]);
     const idade=parseInt(rompM[2]);
     const resist=parseFloat(rompM[3].replace(',','.'));
-    if(!rompiData||isNaN(resist)||isNaN(idade))continue;
+    if(!rompiData||isNaN(resist)||isNaN(idade)||resist<=0||idade<=0)continue;
     resultados.push({moldagem:curMoldagem,estrutura:curEstrutura,fck:curFck,rompiData,idade,resist});
   }
   // Agrupar por (estrutura + data de moldagem)
@@ -980,7 +1012,10 @@ function renderPreviewImportacao(grupos){
       <div style="font-size:12px;font-weight:600;margin-bottom:5px">Vincular ao pavimento:</div>
       <select id="pav-sel-${gi}" style="width:100%;margin-bottom:10px;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;font-size:13px">
         <option value="">— Selecione o pavimento —</option>
-        ${pavimentos.map(p=>`<option value="${p.id}"${p.data_concretagem===grp.moldagem?' selected':''}>${p.nome}${p.data_concretagem?' · C: '+fmtD(p.data_concretagem):''}</option>`).join('')}
+        ${pavimentos.map(p=>{
+          const sel=_importPavId?p.id===_importPavId:p.data_concretagem===grp.moldagem;
+          return`<option value="${p.id}"${sel?' selected':''}>${p.nome}${p.data_concretagem?' · C: '+fmtD(p.data_concretagem):''}</option>`;
+        }).join('')}
       </select>
       <div style="font-size:12px;font-weight:600;margin-bottom:6px">Selecionar rompimento:</div>`;
 
