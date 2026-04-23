@@ -974,11 +974,12 @@ function parsearLaudo(linhas){
     const fullM=l.match(/(\d{2}\/\d{2}\/\d{2})\s+\d{2}:\d{2}/);
     if(fullM){
       curMoldagem=parseDateBR2(fullM[1]);
-      // Estrutura: número decimal (fck) seguido de "Laje / Nº Pavimento"
-      const estM=l.match(/(\d+[.,]\d+)\s+(Laje\s*[/]\s*\d+\s*[oOº°]?\s*Pavimento[^"'\r\n]*)/i);
+      // Extrai fck + nome de estrutura: cap type [N/R/C] → fck decimal → qualquer nome
+      const estM=l.match(/[NRC]\s+(\d+[.,]\d+)\s+([A-ZÀ-Ÿa-zà-ÿ0-9][^"'\n\r]*)$/i);
       if(estM){
         curFck=parseFloat(estM[1].replace(',','.'));
-        curEstrutura=estM[2].trim().replace(/\s+/g,' ');
+        const estText=estM[2].trim().replace(/\s+/g,' ');
+        if(estText) curEstrutura=estText;
       }
     }
     // Data de rompimento: DD/MM/YY NÃO seguida de HH:MM → idade (1-3 dig) → resistência → [NRC]
