@@ -461,7 +461,7 @@ async function renderEtapa1(){
         <div class="field">
           <label>% mínima do fck para desforma</label>
           <input type="number" id="e1-pct" value="${o.pct_desforma||75}" min="50" max="100" step="1" style="font-family:var(--mono);font-size:16px">
-          <span class="field-hint">Definida pelo calculista estrutural. Valor típico: 75% (NBR 15696)</span>
+          <span class="field-hint">Definida pelo calculista estrutural. Valor típico: 75% (NBR 14931:2023 §12.2). Atenção: fcj e Eci devem ser atingidos simultaneamente.</span>
         </div>
       </div>
     </div></div>
@@ -472,11 +472,11 @@ async function renderEtapa1(){
         <p style="margin-bottom:10px">Antes de retirar o escoramento, a laje precisa atingir uma <strong>resistência mínima do concreto</strong>. Esse critério é definido pelo projetista estrutural no projeto de formas e está vinculado ao <strong>fck do projeto</strong>.</p>
         <div class="alert alert-info" style="margin-bottom:10px">
           <span>📐</span>
-          <div><strong>NBR 15696 — Fôrmas e escoramentos para estruturas de concreto:</strong> A estrutura deve ser capaz de suportar o peso próprio e as cargas de execução antes da desforma. O critério usual é atingir <strong>75% do fck</strong>, salvo especificação diferente do calculista.</div>
+          <div><strong>NBR 14931:2023 §12.2 — Tempo de permanência de fôrmas e escoramentos:</strong> A retirada das fôrmas e dos escoramentos só pode ser feita quando o concreto for capaz de resistir às ações que sobre ele atuem nesta etapa da obra e não provocar deformações inaceitáveis. O responsável pela execução deve consultar o projetista sobre os valores mínimos de <strong>resistência à compressão (fcj) e módulo de elasticidade (Eci)</strong>, que devem ser atendidos <strong>concomitantemente</strong>. Critério usual: <strong>75% do fck</strong>.</div>
         </div>
         <div class="alert alert-amber">
           <span>⚠️</span>
-          <div><strong>Atenção:</strong> Nunca retire o escoramento apenas pelo prazo em dias sem um ensaio de controle tecnológico. O laudo de rompimento do corpo de prova é a prova técnica que garante a segurança da estrutura.</div>
+          <div><strong>Atenção (NBR 14931:2023 §12.2):</strong> A remoção dos escoramentos deve ser realizada com <strong>no mínimo 14 dias</strong> após a concretagem, salvo quando utilizado concreto com características especiais de resistência e deformação, desde que asseguradas as condições definidas no projeto estrutural. Nunca retire o escoramento apenas pelo prazo — o laudo de rompimento é a prova técnica que valida a resistência e modulo de deformação exigidos.</div>
         </div>
       </div>
     </div>
@@ -534,7 +534,7 @@ async function renderEtapa2(){
           <div class="field">
             <label>Z — Duração mínima do reescoramento (dias)</label>
             <input type="number" id="e2-Z" value="${Z}" min="1" style="font-family:var(--mono);font-size:15px">
-            <span class="field-hint">Mínimo de reescoramento. Referência: 21 dias (NBR 15696)</span>
+            <span class="field-hint">Duração mínima definida em projeto estrutural (NBR 14931:2023 §12.2). Valor típico de mercado: 21 dias.</span>
           </div>
         </div>
       </div>
@@ -547,7 +547,7 @@ async function renderEtapa2(){
           <div class="field">
             <label>Dias após concretagem para o 1º rompimento</label>
             <input type="number" id="e2-DR" value="${DR}" min="1" max="28" style="font-family:var(--mono);font-size:15px">
-            <span class="field-hint">Prazo padrão da sua obra para romper o primeiro CP. Ex: 5, 7 ou 14 dias</span>
+            <span class="field-hint">Prazo da obra para o ensaio de rompimento. NBR 14931:2023 §12.2 exige mínimo 14 dias para desforma, salvo concreto especial em projeto.</span>
           </div>
         </div>
         <div class="alert alert-info" style="margin-bottom:10px">
@@ -564,9 +564,9 @@ async function renderEtapa2(){
         <div class="alert alert-green">
           <span>💡</span>
           <div>
-            <strong>Exemplo prático (NBR 12655):</strong> fck 40 MPa, critério 75% → resistência mínima = <strong>30 MPa</strong>.
-            Laudo ao 5º dia: 32,3 MPa → ✅ aprovado! O escoramento pode ser retirado com segurança.
-            Sem laudo: o sistema usa os ${DR} dias como estimativa.
+            <strong>Exemplo prático:</strong> fck 40 MPa, critério 75% (NBR 14931:2023 §12.2) → resistência mínima = <strong>30 MPa</strong>.
+            Laudo ao 14º dia: 32,3 MPa → ✅ aprovado! Atenção: verificar também o Eci exigido em projeto.
+            Sem laudo: o sistema usa os ${DR} dias como estimativa da data de desforma.
           </div>
         </div>
       </div>
@@ -580,18 +580,23 @@ async function renderEtapa2(){
             <div style="font-family:var(--display);font-weight:700;margin-bottom:8px;color:var(--accent)">🔵 Escoramento (100%)</div>
             <div>Suporta 100% do peso do concreto fresco, fôrmas e operários. Permanece até a laje atingir resistência para se autossuportar.</div>
             <div style="margin-top:8px;padding:8px 10px;background:var(--accent-lt);border-radius:5px;font-size:12px">
-              <strong>Gatilho de saída:</strong> Laudo aprovado (≥ % mínima do fck) ou prazo padrão de ${DR} dias.
+              <strong>Gatilho de saída (NBR 14931:2023 §12.2):</strong> Laudo aprovado com fcj ≥ % mínima do fck <em>e</em> Eci adequado, com <strong>mínimo de 14 dias</strong> após a concretagem. Estimativa sem laudo: concretagem + ${DR} dias.
             </div>
           </div>
           <div>
             <div style="font-family:var(--display);font-weight:700;margin-bottom:8px;color:var(--green)">🟢 Reescoramento (50%)</div>
             <div>Não sustenta a laje — ela já tem resistência. Serve para <strong>dividir com a laje abaixo</strong> o peso das concretagens dos pavimentos superiores.</div>
             <div style="margin-top:8px;padding:8px 10px;background:var(--green-lt);border-radius:5px;font-size:12px">
-              <strong>Gatilho de saída:</strong> Concretagem da laje +2 (Z mínimo de ${Z} dias garantido).
+              <strong>Gatilho de saída (NBR 14931:2023 §12.2):</strong> Critério mais restritivo entre: concretagem da laje +2, escadinha (Z dias após reesc. da laje +1) ou prazo mínimo Z = ${Z} dias.
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="alert alert-amber" style="margin-bottom:10px">
+      <span>⚠️</span>
+      <div><strong>NBR 14931:2023 §12.2 — Prazo mínimo obrigatório:</strong> A remoção dos escoramentos deve ser realizada com <strong>no mínimo 14 dias</strong> após a concretagem, salvo uso de concreto com características especiais definidas no projeto estrutural. Valores de fcj (resistência) e Eci (módulo de elasticidade) devem ser atendidos concomitantemente na idade definida para a retirada.</div>
     </div>
 
     <div style="display:flex;gap:10px">
@@ -716,7 +721,7 @@ async function renderEtapa3(){
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             ${laudoBadge}
-            <button class="btn btn-ghost btn-sm" onclick="abrirLaudo('${p.id}','${p.nome||'Pavimento'}','${fck}')">🧪</button>
+            <button class="btn btn-ghost btn-sm" onclick="abrirLaudo('${p.id}','${p.nome||'Pavimento'}','${fck}','${p.data_laudo||''}','${p.resistencia_mpa||''}')">🧪</button>
           </div>
         </td>
         <td><button class="btn btn-danger btn-sm" onclick="deletarPav('${p.id}')">✕</button></td>
@@ -764,7 +769,7 @@ async function renderEtapa3(){
   <!-- MODAL LAUDO -->
   <div class="modal-overlay" id="modal-laudo">
     <div class="modal-box" style="max-width:440px">
-      <div class="modal-title">🧪 Lançar Laudo de Rompimento</div>
+      <div class="modal-title" id="laudo-modal-title">🧪 Lançar Laudo de Rompimento</div>
       <input type="hidden" id="laudo-pav-id">
       <div style="margin-bottom:12px;padding:10px 12px;background:#fafafa;border:1px solid var(--rule);border-radius:6px;font-family:var(--mono);font-size:12px" id="laudo-pav-info"></div>
       <div class="fg fg2" style="gap:12px;margin-bottom:14px">
@@ -778,7 +783,8 @@ async function renderEtapa3(){
         </div>
       </div>
       <div id="laudo-resultado" style="margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-danger" id="btn-remover-laudo" style="display:none;margin-right:auto" onclick="excluirLaudo()">🗑 Remover Laudo</button>
         <button class="btn btn-ghost" onclick="fecharModal('modal-laudo')">Cancelar</button>
         <button class="btn btn-primary" onclick="salvarLaudo()">💾 Salvar Laudo</button>
       </div>
@@ -806,15 +812,17 @@ function calcSeqDatas(pavs){
 }
 
 // Abre modal de laudo
-function abrirLaudo(pavId,pavNome,fck){
+function abrirLaudo(pavId,pavNome,fck,dataExist,resistExist){
   g('laudo-pav-id').value=pavId;
   const pctMin=obra.pct_desforma||75;
   const resistMin=fck?(parseFloat(fck)*pctMin/100).toFixed(1):'—';
   g('laudo-pav-info').innerHTML=`${pavNome} · fck: <strong>${fck||'?'} MPa</strong> · Mínimo para desforma: <strong>${resistMin} MPa</strong> (${pctMin}%)`;
-  g('laudo-data').value='';
-  g('laudo-resist').value='';
+  g('laudo-modal-title').textContent=dataExist?'🧪 Editar Laudo de Rompimento':'🧪 Lançar Laudo de Rompimento';
+  g('laudo-data').value=dataExist||'';
+  g('laudo-resist').value=resistExist||'';
   g('laudo-resultado').innerHTML='';
-  // Listener para calcular em tempo real
+  g('btn-remover-laudo').style.display=dataExist?'inline-flex':'none';
+  if(resistExist)calcularLaudoPreview(parseFloat(fck)||0,pctMin);
   g('laudo-resist').oninput=()=>calcularLaudoPreview(parseFloat(fck)||0,pctMin);
   abrirModal('modal-laudo');
 }
@@ -839,6 +847,17 @@ async function salvarLaudo(){
   const idx=pavimentos.findIndex(p=>p.id===pavId);
   if(idx>=0){pavimentos[idx].data_laudo=dataLaudo;pavimentos[idx].resistencia_mpa=resist;}
   toast('Laudo salvo!','success');
+  fecharModal('modal-laudo');
+  renderEtapa3();
+}
+
+async function excluirLaudo(){
+  const pavId=v('laudo-pav-id');
+  const{error}=await db.from('pavimentos').update({data_laudo:null,resistencia_mpa:null}).eq('id',pavId);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  const idx=pavimentos.findIndex(p=>p.id===pavId);
+  if(idx>=0){pavimentos[idx].data_laudo=null;pavimentos[idx].resistencia_mpa=null;}
+  toast('Laudo removido','success');
   fecharModal('modal-laudo');
   renderEtapa3();
 }
