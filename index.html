@@ -404,7 +404,11 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
 
     <div id="imp-mem-preview" style="display:none">
       <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px" id="imp-mem-info"></div>
-      <div style="border:1px solid var(--rule);border-radius:8px;overflow:auto;max-height:280px" id="imp-mem-tabela"></div>
+      <div style="border:1px solid var(--rule);border-radius:8px;overflow:auto;max-height:220px" id="imp-mem-tabela"></div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--ink-soft);margin-bottom:6px">REPLICAR PARA OUTROS PAVIMENTOS <span style="font-weight:400">(opcional — mesmo projeto se repete)</span></div>
+        <div id="imp-mem-pavs-lista" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
+      </div>
     </div>
 
     <div id="imp-mem-erro" style="display:none" class="alert alert-red"><span>❌</span><span id="imp-mem-msg-erro"></span></div>
@@ -1551,6 +1555,9 @@ function abrirImportarPDF(pavId){
   _itensImportados=[];
   g('inp-memorial-pdf').value='';
   g('imp-mem-desc').value='';
+  // Reset botão (pode ter ficado preso de importação anterior)
+  const btn=g('btn-confirmar-imp-mem');
+  btn.disabled=false;btn.textContent='✓ Importar Lista';
   abrirModal('modal-import-memorial');
 }
 
@@ -1560,6 +1567,7 @@ function _impEstado(s){
   g('imp-mem-preview').style.display=s==='preview'?'':'none';
   g('imp-mem-erro').style.display=s==='erro'?'':'none';
   g('imp-mem-trocar').style.display=(s==='preview'||s==='erro')?'':'none';
+  if(s==='inicial') g('imp-mem-pavs-lista').innerHTML='';
   g('btn-confirmar-imp-mem').style.display=s==='preview'?'':'none';
 }
 
@@ -1622,6 +1630,13 @@ async function processarMemorialPDF(event){
     _itensImportados=resultado.itens;
     if(resultado.tipo) g('imp-mem-tipo').value=resultado.tipo;
     if(resultado.subtipo&&!g('imp-mem-desc').value.trim()) g('imp-mem-desc').value=resultado.subtipo;
+    // Checkboxes para replicar em outros pavimentos
+    const selId=g('imp-mem-pav').value;
+    g('imp-mem-pavs-lista').innerHTML=pavimentos
+      .filter(p=>p.id!==selId)
+      .map(p=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#f1f5f9;border:1px solid var(--rule);border-radius:6px;cursor:pointer;font-size:12px">
+        <input type="checkbox" value="${p.id}"> ${p.nome}
+      </label>`).join('');
     const rows_html=_itensImportados.map(it=>`
       <tr style="border-bottom:1px solid var(--rule)">
         <td style="padding:8px 14px;font-size:13px">${it.nome}</td>
@@ -1715,59 +1730,64 @@ function _parsearTabelaTotal(allItems){
 
 async function confirmarImportacaoMemorial(){
   if(!_itensImportados.length)return;
-  const pavId=g('imp-mem-pav').value;
+  const pavIdPrincipal=g('imp-mem-pav').value;
   const tipo=g('imp-mem-tipo').value;
   const descricao=g('imp-mem-desc').value.trim()||null;
-  if(!pavId){alert('Selecione o pavimento.');return;}
+  if(!pavIdPrincipal){alert('Selecione o pavimento.');return;}
+
+  // Pavimentos selecionados: principal + checkboxes extras
+  const pavIds=[pavIdPrincipal];
+  g('imp-mem-pavs-lista').querySelectorAll('input[type=checkbox]:checked')
+    .forEach(cb=>pavIds.push(cb.value));
+
   const btn=g('btn-confirmar-imp-mem');
-  btn.disabled=true;btn.textContent='Verificando...';
+  btn.disabled=true;btn.textContent='Salvando...';
+
   try{
-    // ── Verificar duplicatas ──────────────────────────────────────────
-    const{data:existentes}=await db.from('memoriais_escoramento')
-      .select('id,tipo,descricao').eq('obra_id',obra.id).eq('pavimento_id',pavId).eq('tipo',tipo);
-
-    let substituirIds=[];
-    if(existentes?.length){
-      const pavNome=pavimentos.find(p=>p.id===pavId)?.nome||'este pavimento';
-      const lista=existentes.map(e=>`• ${e.tipo}${e.descricao?' – '+e.descricao:''}`).join('\n');
-      const substituir=confirm(
-        `Já existe(m) ${existentes.length} memorial(is) de ${tipo} para ${pavNome}:\n\n${lista}\n\nClicar OK substitui o(s) existente(s).\nClicar Cancelar cria um registro adicional.`
-      );
-      if(substituir) substituirIds=existentes.map(e=>e.id);
-    }
-
-    btn.textContent='Salvando...';
-
-    // Excluir antigos se o usuário escolheu substituir
-    if(substituirIds.length){
-      const{error:eDel}=await db.from('memoriais_escoramento').delete().in('id',substituirIds);
-      if(eDel)throw eDel;
-    }
-
-    // ── Criar novo memorial ───────────────────────────────────────────
-    const{data:mem,error:eM}=await db.from('memoriais_escoramento').insert({
-      obra_id:obra.id,pavimento_id:pavId,tipo,descricao
-    }).select().single();
-    if(eM)throw eM;
-
-    // Enriquecer com dados do catálogo
+    // Enriquecer itens com dados do catálogo (feito uma vez para todos)
     const nomes=_itensImportados.map(i=>i.nome);
-    const{data:cat}=await db.from('itens_catalogo').select('nome,peso_unit_kg,valor_dia_rs').in('nome',nomes);
+    const{data:cat}=await db.from('itens_catalogo')
+      .select('nome,peso_unit_kg,valor_dia_rs').in('nome',nomes);
     const catMap={};(cat||[]).forEach(c=>{catMap[c.nome]=c;});
-    const payload=_itensImportados.map(it=>({
-      obra_id:obra.id,memorial_id:mem.id,
-      item_nome:it.nome,quantidade:it.quantidade,
-      peso_unit_kg:catMap[it.nome]?.peso_unit_kg??null,
-      valor_dia_rs:catMap[it.nome]?.valor_dia_rs??null
-    }));
-    const{error:eI}=await db.from('itens_memorial').insert(payload);
-    if(eI)throw eI;
+
+    for(const pavId of pavIds){
+      // Verificar duplicata EXATA (mesmo tipo + mesma descricao)
+      let qDup=db.from('memoriais_escoramento')
+        .select('id').eq('obra_id',obra.id).eq('pavimento_id',pavId).eq('tipo',tipo);
+      qDup=descricao?qDup.eq('descricao',descricao):qDup.is('descricao',null);
+      const{data:existentes}=await qDup;
+
+      if(existentes?.length){
+        const pavNome=pavimentos.find(p=>p.id===pavId)?.nome||'pavimento';
+        const sub=confirm(`Já existe um memorial "${tipo}${descricao?' – '+descricao:''}" para ${pavNome}.\n\nOK = Substituir | Cancelar = Manter e criar novo`);
+        if(sub){
+          await db.from('memoriais_escoramento').delete().in('id',existentes.map(e=>e.id));
+        }
+      }
+
+      // Criar memorial
+      const{data:mem,error:eM}=await db.from('memoriais_escoramento')
+        .insert({obra_id:obra.id,pavimento_id:pavId,tipo,descricao}).select().single();
+      if(eM)throw eM;
+
+      // Inserir itens
+      const{error:eI}=await db.from('itens_memorial').insert(
+        _itensImportados.map(it=>({
+          obra_id:obra.id,memorial_id:mem.id,
+          item_nome:it.nome,quantidade:it.quantidade,
+          peso_unit_kg:catMap[it.nome]?.peso_unit_kg??null,
+          valor_dia_rs:catMap[it.nome]?.valor_dia_rs??null
+        }))
+      );
+      if(eI)throw eI;
+    }
 
     fecharModal('modal-import-memorial');
     _itensImportados=[];
     renderMateriais();
   }catch(e){
-    alert('Erro ao salvar: '+e.message);
+    alert('Erro ao salvar: '+(e.message||e));
+  }finally{
     btn.disabled=false;btn.textContent='✓ Importar Lista';
   }
 }
