@@ -1560,26 +1560,22 @@ async function processarMemorialPDF(event){
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const buf=await file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
-    let linhas=[];
+    // Coleta TODOS os itens de texto com suas coordenadas X,Y
+    const allItems=[];
     for(let i=1;i<=pdf.numPages;i++){
       const page=await pdf.getPage(i);
       const content=await page.getTextContent();
-      const items=content.items
-        .filter(it=>it.str&&it.str.trim())
-        .sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>4?dy:a.transform[4]-b.transform[4];});
-      const rows=[];let curRow=null;
-      for(const it of items){
-        const y=it.transform[5];
-        if(!curRow||Math.abs(curRow.y-y)>6){curRow={y,items:[]};rows.push(curRow);}
-        curRow.items.push({x:it.transform[4],str:it.str.trim()});
-      }
-      linhas.push(...rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ')));
+      content.items.filter(it=>it.str&&it.str.trim()).forEach(it=>{
+        allItems.push({str:it.str.trim(),x:it.transform[4],y:it.transform[5]});
+      });
     }
-    const resultado=_parsearTabelaTotal(linhas);
+    const resultado=_parsearTabelaTotal(allItems);
     if(!resultado||!resultado.itens.length){
+      const totFound=allItems.filter(it=>/\bTOTAL\b/i.test(it.str));
+      console.log('[PDF debug] itens com TOTAL:',totFound);
+      console.log('[PDF debug] primeiros 100 itens:',allItems.slice(0,100));
       g('imp-mem-msg-erro').textContent='Tabela TOTAL não encontrada neste PDF. Verifique se o arquivo é um projeto de escoramento com seção "TOTAL".';
       _impEstado('erro');
-      console.log('[PDF debug] primeiras 60 linhas:',linhas.slice(0,60));
       return;
     }
     _itensImportados=resultado.itens;
@@ -1603,35 +1599,67 @@ async function processarMemorialPDF(event){
   }
 }
 
-function _parsearTabelaTotal(linhas){
+function _parsearTabelaTotal(allItems){
+  // Estratégia: localizar o item de texto "TOTAL" pelo seu X/Y e filtrar
+  // apenas a região da tabela (evita mistura com texto da planta CAD).
+  const totalItems=allItems.filter(it=>/^\s*TOTAL\s*$/i.test(it.str));
+  if(!totalItems.length) return null;
+
   let best=null;
-  for(let i=0;i<linhas.length;i++){
-    if(!/Descri/i.test(linhas[i]))continue;
-    const ctx=linhas.slice(Math.max(0,i-10),i);
-    const hasTotalLine=ctx.some(l=>/^\s*TOTAL\s*$/i.test(l));
-    const hasTrechoLine=ctx.some(l=>/\bTRECHO\b/i.test(l));
-    // Match "ESCORAMENTO", "REESCORAMENTO", or abbreviated "ESC LAJE", "ESC VIGA", "REESC ..."
-    const hasEsco=ctx.some(l=>/\b(RE)?ESCORAMENTO\b|\bR?ESC\s+(LAJE|VIGA|DE\s)/i.test(l));
-    if(!hasTotalLine||hasTrechoLine||!hasEsco)continue;
-    const ctxText=ctx.join(' ');
-    // Detect tipo: reescoramento if any variant found
-    const isReeesc=/\bREESCORAMENTO\b|\bRE\s*ESC\b|\bREESC\b/i.test(ctxText);
+
+  for(const tot of totalItems){
+    // Região X da tabela: começa ≈ no X de TOTAL, estende para a direita
+    const xMin=tot.x-150;
+    const xMax=tot.x+600;
+
+    // Contexto ACIMA de TOTAL (Y maior = visualmente acima em PDF)
+    const ctxItems=allItems.filter(it=>
+      it.x>=xMin&&it.x<=xMax&&it.y>tot.y&&it.y<=tot.y+350
+    );
+    const ctxText=ctxItems.map(i=>i.str).join(' ');
+
+    // Deve ter ESCORAMENTO ou "ESC LAJE/VIGA" e NÃO ter TRECHO
+    const hasEsco=/\b(RE)?ESCORAMENTO\b|\bR?ESC\s+(LAJE|VIGA)/i.test(ctxText);
+    const hasTrecho=/\bTRECHO\b/i.test(ctxText);
+    if(!hasEsco||hasTrecho) continue;
+
+    // Detectar tipo e subtipo
+    const isReeesc=/\bREESCORAMENTO\b|\bREESC\b/i.test(ctxText);
     const tipo=isReeesc?'REESCORAMENTO':'ESCORAMENTO';
-    // Detect subtipo/estrutura (LAJE, VIGA, etc.)
-    const subMatch=ctxText.match(/\b(RE\s*)?ESC\s+(LAJE|VIGA|LAJES|VIGAS)\b/i)
-      || ctxText.match(/\b(LAJE|VIGA|LAJES|VIGAS)\b/i);
+    const subMatch=ctxText.match(/\bR?ESC\s+(LAJE|VIGA|LAJES|VIGAS)\b/i)||ctxText.match(/\b(LAJE|VIGA)\b/i);
     const subtipo=subMatch?subMatch[0].trim().toUpperCase():null;
+
+    // Itens ABAIXO de TOTAL (Y menor = visualmente abaixo)
+    const belowItems=allItems.filter(it=>
+      it.x>=xMin&&it.x<=xMax&&it.y<=tot.y+5&&it.y>=tot.y-700
+    );
+    belowItems.sort((a,b)=>b.y-a.y); // de cima para baixo
+
+    // Agrupar por Y em linhas
+    const rows=[];let curRow=null;
+    for(const it of belowItems){
+      if(!curRow||Math.abs(curRow.y-it.y)>6){curRow={y:it.y,items:[]};rows.push(curRow);}
+      curRow.items.push(it);
+    }
+    const linhas=rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' '));
+
+    // Encontrar linha "Descrição"
+    let descIdx=-1;
+    for(let j=0;j<linhas.length;j++){if(/Descri/i.test(linhas[j])){descIdx=j;break;}}
+    if(descIdx<0) continue;
+
+    // Extrair itens até "Peso Total"
     const itens=[];
-    for(let j=i+1;j<linhas.length;j++){
+    for(let j=descIdx+1;j<linhas.length;j++){
       const row=linhas[j].trim();
-      if(/Peso\s*Total/i.test(row))break;
-      if(!row)continue;
+      if(/Peso\s*Total/i.test(row)) break;
+      if(!row) continue;
       const m=row.match(/^(.+)\s+(\d+)\s*$/);
       if(m&&m[1].trim().length>1&&parseInt(m[2])>0){
         itens.push({nome:m[1].trim(),quantidade:parseInt(m[2])});
       }
     }
-    if(itens.length>0&&(!best||itens.length>=best.itens.length)){
+    if(itens.length>0&&(!best||itens.length>best.itens.length)){
       best={itens,tipo,subtipo};
     }
   }
