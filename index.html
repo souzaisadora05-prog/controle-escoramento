@@ -366,6 +366,55 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
   </div>
 </div>
 
+<input type="file" id="inp-memorial-pdf" accept=".pdf" style="display:none" onchange="processarMemorialPDF(event)">
+
+<!-- MODAL IMPORTAR MATERIAIS PDF -->
+<div class="modal-overlay" id="modal-import-memorial">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-title">📄 Importar Lista de Materiais</div>
+
+    <div class="fg fg2" style="gap:10px;margin-bottom:14px">
+      <div class="field">
+        <label>Pavimento</label>
+        <select id="imp-mem-pav" style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px"></select>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="imp-mem-tipo" style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px">
+          <option value="ESCORAMENTO">Escoramento</option>
+          <option value="REESCORAMENTO">Reescoramento</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="imp-mem-inicial" style="text-align:center;padding:28px;border:2px dashed var(--rule);border-radius:10px;margin-bottom:12px">
+      <div style="font-size:40px;margin-bottom:10px">📄</div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">Selecione o PDF do projeto — o sistema extrai automaticamente a tabela <strong>TOTAL</strong></div>
+      <button class="btn btn-primary" onclick="g('inp-memorial-pdf').click()">Selecionar PDF</button>
+    </div>
+
+    <div id="imp-mem-loading" style="display:none;text-align:center;padding:28px">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      <div style="font-size:13px;color:var(--ink-soft)">Lendo PDF e extraindo itens...</div>
+    </div>
+
+    <div id="imp-mem-preview" style="display:none">
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px" id="imp-mem-info"></div>
+      <div style="border:1px solid var(--rule);border-radius:8px;overflow:auto;max-height:280px" id="imp-mem-tabela"></div>
+    </div>
+
+    <div id="imp-mem-erro" style="display:none" class="alert alert-red"><span>❌</span><span id="imp-mem-msg-erro"></span></div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:14px;border-top:1px solid var(--rule);padding-top:12px">
+      <button class="btn btn-ghost btn-sm" id="imp-mem-trocar" style="display:none" onclick="g('inp-memorial-pdf').click()">↩ Trocar PDF</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-import-memorial')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirmar-imp-mem" style="display:none" onclick="confirmarImportacaoMemorial()">✓ Importar Lista</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO USUÁRIO -->
 <div class="modal-overlay" id="modal-novo-user">
   <div class="modal-box">
@@ -1394,8 +1443,9 @@ async function renderControle(){
 // MATERIAIS
 // ═══════════════════════════════════════════
 
-let _memorialAtivo=null; // id do memorial aberto no modal-itens
-let _itemSelecionado=null; // {nome, peso_unit_kg, valor_dia_rs} do catálogo
+let _memorialAtivo=null;
+let _itemSelecionado=null;
+let _itensImportados=[];
 
 async function renderMateriais(){
   if(!obra){semObra();return;}
@@ -1407,134 +1457,209 @@ async function renderMateriais(){
   if(ePavs||eMem){g('content-area').innerHTML=`<div class="alert alert-red"><span>❌</span><span>${ePavs?.message||eMem?.message}</span></div>`;return;}
   pavimentos=pavs||[];
 
-  // Buscar contagem de itens e peso total por memorial
   const memIds=(memoriais||[]).map(m=>m.id);
   let itensPorMem={};
   if(memIds.length){
     const{data:itens}=await db.from('itens_memorial').select('memorial_id,quantidade,peso_unit_kg').in('memorial_id',memIds);
     (itens||[]).forEach(it=>{
-      if(!itensPorMem[it.memorial_id])itensPorMem[it.memorial_id]={qtdTotal:0,pesoTotal:0};
-      itensPorMem[it.memorial_id].qtdTotal+=it.quantidade;
-      itensPorMem[it.memorial_id].pesoTotal+=(it.peso_unit_kg||0)*it.quantidade;
+      if(!itensPorMem[it.memorial_id])itensPorMem[it.memorial_id]={qtd:0,peso:0};
+      itensPorMem[it.memorial_id].qtd+=it.quantidade;
+      itensPorMem[it.memorial_id].peso+=(it.peso_unit_kg||0)*it.quantidade;
     });
   }
 
-  // Agrupar memoriais por pavimento
   const memPorPav={};
   (memoriais||[]).forEach(m=>{
     if(!memPorPav[m.pavimento_id])memPorPav[m.pavimento_id]=[];
     memPorPav[m.pavimento_id].push(m);
   });
 
-  const tipoBadge=t=>t==='REESCORAMENTO'
-    ?`<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">RE</span>`
+  const badge=t=>t==='REESCORAMENTO'
+    ?`<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">REEESC</span>`
     :`<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">ESC</span>`;
 
   let cards='';
   (pavimentos||[]).forEach(pav=>{
     const mems=memPorPav[pav.id]||[];
+
     const rows=mems.map(m=>{
-      const inf=itensPorMem[m.id]||{qtdTotal:0,pesoTotal:0};
-      const titulo=[m.trecho,m.descricao].filter(Boolean).join(' — ')||'—';
-      const pesoStr=inf.pesoTotal>0?`${inf.pesoTotal.toFixed(1)} kg`:'—';
-      return `<tr>
-        <td style="padding:7px 10px">${tipoBadge(m.tipo)}</td>
-        <td style="padding:7px 10px;font-size:12px">${titulo}</td>
-        <td style="padding:7px 10px;font-size:12px">${m.projeto||'—'}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:center">${inf.qtdTotal||'—'}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right">${pesoStr}</td>
-        <td style="padding:7px 10px;text-align:right">
-          <button class="btn btn-ghost btn-sm" onclick="abrirItensMemorial('${m.id}','${pav.nome} – ${m.tipo}${m.trecho?' ('+m.trecho+')':''}')">📋 Itens</button>
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditarMemorial('${m.id}')">✏️</button>
+      const inf=itensPorMem[m.id]||{qtd:0,peso:0};
+      return `<tr style="border-bottom:1px solid var(--rule)">
+        <td style="padding:8px 12px">${badge(m.tipo)}</td>
+        <td style="padding:8px 12px;font-size:12px;color:var(--ink-soft)">${m.descricao||m.projeto||'—'}</td>
+        <td style="padding:8px 12px;font-size:13px;text-align:center;font-weight:600">${inf.qtd||'—'}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:right">${inf.peso>0?inf.peso.toFixed(1)+' kg':'—'}</td>
+        <td style="padding:8px 12px;text-align:right;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="abrirItensMemorial('${m.id}','${(pav.nome+' – '+m.tipo).replace(/'/g,"\\'")}')">📋 Ver itens</button>
           <button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="excluirMemorial('${m.id}')">🗑️</button>
         </td>
       </tr>`;
     }).join('');
 
-    const semMem=`<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--ink-soft);font-size:12px">Nenhum memorial cadastrado</td></tr>`;
-    cards+=`
-    <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    const vazio=`<div style="padding:28px;text-align:center;color:var(--ink-soft)">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <div style="font-size:13px;margin-bottom:14px">Nenhuma lista importada</div>
+      <button class="btn btn-primary" onclick="abrirImportarPDF('${pav.id}')">📄 Importar PDF do projeto</button>
+    </div>`;
+
+    cards+=`<div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-weight:700;font-size:15px">🏗️ ${pav.nome}</div>
-        <button class="btn btn-primary btn-sm" onclick="abrirNovoMemorial('${pav.id}')">+ Novo Memorial</button>
+        ${mems.length?`<button class="btn btn-ghost btn-sm" onclick="abrirImportarPDF('${pav.id}')">📄 Importar novo PDF</button>`:''}
       </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead>
-            <tr style="background:#f1f5f9">
-              <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:600">Tipo</th>
-              <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:600">Descrição</th>
-              <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:600">Projeto</th>
-              <th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:600">Qtd Itens</th>
-              <th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:600">Peso Total</th>
-              <th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:600">Ações</th>
-            </tr>
-          </thead>
-          <tbody>${rows||semMem}</tbody>
-        </table>
-      </div>
+      ${mems.length?`<table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#f1f5f9">
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600">Tipo</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600">Descrição</th>
+          <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600">Qtd peças</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600">Peso total</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600">Ações</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`:vazio}
     </div>`;
   });
 
   g('content-area').innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <h2 style="margin:0;font-size:18px">📦 Materiais de Escoramento</h2>
+    <div style="margin-bottom:18px">
+      <h2 style="margin:0 0 4px;font-size:18px">📦 Materiais de Escoramento</h2>
+      <div style="font-size:12px;color:var(--ink-soft)">Importe o PDF do projeto — o sistema extrai a tabela TOTAL automaticamente</div>
     </div>
     ${cards||'<div class="alert alert-amber"><span>⚠️</span><span>Nenhum pavimento cadastrado.</span></div>'}`;
 }
 
-function abrirNovoMemorial(pavId){
-  // Preencher select de pavimentos
-  const sel=g('memorial-pav');
-  sel.innerHTML=pavimentos.map(p=>`<option value="${p.id}"${p.id===pavId?'selected':''}>${p.nome}</option>`).join('');
-  // Limpar campos
-  g('memorial-id').value='';
-  g('memorial-modal-title').textContent='📦 Novo Memorial de Materiais';
-  g('memorial-tipo').value='ESCORAMENTO';
-  g('memorial-trecho').value='';
-  g('memorial-desc').value='';
-  g('memorial-proj').value='';
-  g('memorial-rev').value='';
-  abrirModal('modal-memorial');
+function abrirImportarPDF(pavId){
+  g('imp-mem-pav').innerHTML=pavimentos.map(p=>`<option value="${p.id}"${p.id===pavId?'selected':''}>${p.nome}</option>`).join('');
+  _impEstado('inicial');
+  _itensImportados=[];
+  g('inp-memorial-pdf').value='';
+  abrirModal('modal-import-memorial');
 }
 
-async function abrirEditarMemorial(id){
-  const{data:m,error}=await db.from('memoriais_escoramento').select('*').eq('id',id).single();
-  if(error||!m){alert('Erro ao carregar memorial.');return;}
-  const sel=g('memorial-pav');
-  sel.innerHTML=pavimentos.map(p=>`<option value="${p.id}"${p.id===m.pavimento_id?'selected':''}>${p.nome}</option>`).join('');
-  g('memorial-id').value=m.id;
-  g('memorial-modal-title').textContent='✏️ Editar Memorial';
-  g('memorial-tipo').value=m.tipo;
-  g('memorial-trecho').value=m.trecho||'';
-  g('memorial-desc').value=m.descricao||'';
-  g('memorial-proj').value=m.projeto||'';
-  g('memorial-rev').value=m.revisao||'';
-  abrirModal('modal-memorial');
+function _impEstado(s){
+  g('imp-mem-inicial').style.display=s==='inicial'?'':'none';
+  g('imp-mem-loading').style.display=s==='loading'?'':'none';
+  g('imp-mem-preview').style.display=s==='preview'?'':'none';
+  g('imp-mem-erro').style.display=s==='erro'?'':'none';
+  g('imp-mem-trocar').style.display=(s==='preview'||s==='erro')?'':'none';
+  g('btn-confirmar-imp-mem').style.display=s==='preview'?'':'none';
 }
 
-async function salvarMemorial(){
-  const pavId=g('memorial-pav').value;
-  const tipo=g('memorial-tipo').value;
-  const trecho=g('memorial-trecho').value.trim()||null;
-  const descricao=g('memorial-desc').value.trim()||null;
-  const projeto=g('memorial-proj').value.trim()||null;
-  const revisao=g('memorial-rev').value||null;
-  const editId=g('memorial-id').value;
-
-  if(!pavId){alert('Selecione o pavimento.');return;}
-
-  const payload={obra_id:obra.id,pavimento_id:pavId,tipo,trecho,descricao,projeto,revisao};
-
-  let error;
-  if(editId){
-    ({error}=await db.from('memoriais_escoramento').update(payload).eq('id',editId));
-  }else{
-    ({error}=await db.from('memoriais_escoramento').insert(payload));
+async function processarMemorialPDF(event){
+  const file=event.target.files[0];
+  event.target.value='';
+  if(!file)return;
+  _impEstado('loading');
+  try{
+    if(typeof pdfjsLib==='undefined') throw new Error('Biblioteca PDF não carregada. Recarregue a página.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    let linhas=[];
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const items=content.items
+        .filter(it=>it.str&&it.str.trim())
+        .sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>4?dy:a.transform[4]-b.transform[4];});
+      const rows=[];let curRow=null;
+      for(const it of items){
+        const y=it.transform[5];
+        if(!curRow||Math.abs(curRow.y-y)>6){curRow={y,items:[]};rows.push(curRow);}
+        curRow.items.push({x:it.transform[4],str:it.str.trim()});
+      }
+      linhas.push(...rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ')));
+    }
+    const resultado=_parsearTabelaTotal(linhas);
+    if(!resultado||!resultado.itens.length){
+      g('imp-mem-msg-erro').textContent='Tabela TOTAL não encontrada neste PDF. Verifique se o arquivo é um projeto de escoramento com seção "TOTAL".';
+      _impEstado('erro');
+      console.log('[PDF debug] primeiras 60 linhas:',linhas.slice(0,60));
+      return;
+    }
+    _itensImportados=resultado.itens;
+    if(resultado.tipo) g('imp-mem-tipo').value=resultado.tipo;
+    const rows_html=_itensImportados.map(it=>`
+      <tr style="border-bottom:1px solid var(--rule)">
+        <td style="padding:8px 14px;font-size:13px">${it.nome}</td>
+        <td style="padding:8px 14px;font-size:13px;text-align:center;font-weight:700">${it.quantidade}</td>
+      </tr>`).join('');
+    g('imp-mem-tabela').innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f1f5f9">
+        <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:600">Item</th>
+        <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:600">Quantidade</th>
+      </tr></thead><tbody>${rows_html}</tbody></table>`;
+    g('imp-mem-info').textContent=`${_itensImportados.length} item(ns) extraído(s) da tabela TOTAL`;
+    _impEstado('preview');
+  }catch(e){
+    g('imp-mem-msg-erro').textContent=e.message;
+    _impEstado('erro');
   }
-  if(error){alert('Erro ao salvar: '+error.message);return;}
-  fecharModal('modal-memorial');
-  renderMateriais();
+}
+
+function _parsearTabelaTotal(linhas){
+  let best=null;
+  for(let i=0;i<linhas.length;i++){
+    if(!/Descri/i.test(linhas[i]))continue;
+    const ctx=linhas.slice(Math.max(0,i-8),i);
+    // Must have a line that is exactly "TOTAL" (not "TRECHO", not "Peso Total")
+    const hasTotalLine=ctx.some(l=>/^\s*TOTAL\s*$/i.test(l));
+    const hasTrechoLine=ctx.some(l=>/\bTRECHO\b/i.test(l));
+    const hasEsco=ctx.some(l=>/ESCORAMENTO/i.test(l));
+    if(!hasTotalLine||hasTrechoLine||!hasEsco)continue;
+    const tipoMatch=ctx.join(' ').match(/\b(REESCORAMENTO|ESCORAMENTO)\b/i);
+    const tipo=tipoMatch?tipoMatch[1].toUpperCase():'ESCORAMENTO';
+    const itens=[];
+    for(let j=i+1;j<linhas.length;j++){
+      const row=linhas[j].trim();
+      if(/Peso\s*Total/i.test(row))break;
+      if(!row)continue;
+      const m=row.match(/^(.+)\s+(\d+)\s*$/);
+      if(m&&m[1].trim().length>1&&parseInt(m[2])>0){
+        itens.push({nome:m[1].trim(),quantidade:parseInt(m[2])});
+      }
+    }
+    if(itens.length>0&&(!best||itens.length>=best.itens.length)){
+      best={itens,tipo};
+    }
+  }
+  return best;
+}
+
+async function confirmarImportacaoMemorial(){
+  if(!_itensImportados.length)return;
+  const pavId=g('imp-mem-pav').value;
+  const tipo=g('imp-mem-tipo').value;
+  if(!pavId){alert('Selecione o pavimento.');return;}
+  const btn=g('btn-confirmar-imp-mem');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const{data:mem,error:eM}=await db.from('memoriais_escoramento').insert({
+      obra_id:obra.id,pavimento_id:pavId,tipo
+    }).select().single();
+    if(eM)throw eM;
+    // Enrich with catalog data
+    const nomes=_itensImportados.map(i=>i.nome);
+    const{data:cat}=await db.from('itens_catalogo').select('nome,peso_unit_kg,valor_dia_rs').in('nome',nomes);
+    const catMap={};
+    (cat||[]).forEach(c=>{catMap[c.nome]=c;});
+    const payload=_itensImportados.map(it=>({
+      obra_id:obra.id,
+      memorial_id:mem.id,
+      item_nome:it.nome,
+      quantidade:it.quantidade,
+      peso_unit_kg:catMap[it.nome]?.peso_unit_kg??null,
+      valor_dia_rs:catMap[it.nome]?.valor_dia_rs??null
+    }));
+    const{error:eI}=await db.from('itens_memorial').insert(payload);
+    if(eI)throw eI;
+    fecharModal('modal-import-memorial');
+    _itensImportados=[];
+    renderMateriais();
+  }catch(e){
+    alert('Erro ao salvar: '+e.message);
+    btn.disabled=false;btn.textContent='✓ Importar Lista';
+  }
 }
 
 async function excluirMemorial(id){
@@ -1560,27 +1685,20 @@ async function renderItensLista(memorialId){
   const lista=g('itens-lista');
   const totais=g('itens-totais');
   lista.innerHTML='<div style="padding:14px;text-align:center;color:var(--ink-soft)">Carregando...</div>';
-
-  const{data:itens,error}=await db.from('itens_memorial')
-    .select('*').eq('memorial_id',memorialId).order('created_at');
-
+  const{data:itens,error}=await db.from('itens_memorial').select('*').eq('memorial_id',memorialId).order('created_at');
   if(error){lista.innerHTML=`<div style="padding:14px;color:#ef4444">${error.message}</div>`;return;}
   if(!itens||!itens.length){
-    lista.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-soft);font-size:13px">Nenhum item adicionado</div>';
-    totais.innerHTML='';
-    return;
+    lista.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-soft);font-size:13px">Nenhum item</div>';
+    totais.innerHTML='';return;
   }
-
   let qtdTotal=0,pesoTotal=0,custoTotal=0;
   const rows=itens.map(it=>{
     const peso=(it.peso_unit_kg||0)*it.quantidade;
     const custo=(it.valor_dia_rs||0)*it.quantidade;
-    qtdTotal+=it.quantidade;
-    pesoTotal+=peso;
-    custoTotal+=custo;
+    qtdTotal+=it.quantidade;pesoTotal+=peso;custoTotal+=custo;
     return `<tr style="border-bottom:1px solid var(--rule)">
       <td style="padding:7px 10px;font-size:12px">${it.item_nome}</td>
-      <td style="padding:7px 10px;font-size:12px;text-align:center">${it.quantidade}</td>
+      <td style="padding:7px 10px;font-size:12px;text-align:center;font-weight:600">${it.quantidade}</td>
       <td style="padding:7px 10px;font-size:12px;text-align:right">${it.peso_unit_kg?it.peso_unit_kg.toFixed(3)+' kg':'—'}</td>
       <td style="padding:7px 10px;font-size:12px;text-align:right">${peso>0?peso.toFixed(1)+' kg':'—'}</td>
       <td style="padding:7px 10px;font-size:12px;text-align:right">${it.valor_dia_rs?'R$ '+custo.toFixed(2):'—'}</td>
@@ -1589,7 +1707,6 @@ async function renderItensLista(memorialId){
       </td>
     </tr>`;
   }).join('');
-
   lista.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:#f1f5f9">
       <th style="padding:7px 10px;text-align:left;font-size:11px">Item</th>
@@ -1598,10 +1715,7 @@ async function renderItensLista(memorialId){
       <th style="padding:7px 10px;text-align:right;font-size:11px">Peso Total</th>
       <th style="padding:7px 10px;text-align:right;font-size:11px">Custo/dia</th>
       <th style="padding:7px 10px;text-align:center;font-size:11px">Del</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
-
+    </tr></thead><tbody>${rows}</tbody></table>`;
   totais.innerHTML=`
     <div><span style="font-weight:600">Total de peças:</span> ${qtdTotal}</div>
     <div><span style="font-weight:600">Peso total:</span> ${pesoTotal.toFixed(1)} kg</div>
@@ -1613,16 +1727,10 @@ async function filtrarCatalogo(){
   const sug=g('item-sugestoes');
   _itemSelecionado=null;
   if(q.length<2){sug.style.display='none';return;}
-
-  const{data:itens}=await db.from('itens_catalogo')
-    .select('nome,peso_unit_kg,valor_dia_rs')
-    .ilike('nome','%'+q+'%')
-    .order('nome').limit(20);
-
+  const{data:itens}=await db.from('itens_catalogo').select('nome,peso_unit_kg,valor_dia_rs').ilike('nome','%'+q+'%').order('nome').limit(20);
   if(!itens||!itens.length){
     sug.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--ink-soft)">Nenhum item encontrado — será criado como novo</div>`;
-    sug.style.display='block';
-    return;
+    sug.style.display='block';return;
   }
   sug.innerHTML=itens.map(it=>`
     <div onclick="selecionarItemCatalogo('${it.nome.replace(/'/g,"\\'")}',${it.peso_unit_kg||0},${it.valor_dia_rs||0})"
@@ -1642,29 +1750,19 @@ function selecionarItemCatalogo(nome,peso,valor){
 }
 
 async function adicionarItemMemorial(){
-  if(!_memorialAtivo){return;}
+  if(!_memorialAtivo)return;
   const nomeInput=g('item-busca').value.trim();
   const qtd=parseInt(g('item-qtd').value)||1;
   if(!nomeInput){alert('Digite o nome do item.');return;}
-
-  // Usar dados do catálogo se disponíveis, senão apenas o nome
-  const item=_itemSelecionado && _itemSelecionado.nome===nomeInput
-    ? _itemSelecionado
-    : {nome:nomeInput,peso_unit_kg:null,valor_dia_rs:null};
-
+  const item=_itemSelecionado&&_itemSelecionado.nome===nomeInput
+    ?_itemSelecionado:{nome:nomeInput,peso_unit_kg:null,valor_dia_rs:null};
   const{error}=await db.from('itens_memorial').insert({
-    obra_id:obra.id,
-    memorial_id:_memorialAtivo,
-    item_nome:item.nome,
-    peso_unit_kg:item.peso_unit_kg,
-    valor_dia_rs:item.valor_dia_rs,
-    quantidade:qtd
+    obra_id:obra.id,memorial_id:_memorialAtivo,
+    item_nome:item.nome,peso_unit_kg:item.peso_unit_kg,valor_dia_rs:item.valor_dia_rs,quantidade:qtd
   });
-  if(error){alert('Erro ao adicionar item: '+error.message);return;}
-  g('item-busca').value='';
-  g('item-qtd').value='1';
-  _itemSelecionado=null;
-  g('item-sugestoes').style.display='none';
+  if(error){alert('Erro: '+error.message);return;}
+  g('item-busca').value='';g('item-qtd').value='1';
+  _itemSelecionado=null;g('item-sugestoes').style.display='none';
   await renderItensLista(_memorialAtivo);
 }
 
