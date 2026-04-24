@@ -386,9 +386,19 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
         </select>
       </div>
     </div>
-    <div class="field" style="margin-bottom:14px">
+    <div class="field" style="margin-bottom:10px">
       <label>Estrutura / Identificação <span style="font-weight:400;color:var(--ink-soft)">(preenchido automático pelo PDF)</span></label>
       <input type="text" id="imp-mem-desc" placeholder="Ex: ESC LAJE, ESC VIGA, REESC LAJE..." style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px;box-sizing:border-box">
+    </div>
+    <div class="fg fg2" style="gap:10px;margin-bottom:14px">
+      <div class="field">
+        <label>Nº do Projeto <span style="font-weight:400;color:var(--ink-soft)">(auto do PDF)</span></label>
+        <input type="text" id="imp-mem-proj" placeholder="Ex: CWB-2024-1139-E060" style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px;box-sizing:border-box">
+      </div>
+      <div class="field">
+        <label>Revisão <span style="font-weight:400;color:var(--ink-soft)">(auto do PDF)</span></label>
+        <input type="text" id="imp-mem-rev" placeholder="Ex: R0, R1..." style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px;box-sizing:border-box">
+      </div>
     </div>
 
     <div id="imp-mem-inicial" style="text-align:center;padding:28px;border:2px dashed var(--rule);border-radius:10px;margin-bottom:12px">
@@ -1448,6 +1458,116 @@ async function renderControle(){
 }
 
 // ═══════════════════════════════════════════
+// CATÁLOGO PADRÃO SH
+// ═══════════════════════════════════════════
+
+function _normNome(n){
+  return (n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim().replace(/\s+/g,' ');
+}
+
+const _CATALOGO_PADRAO=[
+  {codigo:'225301-1',nome:'Adaptador Aprumador 300 Pilar',valor_dia_rs:0.046667,peso_unit_kg:0.811},
+  {codigo:'225102-3',nome:'Adaptador LTT-Escora',valor_dia_rs:0.167333,peso_unit_kg:2.958020833},
+  {codigo:'225300-3',nome:'Aprumador 300',valor_dia_rs:0.500667,peso_unit_kg:9.95},
+  {codigo:'245106-5',nome:'Bag1000',valor_dia_rs:0.036000,peso_unit_kg:3},
+  {codigo:'111075-9',nome:'Barra de Ancoragem 075',valor_dia_rs:0.056000,peso_unit_kg:1.26},
+  {codigo:'111100-4',nome:'Barra de Ancoragem 100',valor_dia_rs:0.075667,peso_unit_kg:1.68},
+  {codigo:'111130-1',nome:'Barra de Ancoragem 130',valor_dia_rs:0.100333,peso_unit_kg:2.18},
+  {codigo:'111150-9',nome:'Barra de Ancoragem 150',valor_dia_rs:0.114667,peso_unit_kg:2.52},
+  {codigo:'111200-2',nome:'Barra de Ancoragem 200',valor_dia_rs:0.153333,peso_unit_kg:3.36},
+  {codigo:'248101-8',nome:'Base Dupla',valor_dia_rs:0.053000,peso_unit_kg:2.19},
+  {codigo:'247102-7',nome:'Base Regulável Tubular',valor_dia_rs:0.110333,peso_unit_kg:3.3},
+  {codigo:'252106-2',nome:'Braçadeira Fixa F',valor_dia_rs:0.045333,peso_unit_kg:1.17},
+  {codigo:'252108-8',nome:'Braçadeira Móvel F',valor_dia_rs:0.047333,peso_unit_kg:1.22},
+  {codigo:'244101-2',nome:'Conector',valor_dia_rs:0.016333,peso_unit_kg:0.54},
+  {codigo:'249101-7',nome:'Console SH',valor_dia_rs:0.509000,peso_unit_kg:11.2},
+  {codigo:'242100-6',nome:'Cruzeta 075/100',valor_dia_rs:0.167333,peso_unit_kg:7.6},
+  {codigo:'242101-4',nome:'Cruzeta 125/155',valor_dia_rs:0.206667,peso_unit_kg:9.4},
+  {codigo:'242102-2',nome:'Cruzeta 175/200',valor_dia_rs:0.242667,peso_unit_kg:11.02},
+  {codigo:'242103-0',nome:'Cruzeta 225/250',valor_dia_rs:0.279333,peso_unit_kg:12.65},
+  {codigo:'221202-5',nome:'Esc. Extra Fêmea Hunnebeck®',valor_dia_rs:0.371000,peso_unit_kg:11.2},
+  {codigo:'221201-7',nome:'Esc. Extra Macho Hunnebeck®',valor_dia_rs:0.277667,peso_unit_kg:9.3},
+  {codigo:'221102-7',nome:'Esc. Standard Fêmea Hunnebeck®',valor_dia_rs:0.318333,peso_unit_kg:9.2},
+  {codigo:'221101-9',nome:'Esc. Standard Macho Hunnebeck®',valor_dia_rs:0.223333,peso_unit_kg:7.2},
+  {codigo:'228500-1',nome:'Escora Lume',valor_dia_rs:2.148000,peso_unit_kg:22},
+  {codigo:'221152-2',nome:'Escora Plus SH Fêmea',valor_dia_rs:0.350000,peso_unit_kg:9.7},
+  {codigo:'221151-4',nome:'Escora Plus SH Macho',valor_dia_rs:0.243333,peso_unit_kg:7.6},
+  {codigo:'223103-3',nome:'Forcado de Escora Light',valor_dia_rs:0.023667,peso_unit_kg:0.99},
+  {codigo:'246101-0',nome:'Forcado Regulável',valor_dia_rs:0.210333,peso_unit_kg:5.6},
+  {codigo:'154001-3',nome:'Garra para ancoragem',valor_dia_rs:0.007333,peso_unit_kg:0.29},
+  {codigo:'224101-6',nome:'Grampo Contraventamento',valor_dia_rs:0.052667,peso_unit_kg:1.1},
+  {codigo:'252048-6',nome:'Luva',valor_dia_rs:0.034000,peso_unit_kg:1.08},
+  {codigo:'381400-2',nome:'Parafuso 1/2"x2"(Perfil I,TK)',valor_dia_rs:0.002000,peso_unit_kg:0.07},
+  {codigo:'267075-2',nome:'Perfil C-05/075',valor_dia_rs:0.124333,peso_unit_kg:4.65},
+  {codigo:'267100-7',nome:'Perfil C-05/100',valor_dia_rs:0.166000,peso_unit_kg:6.2},
+  {codigo:'267150-2',nome:'Perfil C-05/150',valor_dia_rs:0.250333,peso_unit_kg:9.3},
+  {codigo:'267200-5',nome:'Perfil C-05/200',valor_dia_rs:0.338333,peso_unit_kg:12.4},
+  {codigo:'264150-5',nome:'Perfil C-12/150',valor_dia_rs:0.415333,peso_unit_kg:15.3},
+  {codigo:'264200-8',nome:'Perfil C-12/200',valor_dia_rs:0.553333,peso_unit_kg:20.4},
+  {codigo:'264250-3',nome:'Perfil C-12/250',valor_dia_rs:0.692000,peso_unit_kg:25.5},
+  {codigo:'264300-6',nome:'Perfil C-12/300',valor_dia_rs:0.828667,peso_unit_kg:30.6},
+  {codigo:'264350-1',nome:'Perfil C-12/350',valor_dia_rs:0.969000,peso_unit_kg:35.7},
+  {codigo:'264400-4',nome:'Perfil C-12/400',valor_dia_rs:1.104667,peso_unit_kg:40.8},
+  {codigo:'264450-9',nome:'Perfil C-12/450',valor_dia_rs:1.235667,peso_unit_kg:45.9},
+  {codigo:'269100-5',nome:'Perfil C-7,5/100',valor_dia_rs:0.236333,peso_unit_kg:6.5},
+  {codigo:'269150-0',nome:'Perfil C-7,5/150',valor_dia_rs:0.351000,peso_unit_kg:9.75},
+  {codigo:'269200-3',nome:'Perfil C-7,5/200',valor_dia_rs:0.472333,peso_unit_kg:13},
+  {codigo:'269250-8',nome:'Perfil C-7,5/250',valor_dia_rs:0.589000,peso_unit_kg:16.25},
+  {codigo:'269300-1',nome:'Perfil C-7,5/300',valor_dia_rs:0.707333,peso_unit_kg:19.5},
+  {codigo:'269350-6',nome:'Perfil C-7,5/350',valor_dia_rs:0.823333,peso_unit_kg:22.730},
+  {codigo:'269400-9',nome:'Perfil C-7,5/400',valor_dia_rs:0.940667,peso_unit_kg:26},
+  {codigo:'245101-1',nome:'Pino',valor_dia_rs:0.012333,peso_unit_kg:0.22},
+  {codigo:'228200-4',nome:'Pino Lume',valor_dia_rs:0.018333,peso_unit_kg:0.91},
+  {codigo:'221160-9',nome:'Pino Plus',valor_dia_rs:0.022000,peso_unit_kg:0.5},
+  {codigo:'119000-8',nome:'Pino Topec®',valor_dia_rs:0.008667,peso_unit_kg:0.09},
+  {codigo:'112203-5',nome:'Porca TS',valor_dia_rs:0.044333,peso_unit_kg:0.8},
+  {codigo:'228100-5',nome:'Prolongador Lume',valor_dia_rs:0.386333,peso_unit_kg:4.28},
+  {codigo:'241636-2',nome:'Quadro 136 LTT-2',valor_dia_rs:0.447000,peso_unit_kg:14.27},
+  {codigo:'241700-5',nome:'Quadro 200 LTT-2',valor_dia_rs:0.488000,peso_unit_kg:19.77},
+  {codigo:'222101-8',nome:'Triangulo',valor_dia_rs:0.089333,peso_unit_kg:4.11},
+  {codigo:'226101-4',nome:'Tripé',valor_dia_rs:0.158667,peso_unit_kg:8.06},
+  {codigo:'228005-1',nome:'Tripé Lume',valor_dia_rs:0.259333,peso_unit_kg:13},
+  {codigo:'251025-5',nome:'Tubo 48/025',valor_dia_rs:0.012000,peso_unit_kg:0.9},
+  {codigo:'251050-2',nome:'Tubo 48/050',valor_dia_rs:0.023667,peso_unit_kg:1.8},
+  {codigo:'251075-0',nome:'Tubo 48/075',valor_dia_rs:0.035667,peso_unit_kg:2.7},
+  {codigo:'251100-5',nome:'Tubo 48/100',valor_dia_rs:0.047333,peso_unit_kg:3.6},
+  {codigo:'251125-3',nome:'Tubo 48/125',valor_dia_rs:0.059333,peso_unit_kg:4.5},
+  {codigo:'251150-0',nome:'Tubo 48/150',valor_dia_rs:0.071000,peso_unit_kg:5.4},
+  {codigo:'251175-8',nome:'Tubo 48/175',valor_dia_rs:0.083000,peso_unit_kg:6.3},
+  {codigo:'251200-3',nome:'Tubo 48/200',valor_dia_rs:0.094667,peso_unit_kg:7.2},
+  {codigo:'251225-1',nome:'Tubo 48/225',valor_dia_rs:0.106667,peso_unit_kg:8.1},
+  {codigo:'251250-8',nome:'Tubo 48/250',valor_dia_rs:0.118333,peso_unit_kg:9},
+  {codigo:'251275-6',nome:'Tubo 48/275',valor_dia_rs:0.130333,peso_unit_kg:9.9},
+  {codigo:'251300-1',nome:'Tubo 48/300',valor_dia_rs:0.142000,peso_unit_kg:10.8},
+  {codigo:'251325-9',nome:'Tubo 48/325',valor_dia_rs:0.154000,peso_unit_kg:11.7},
+  {codigo:'251350-6',nome:'Tubo 48/350',valor_dia_rs:0.165667,peso_unit_kg:12.6},
+  {codigo:'251375-4',nome:'Tubo 48/375',valor_dia_rs:0.177667,peso_unit_kg:13.5},
+  {codigo:'251400-9',nome:'Tubo 48/400',valor_dia_rs:0.189333,peso_unit_kg:14.4},
+  {codigo:'251475-2',nome:'Tubo 48/475',valor_dia_rs:0.225000,peso_unit_kg:17.1},
+];
+
+async function importarCatalogoPadrao(){
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='Importando...';
+  try{
+    // upsert usando codigo como chave de conflito
+    const{error}=await db.from('itens_catalogo')
+      .upsert(_CATALOGO_PADRAO.map(c=>({...c,aplicacao:'ESCORAMENTO'})),{onConflict:'codigo'});
+    if(error){
+      if(error.message?.includes('codigo')){
+        alert('A coluna "codigo" não existe ainda na tabela.\n\nExecute no SQL Editor do Supabase:\n\nALTER TABLE itens_catalogo ADD COLUMN IF NOT EXISTS codigo TEXT UNIQUE;\n\nDepois tente novamente.');
+      }else{
+        alert('Erro: '+error.message);
+      }
+      return;
+    }
+    toast(`${_CATALOGO_PADRAO.length} itens importados com sucesso!`,'success');
+    renderAdmin();
+  }catch(e){alert('Erro: '+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent='⬆️ Importar/Atualizar';}
+}
+
+// ═══════════════════════════════════════════
 // MATERIAIS
 // ═══════════════════════════════════════════
 
@@ -1504,8 +1624,9 @@ async function renderMateriais(){
       const semItens=inf.qtd===0;
       return `<tr style="border-bottom:1px solid var(--rule)${semItens?';background:#fffbeb':''}">
         <td style="padding:8px 12px">${badge(m.tipo)}</td>
-        <td style="padding:8px 12px;font-size:12px;color:var(--ink-soft)">${m.descricao||m.projeto||'—'}
-          ${semItens?`<span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:6px">⚠️ vazio</span>`:''}
+        <td style="padding:8px 12px">
+          <div style="font-size:13px">${m.descricao||'—'}${semItens?` <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:10px">⚠️ vazio</span>`:''}</div>
+          ${(m.projeto||m.revisao)?`<div style="font-size:11px;color:var(--ink-soft);margin-top:2px">${[m.projeto,m.revisao?'Rev. '+m.revisao:''].filter(Boolean).join(' · ')}</div>`:''}
         </td>
         <td style="padding:8px 12px;font-size:13px;text-align:center;font-weight:600">${inf.qtd||'—'}</td>
         <td style="padding:8px 12px;font-size:12px;text-align:right">${inf.peso>0?inf.peso.toFixed(1)+' kg':'—'}</td>
@@ -1555,6 +1676,8 @@ function abrirImportarPDF(pavId){
   _itensImportados=[];
   g('inp-memorial-pdf').value='';
   g('imp-mem-desc').value='';
+  g('imp-mem-proj').value='';
+  g('imp-mem-rev').value='';
   // Reset botão (pode ter ficado preso de importação anterior)
   const btn=g('btn-confirmar-imp-mem');
   btn.disabled=false;btn.textContent='✓ Importar Lista';
@@ -1630,6 +1753,13 @@ async function processarMemorialPDF(event){
     _itensImportados=resultado.itens;
     if(resultado.tipo) g('imp-mem-tipo').value=resultado.tipo;
     if(resultado.subtipo&&!g('imp-mem-desc').value.trim()) g('imp-mem-desc').value=resultado.subtipo;
+    // Auto-detectar nº do projeto e revisão no texto do PDF
+    const fullPDFText=allItems.map(it=>it.str).join(' ');
+    const pm=fullPDFText.match(/\b([A-Z]{2,4}-\d{4}-\d{3,4}-[A-Z]\d{2,3})(-R\d+)?/);
+    if(pm){
+      if(!g('imp-mem-proj').value.trim()) g('imp-mem-proj').value=pm[1];
+      if(pm[2]&&!g('imp-mem-rev').value.trim()) g('imp-mem-rev').value=pm[2].slice(1);
+    }
     // Checkboxes para replicar em outros pavimentos
     const selId=g('imp-mem-pav').value;
     g('imp-mem-pavs-lista').innerHTML=pavimentos
@@ -1637,17 +1767,28 @@ async function processarMemorialPDF(event){
       .map(p=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#f1f5f9;border:1px solid var(--rule);border-radius:6px;cursor:pointer;font-size:12px">
         <input type="checkbox" value="${p.id}"> ${p.nome}
       </label>`).join('');
-    const rows_html=_itensImportados.map(it=>`
-      <tr style="border-bottom:1px solid var(--rule)">
-        <td style="padding:8px 14px;font-size:13px">${it.nome}</td>
-        <td style="padding:8px 14px;font-size:13px;text-align:center;font-weight:700">${it.quantidade}</td>
-      </tr>`).join('');
+    // Cruzar com catálogo local para preview de match
+    const catNormLocal={};
+    _CATALOGO_PADRAO.forEach(c=>{catNormLocal[_normNome(c.nome)]=c;});
+    let semMatch=0;
+    const rows_html=_itensImportados.map(it=>{
+      const cat=catNormLocal[_normNome(it.nome)];
+      if(!cat)semMatch++;
+      const badge=cat
+        ?`<span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:8px;font-size:10px">✓ ${cat.codigo}</span>`
+        :`<span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:10px">? sem match</span>`;
+      return`<tr style="border-bottom:1px solid var(--rule)">
+        <td style="padding:6px 14px;font-size:13px">${it.nome} ${badge}</td>
+        <td style="padding:6px 14px;font-size:13px;text-align:center;font-weight:700">${it.quantidade}</td>
+      </tr>`;
+    }).join('');
     g('imp-mem-tabela').innerHTML=`<table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:#f1f5f9">
         <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:600">Item</th>
-        <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:600">Quantidade</th>
+        <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:600">Qtd</th>
       </tr></thead><tbody>${rows_html}</tbody></table>`;
-    g('imp-mem-info').textContent=`${_itensImportados.length} item(ns) extraído(s) da tabela TOTAL`;
+    const matchMsg=semMatch?` · <span style="color:#92400e">${semMatch} sem match no catálogo</span>`:'';
+    g('imp-mem-info').innerHTML=`${_itensImportados.length} item(ns) extraído(s) da tabela TOTAL${matchMsg}`;
     _impEstado('preview');
   }catch(e){
     g('imp-mem-msg-erro').textContent=e.message;
@@ -1733,6 +1874,8 @@ async function confirmarImportacaoMemorial(){
   const pavIdPrincipal=g('imp-mem-pav').value;
   const tipo=g('imp-mem-tipo').value;
   const descricao=g('imp-mem-desc').value.trim()||null;
+  const projeto=g('imp-mem-proj').value.trim()||null;
+  const revisao=g('imp-mem-rev').value.trim()||null;
   if(!pavIdPrincipal){alert('Selecione o pavimento.');return;}
 
   // Pavimentos selecionados: principal + checkboxes extras
@@ -1744,11 +1887,11 @@ async function confirmarImportacaoMemorial(){
   btn.disabled=true;btn.textContent='Salvando...';
 
   try{
-    // Enriquecer itens com dados do catálogo (feito uma vez para todos)
-    const nomes=_itensImportados.map(i=>i.nome);
-    const{data:cat}=await db.from('itens_catalogo')
-      .select('nome,peso_unit_kg,valor_dia_rs').in('nome',nomes);
-    const catMap={};(cat||[]).forEach(c=>{catMap[c.nome]=c;});
+    // Enriquecer itens com dados do catálogo — busca todos e usa normalização como fallback
+    const{data:cat}=await db.from('itens_catalogo').select('nome,codigo,peso_unit_kg,valor_dia_rs');
+    const catMap={};
+    const catMapNorm={};
+    (cat||[]).forEach(c=>{catMap[c.nome]=c;catMapNorm[_normNome(c.nome)]=c;});
 
     for(const pavId of pavIds){
       // Verificar duplicata EXATA (mesmo tipo + mesma descricao)
@@ -1767,17 +1910,20 @@ async function confirmarImportacaoMemorial(){
 
       // Criar memorial
       const{data:mem,error:eM}=await db.from('memoriais_escoramento')
-        .insert({obra_id:obra.id,pavimento_id:pavId,tipo,descricao}).select().single();
+        .insert({obra_id:obra.id,pavimento_id:pavId,tipo,descricao,projeto,revisao}).select().single();
       if(eM)throw eM;
 
       // Inserir itens
       const{error:eI}=await db.from('itens_memorial').insert(
-        _itensImportados.map(it=>({
-          obra_id:obra.id,memorial_id:mem.id,
-          item_nome:it.nome,quantidade:it.quantidade,
-          peso_unit_kg:catMap[it.nome]?.peso_unit_kg??null,
-          valor_dia_rs:catMap[it.nome]?.valor_dia_rs??null
-        }))
+        _itensImportados.map(it=>{
+          const cat=catMap[it.nome]||catMapNorm[_normNome(it.nome)]||null;
+          return{
+            obra_id:obra.id,memorial_id:mem.id,
+            item_nome:it.nome,quantidade:it.quantidade,
+            peso_unit_kg:cat?.peso_unit_kg??null,
+            valor_dia_rs:cat?.valor_dia_rs??null
+          };
+        })
       );
       if(eI)throw eI;
     }
@@ -2174,9 +2320,10 @@ async function renderCronograma(){
 async function renderAdmin(){
   if(!user?.isAdmin){g('content-area').innerHTML='<div class="alert alert-red" style="margin:20px"><span>🚫</span><span>Acesso restrito.</span></div>';return;}
   loading();
-  const[{data:profiles},{data:todasObras}]=await Promise.all([
+  const[{data:profiles},{data:todasObras},{count:totalCat}]=await Promise.all([
     db.from('profiles').select('*').order('created_at'),
     db.from('obras').select('*').order('created_at',{ascending:false}),
+    db.from('itens_catalogo').select('*',{count:'exact',head:true}),
   ]);
   const users=profiles||[],obras=todasObras||[];
   const opu={};obras.forEach(o=>{if(!opu[o.user_id])opu[o.user_id]=[];opu[o.user_id].push(o);});
@@ -2209,6 +2356,23 @@ async function renderAdmin(){
         </td>
       </tr>`).join('')}</tbody>
     </table></div></div>
+    <div class="card" style="margin-bottom:16px"><div class="card-head">
+      <span class="card-head-title">📦 Catálogo de Itens SH</span>
+      <button class="btn btn-primary btn-sm" onclick="importarCatalogoPadrao()">⬆️ Importar/Atualizar</button>
+    </div>
+    <div style="padding:12px 16px;display:flex;align-items:center;gap:16px">
+      <div style="font-size:28px;font-weight:700;color:var(--ink)">${totalCat||0}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600">itens no catálogo</div>
+        <div style="font-size:11px;color:var(--ink-soft)">Usado para cruzar preços e pesos dos PDFs importados</div>
+      </div>
+      ${!totalCat?`<div class="alert alert-amber" style="margin:0;flex:1"><span>⚠️</span><span>Catálogo vazio — importe para ativar o cálculo de custos.</span></div>`:''}
+    </div>
+    ${!totalCat?`<div style="padding:0 16px 12px;font-size:12px;color:var(--ink-soft)">
+      Se o botão retornar erro sobre coluna "codigo", execute antes no <strong>SQL Editor do Supabase</strong>:<br>
+      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">ALTER TABLE itens_catalogo ADD COLUMN IF NOT EXISTS codigo TEXT UNIQUE;</code>
+    </div>`:''}
+    </div>
     <div class="card"><div class="card-head"><span class="card-head-title">🏗️ Todas as Obras</span></div>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Obra</th><th>Usuário</th><th>Contrato</th><th>Valor</th><th></th></tr></thead>
