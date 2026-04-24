@@ -373,7 +373,7 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
   <div class="modal-box" style="max-width:600px">
     <div class="modal-title">📄 Importar Lista de Materiais</div>
 
-    <div class="fg fg2" style="gap:10px;margin-bottom:14px">
+    <div class="fg fg2" style="gap:10px;margin-bottom:10px">
       <div class="field">
         <label>Pavimento</label>
         <select id="imp-mem-pav" style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px"></select>
@@ -385,6 +385,10 @@ body{font-family:var(--sans);background:#f8f9fb;color:var(--ink);min-height:100v
           <option value="REESCORAMENTO">Reescoramento</option>
         </select>
       </div>
+    </div>
+    <div class="field" style="margin-bottom:14px">
+      <label>Estrutura / Identificação <span style="font-weight:400;color:var(--ink-soft)">(preenchido automático pelo PDF)</span></label>
+      <input type="text" id="imp-mem-desc" placeholder="Ex: ESC LAJE, ESC VIGA, REESC LAJE..." style="width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;font-size:13px;box-sizing:border-box">
     </div>
 
     <div id="imp-mem-inicial" style="text-align:center;padding:28px;border:2px dashed var(--rule);border-radius:10px;margin-bottom:12px">
@@ -1533,6 +1537,7 @@ function abrirImportarPDF(pavId){
   _impEstado('inicial');
   _itensImportados=[];
   g('inp-memorial-pdf').value='';
+  g('imp-mem-desc').value='';
   abrirModal('modal-import-memorial');
 }
 
@@ -1579,6 +1584,7 @@ async function processarMemorialPDF(event){
     }
     _itensImportados=resultado.itens;
     if(resultado.tipo) g('imp-mem-tipo').value=resultado.tipo;
+    if(resultado.subtipo&&!g('imp-mem-desc').value.trim()) g('imp-mem-desc').value=resultado.subtipo;
     const rows_html=_itensImportados.map(it=>`
       <tr style="border-bottom:1px solid var(--rule)">
         <td style="padding:8px 14px;font-size:13px">${it.nome}</td>
@@ -1601,14 +1607,20 @@ function _parsearTabelaTotal(linhas){
   let best=null;
   for(let i=0;i<linhas.length;i++){
     if(!/Descri/i.test(linhas[i]))continue;
-    const ctx=linhas.slice(Math.max(0,i-8),i);
-    // Must have a line that is exactly "TOTAL" (not "TRECHO", not "Peso Total")
+    const ctx=linhas.slice(Math.max(0,i-10),i);
     const hasTotalLine=ctx.some(l=>/^\s*TOTAL\s*$/i.test(l));
     const hasTrechoLine=ctx.some(l=>/\bTRECHO\b/i.test(l));
-    const hasEsco=ctx.some(l=>/ESCORAMENTO/i.test(l));
+    // Match "ESCORAMENTO", "REESCORAMENTO", or abbreviated "ESC LAJE", "ESC VIGA", "REESC ..."
+    const hasEsco=ctx.some(l=>/\b(RE)?ESCORAMENTO\b|\bR?ESC\s+(LAJE|VIGA|DE\s)/i.test(l));
     if(!hasTotalLine||hasTrechoLine||!hasEsco)continue;
-    const tipoMatch=ctx.join(' ').match(/\b(REESCORAMENTO|ESCORAMENTO)\b/i);
-    const tipo=tipoMatch?tipoMatch[1].toUpperCase():'ESCORAMENTO';
+    const ctxText=ctx.join(' ');
+    // Detect tipo: reescoramento if any variant found
+    const isReeesc=/\bREESCORAMENTO\b|\bRE\s*ESC\b|\bREESC\b/i.test(ctxText);
+    const tipo=isReeesc?'REESCORAMENTO':'ESCORAMENTO';
+    // Detect subtipo/estrutura (LAJE, VIGA, etc.)
+    const subMatch=ctxText.match(/\b(RE\s*)?ESC\s+(LAJE|VIGA|LAJES|VIGAS)\b/i)
+      || ctxText.match(/\b(LAJE|VIGA|LAJES|VIGAS)\b/i);
+    const subtipo=subMatch?subMatch[0].trim().toUpperCase():null;
     const itens=[];
     for(let j=i+1;j<linhas.length;j++){
       const row=linhas[j].trim();
@@ -1620,7 +1632,7 @@ function _parsearTabelaTotal(linhas){
       }
     }
     if(itens.length>0&&(!best||itens.length>=best.itens.length)){
-      best={itens,tipo};
+      best={itens,tipo,subtipo};
     }
   }
   return best;
@@ -1630,12 +1642,13 @@ async function confirmarImportacaoMemorial(){
   if(!_itensImportados.length)return;
   const pavId=g('imp-mem-pav').value;
   const tipo=g('imp-mem-tipo').value;
+  const descricao=g('imp-mem-desc').value.trim()||null;
   if(!pavId){alert('Selecione o pavimento.');return;}
   const btn=g('btn-confirmar-imp-mem');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
     const{data:mem,error:eM}=await db.from('memoriais_escoramento').insert({
-      obra_id:obra.id,pavimento_id:pavId,tipo
+      obra_id:obra.id,pavimento_id:pavId,tipo,descricao
     }).select().single();
     if(eM)throw eM;
     // Enrich with catalog data
