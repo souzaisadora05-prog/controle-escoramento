@@ -1560,21 +1560,49 @@ async function processarMemorialPDF(event){
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const buf=await file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
-    // Coleta TODOS os itens de texto com suas coordenadas X,Y
-    const allItems=[];
+
+    // Coletar itens brutos com X, Y, largura
+    const rawItems=[];
     for(let i=1;i<=pdf.numPages;i++){
       const page=await pdf.getPage(i);
       const content=await page.getTextContent();
       content.items.filter(it=>it.str&&it.str.trim()).forEach(it=>{
-        allItems.push({str:it.str.trim(),x:it.transform[4],y:it.transform[5]});
+        rawItems.push({str:it.str.trim(),x:it.transform[4],y:it.transform[5],w:it.width||0});
       });
     }
+
+    // Agrupar em linhas por Y (tolerância 6 unidades)
+    rawItems.sort((a,b)=>{const dy=b.y-a.y;return Math.abs(dy)>4?dy:a.x-b.x;});
+    const linhasBruto=[];let curL=null;
+    for(const it of rawItems){
+      if(!curL||Math.abs(curL.y-it.y)>6){curL={y:it.y,items:[]};linhasBruto.push(curL);}
+      curL.items.push(it);
+    }
+
+    // Reconstruir palavras dentro de cada linha mesclando caracteres próximos
+    // (PDFs CAD às vezes armazenam texto caractere a caractere)
+    const allItems=[];
+    for(const linha of linhasBruto){
+      const sorted=linha.items.sort((a,b)=>a.x-b.x);
+      let cur=null;
+      for(const it of sorted){
+        const prevEnd=cur?cur.x+(cur.w>0?cur.w:cur.str.length*6):it.x-999;
+        const gap=it.x-prevEnd;
+        if(!cur||gap>5){
+          cur={str:it.str,x:it.x,y:linha.y,w:it.w||0};
+          allItems.push(cur);
+        }else{
+          cur.str+=it.str;
+          cur.w=(it.x-cur.x)+(it.w>0?it.w:it.str.length*6);
+        }
+      }
+    }
+
     const resultado=_parsearTabelaTotal(allItems);
     if(!resultado||!resultado.itens.length){
-      const totFound=allItems.filter(it=>/\bTOTAL\b/i.test(it.str));
-      console.log('[PDF debug] itens com TOTAL:',totFound);
-      console.log('[PDF debug] primeiros 100 itens:',allItems.slice(0,100));
-      g('imp-mem-msg-erro').textContent='Tabela TOTAL não encontrada neste PDF. Verifique se o arquivo é um projeto de escoramento com seção "TOTAL".';
+      console.log('[PDF] items com TOTAL:',allItems.filter(it=>/TOTAL/i.test(it.str)).slice(0,8));
+      console.log('[PDF] primeiros 100 words:',allItems.slice(0,100));
+      g('imp-mem-msg-erro').textContent='Tabela TOTAL não encontrada neste PDF. Verifique se o arquivo é um projeto de escoramento SH com seção "TOTAL".';
       _impEstado('erro');
       return;
     }
@@ -1599,69 +1627,75 @@ async function processarMemorialPDF(event){
   }
 }
 
-function _parsearTabelaTotal(allItems){
-  // Estratégia: localizar o item de texto "TOTAL" pelo seu X/Y e filtrar
-  // apenas a região da tabela (evita mistura com texto da planta CAD).
-  const totalItems=allItems.filter(it=>/^\s*TOTAL\s*$/i.test(it.str));
-  if(!totalItems.length) return null;
+// Extrai itens de uma região filtrada por X (evita mistura com planta CAD)
+function _extrairItensRegiao(allItems,xMin,xMax,yRef,ctxText,tipoForcado){
+  const isReeesc=/\bREESCORAMENTO\b|\bREESC\b/i.test(ctxText);
+  const tipo=tipoForcado||(isReeesc?'REESCORAMENTO':'ESCORAMENTO');
+  const subMatch=ctxText.match(/\bR?ESC\s+(LAJE|VIGA|LAJES|VIGAS)\b/i)||ctxText.match(/\b(LAJE|VIGA)\b/i);
+  const subtipo=subMatch?subMatch[0].trim().toUpperCase():null;
 
+  // Items abaixo/igual a yRef na região X
+  const below=allItems.filter(it=>it.x>=xMin&&it.x<=xMax&&it.y<=yRef+5&&it.y>=yRef-800);
+  below.sort((a,b)=>b.y-a.y);
+  const rows=[];let curRow=null;
+  for(const it of below){
+    if(!curRow||Math.abs(curRow.y-it.y)>6){curRow={y:it.y,items:[]};rows.push(curRow);}
+    curRow.items.push(it);
+  }
+  const linhas=rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' '));
+  let descIdx=-1;
+  for(let j=0;j<linhas.length;j++){if(/Descri/i.test(linhas[j])){descIdx=j;break;}}
+  if(descIdx<0)return null;
+  const itens=[];
+  for(let j=descIdx+1;j<linhas.length;j++){
+    const row=linhas[j].trim();
+    if(/Peso\s*Total/i.test(row))break;
+    if(!row)continue;
+    const m=row.match(/^(.+)\s+(\d+)\s*$/);
+    if(m&&m[1].trim().length>1&&parseInt(m[2])>0)itens.push({nome:m[1].trim(),quantidade:parseInt(m[2])});
+  }
+  return itens.length?{itens,tipo,subtipo}:null;
+}
+
+function _parsearTabelaTotal(allItems){
   let best=null;
 
-  for(const tot of totalItems){
-    // Região X da tabela: começa ≈ no X de TOTAL, estende para a direita
-    const xMin=tot.x-150;
-    const xMax=tot.x+600;
+  // ─── ESTRATÉGIA A: ancora em item "TOTAL" exato ───────────────────
+  for(const tot of allItems.filter(it=>/^\s*TOTAL\s*$/i.test(it.str))){
+    const xMin=tot.x-200,xMax=tot.x+700;
+    const ctx=allItems.filter(it=>it.x>=xMin&&it.x<=xMax&&it.y>tot.y&&it.y<=tot.y+400);
+    const ctxText=ctx.map(i=>i.str).join(' ');
+    // Deve ter ESC/ESCORAMENTO e NÃO TRECHO
+    if(!/\b(RE)?ESCORAMENTO\b|\bR?ESC\s+(LAJE|VIGA)/i.test(ctxText))continue;
+    if(/\bTRECHO\b/i.test(ctxText))continue;
+    const r=_extrairItensRegiao(allItems,xMin,xMax,tot.y,ctxText);
+    if(r&&(!best||r.itens.length>best.itens.length))best=r;
+  }
+  if(best)return best;
 
-    // Contexto ACIMA de TOTAL (Y maior = visualmente acima em PDF)
-    const ctxItems=allItems.filter(it=>
-      it.x>=xMin&&it.x<=xMax&&it.y>tot.y&&it.y<=tot.y+350
-    );
-    const ctxText=ctxItems.map(i=>i.str).join(' ');
-
-    // Deve ter ESCORAMENTO ou "ESC LAJE/VIGA" e NÃO ter TRECHO
-    const hasEsco=/\b(RE)?ESCORAMENTO\b|\bR?ESC\s+(LAJE|VIGA)/i.test(ctxText);
-    const hasTrecho=/\bTRECHO\b/i.test(ctxText);
-    if(!hasEsco||hasTrecho) continue;
-
-    // Detectar tipo e subtipo
-    const isReeesc=/\bREESCORAMENTO\b|\bREESC\b/i.test(ctxText);
-    const tipo=isReeesc?'REESCORAMENTO':'ESCORAMENTO';
-    const subMatch=ctxText.match(/\bR?ESC\s+(LAJE|VIGA|LAJES|VIGAS)\b/i)||ctxText.match(/\b(LAJE|VIGA)\b/i);
-    const subtipo=subMatch?subMatch[0].trim().toUpperCase():null;
-
-    // Itens ABAIXO de TOTAL (Y menor = visualmente abaixo)
-    const belowItems=allItems.filter(it=>
-      it.x>=xMin&&it.x<=xMax&&it.y<=tot.y+5&&it.y>=tot.y-700
-    );
-    belowItems.sort((a,b)=>b.y-a.y); // de cima para baixo
-
-    // Agrupar por Y em linhas
-    const rows=[];let curRow=null;
-    for(const it of belowItems){
-      if(!curRow||Math.abs(curRow.y-it.y)>6){curRow={y:it.y,items:[]};rows.push(curRow);}
-      curRow.items.push(it);
+  // ─── ESTRATÉGIA B: ancora em "Peso Total" e verifica TOTAL acima ──
+  for(const peso of allItems.filter(it=>/^Peso\s*Total/i.test(it.str))){
+    const xMin=peso.x-200,xMax=peso.x+700;
+    const ctx=allItems.filter(it=>it.x>=xMin&&it.x<=xMax&&it.y>peso.y&&it.y<=peso.y+900);
+    ctx.sort((a,b)=>b.y-a.y);
+    const ctxText=ctx.map(i=>i.str).join(' ');
+    if(!/\bTOTAL\b/i.test(ctxText))continue;      // deve ter "TOTAL" acima
+    // Reconstituir linhas para checar ordem: TOTAL deve vir ANTES de TRECHO (ou sem TRECHO)
+    const rows=[];let cr=null;
+    for(const it of ctx){
+      if(!cr||Math.abs(cr.y-it.y)>6){cr={y:it.y,items:[]};rows.push(cr);}
+      cr.items.push(it);
     }
     const linhas=rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' '));
-
-    // Encontrar linha "Descrição"
+    // Encontrar "Descrição" de baixo para cima (mais próximo de Peso Total)
     let descIdx=-1;
-    for(let j=0;j<linhas.length;j++){if(/Descri/i.test(linhas[j])){descIdx=j;break;}}
-    if(descIdx<0) continue;
-
-    // Extrair itens até "Peso Total"
-    const itens=[];
-    for(let j=descIdx+1;j<linhas.length;j++){
-      const row=linhas[j].trim();
-      if(/Peso\s*Total/i.test(row)) break;
-      if(!row) continue;
-      const m=row.match(/^(.+)\s+(\d+)\s*$/);
-      if(m&&m[1].trim().length>1&&parseInt(m[2])>0){
-        itens.push({nome:m[1].trim(),quantidade:parseInt(m[2])});
-      }
-    }
-    if(itens.length>0&&(!best||itens.length>best.itens.length)){
-      best={itens,tipo,subtipo};
-    }
+    for(let j=linhas.length-1;j>=0;j--){if(/Descri/i.test(linhas[j])){descIdx=j;break;}}
+    if(descIdx<0)continue;
+    const acima=linhas.slice(0,descIdx).join(' ');
+    if(!/\bTOTAL\b/i.test(acima))continue;         // TOTAL deve estar acima de Descrição
+    if(/\bTRECHO\b/i.test(acima)&&!/\bTOTAL\b/i.test(acima.replace(/\bTRECHO\s*\d*\b/gi,'')))continue;
+    const r=_extrairItensRegiao(allItems,xMin,xMax,peso.y+900,ctxText);
+    if(r&&(!best||r.itens.length>best.itens.length))best=r;
   }
   return best;
 }
