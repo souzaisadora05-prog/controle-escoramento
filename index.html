@@ -1482,19 +1482,31 @@ async function renderMateriais(){
     ?`<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">REEESC</span>`
     :`<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">ESC</span>`;
 
+  // Detectar memoriais sem itens (importações com erro)
+  const vazios=(memoriais||[]).filter(m=>!(itensPorMem[m.id]?.qtd>0));
+  const alertaVazios=vazios.length?`
+    <div class="alert alert-amber" style="margin-bottom:14px;align-items:center">
+      <span>⚠️</span>
+      <span style="flex:1">${vazios.length} memorial(is) sem itens — provavelmente importações que falharam.</span>
+      <button class="btn btn-ghost btn-sm" onclick="limparMemoriaisVazios()" style="white-space:nowrap">🗑️ Limpar todos</button>
+    </div>`:'';
+
   let cards='';
   (pavimentos||[]).forEach(pav=>{
     const mems=memPorPav[pav.id]||[];
 
     const rows=mems.map(m=>{
       const inf=itensPorMem[m.id]||{qtd:0,peso:0};
-      return `<tr style="border-bottom:1px solid var(--rule)">
+      const semItens=inf.qtd===0;
+      return `<tr style="border-bottom:1px solid var(--rule)${semItens?';background:#fffbeb':''}">
         <td style="padding:8px 12px">${badge(m.tipo)}</td>
-        <td style="padding:8px 12px;font-size:12px;color:var(--ink-soft)">${m.descricao||m.projeto||'—'}</td>
+        <td style="padding:8px 12px;font-size:12px;color:var(--ink-soft)">${m.descricao||m.projeto||'—'}
+          ${semItens?`<span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:6px">⚠️ vazio</span>`:''}
+        </td>
         <td style="padding:8px 12px;font-size:13px;text-align:center;font-weight:600">${inf.qtd||'—'}</td>
         <td style="padding:8px 12px;font-size:12px;text-align:right">${inf.peso>0?inf.peso.toFixed(1)+' kg':'—'}</td>
         <td style="padding:8px 12px;text-align:right;white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="abrirItensMemorial('${m.id}','${(pav.nome+' – '+m.tipo).replace(/'/g,"\\'")}')">📋 Ver itens</button>
+          ${!semItens?`<button class="btn btn-ghost btn-sm" onclick="abrirItensMemorial('${m.id}','${(pav.nome+' – '+m.tipo).replace(/'/g,"\\'")}')">📋 Ver itens</button>`:''}
           <button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="excluirMemorial('${m.id}')">🗑️</button>
         </td>
       </tr>`;
@@ -1525,10 +1537,11 @@ async function renderMateriais(){
   });
 
   g('content-area').innerHTML=`
-    <div style="margin-bottom:18px">
+    <div style="margin-bottom:14px">
       <h2 style="margin:0 0 4px;font-size:18px">📦 Materiais de Escoramento</h2>
       <div style="font-size:12px;color:var(--ink-soft)">Importe o PDF do projeto — o sistema extrai a tabela TOTAL automaticamente</div>
     </div>
+    ${alertaVazios}
     ${cards||'<div class="alert alert-amber"><span>⚠️</span><span>Nenhum pavimento cadastrado.</span></div>'}`;
 }
 
@@ -1707,27 +1720,49 @@ async function confirmarImportacaoMemorial(){
   const descricao=g('imp-mem-desc').value.trim()||null;
   if(!pavId){alert('Selecione o pavimento.');return;}
   const btn=g('btn-confirmar-imp-mem');
-  btn.disabled=true;btn.textContent='Salvando...';
+  btn.disabled=true;btn.textContent='Verificando...';
   try{
+    // ── Verificar duplicatas ──────────────────────────────────────────
+    const{data:existentes}=await db.from('memoriais_escoramento')
+      .select('id,tipo,descricao').eq('obra_id',obra.id).eq('pavimento_id',pavId).eq('tipo',tipo);
+
+    let substituirIds=[];
+    if(existentes?.length){
+      const pavNome=pavimentos.find(p=>p.id===pavId)?.nome||'este pavimento';
+      const lista=existentes.map(e=>`• ${e.tipo}${e.descricao?' – '+e.descricao:''}`).join('\n');
+      const substituir=confirm(
+        `Já existe(m) ${existentes.length} memorial(is) de ${tipo} para ${pavNome}:\n\n${lista}\n\nClicar OK substitui o(s) existente(s).\nClicar Cancelar cria um registro adicional.`
+      );
+      if(substituir) substituirIds=existentes.map(e=>e.id);
+    }
+
+    btn.textContent='Salvando...';
+
+    // Excluir antigos se o usuário escolheu substituir
+    if(substituirIds.length){
+      const{error:eDel}=await db.from('memoriais_escoramento').delete().in('id',substituirIds);
+      if(eDel)throw eDel;
+    }
+
+    // ── Criar novo memorial ───────────────────────────────────────────
     const{data:mem,error:eM}=await db.from('memoriais_escoramento').insert({
       obra_id:obra.id,pavimento_id:pavId,tipo,descricao
     }).select().single();
     if(eM)throw eM;
-    // Enrich with catalog data
+
+    // Enriquecer com dados do catálogo
     const nomes=_itensImportados.map(i=>i.nome);
     const{data:cat}=await db.from('itens_catalogo').select('nome,peso_unit_kg,valor_dia_rs').in('nome',nomes);
-    const catMap={};
-    (cat||[]).forEach(c=>{catMap[c.nome]=c;});
+    const catMap={};(cat||[]).forEach(c=>{catMap[c.nome]=c;});
     const payload=_itensImportados.map(it=>({
-      obra_id:obra.id,
-      memorial_id:mem.id,
-      item_nome:it.nome,
-      quantidade:it.quantidade,
+      obra_id:obra.id,memorial_id:mem.id,
+      item_nome:it.nome,quantidade:it.quantidade,
       peso_unit_kg:catMap[it.nome]?.peso_unit_kg??null,
       valor_dia_rs:catMap[it.nome]?.valor_dia_rs??null
     }));
     const{error:eI}=await db.from('itens_memorial').insert(payload);
     if(eI)throw eI;
+
     fecharModal('modal-import-memorial');
     _itensImportados=[];
     renderMateriais();
@@ -1735,6 +1770,20 @@ async function confirmarImportacaoMemorial(){
     alert('Erro ao salvar: '+e.message);
     btn.disabled=false;btn.textContent='✓ Importar Lista';
   }
+}
+
+async function limparMemoriaisVazios(){
+  if(!obra)return;
+  if(!confirm('Excluir todos os memoriais sem itens (importações que falharam)?'))return;
+  const{data:mems}=await db.from('memoriais_escoramento').select('id').eq('obra_id',obra.id);
+  if(!mems?.length){alert('Nenhum memorial encontrado.');return;}
+  const{data:itens}=await db.from('itens_memorial').select('memorial_id').eq('obra_id',obra.id);
+  const comItens=new Set((itens||[]).map(i=>i.memorial_id));
+  const vazios=mems.filter(m=>!comItens.has(m.id)).map(m=>m.id);
+  if(!vazios.length){alert('Nenhum memorial vazio encontrado. O banco está limpo!');return;}
+  const{error}=await db.from('memoriais_escoramento').delete().in('id',vazios);
+  if(error){alert('Erro: '+error.message);return;}
+  renderMateriais();
 }
 
 async function excluirMemorial(id){
