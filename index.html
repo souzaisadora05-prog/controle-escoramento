@@ -1546,8 +1546,8 @@ const _CATALOGO_PADRAO=[
   {codigo:'251475-2',nome:'Tubo 48/475',valor_dia_rs:0.225000,peso_unit_kg:17.1},
 ];
 
-async function importarCatalogoPadrao(){
-  const btn=event.target;
+async function importarCatalogoPadrao(ev){
+  const btn=ev?.target||event.target;
   btn.disabled=true;btn.textContent='Importando...';
   try{
     // upsert usando codigo como chave de conflito
@@ -1565,6 +1565,41 @@ async function importarCatalogoPadrao(){
     renderAdmin();
   }catch(e){alert('Erro: '+(e.message||e));}
   finally{btn.disabled=false;btn.textContent='⬆️ Importar/Atualizar';}
+}
+
+async function sincronizarItensComCatalogo(ev){
+  const btn=ev?.target||event.target;
+  btn.disabled=true;btn.textContent='Sincronizando...';
+  try{
+    // Buscar todos os itens_memorial sem valores do catálogo
+    const{data:itens}=await db.from('itens_memorial')
+      .select('id,item_nome,peso_unit_kg,valor_dia_rs')
+      .or('peso_unit_kg.is.null,valor_dia_rs.is.null');
+    if(!itens?.length){
+      toast('Todos os itens já têm valores do catálogo!','success');
+      return;
+    }
+    // Buscar catálogo completo
+    const{data:cat}=await db.from('itens_catalogo').select('nome,peso_unit_kg,valor_dia_rs');
+    const catExato={};const catNorm={};
+    (cat||[]).forEach(c=>{catExato[c.nome]=c;catNorm[_normNome(c.nome)]=c;});
+
+    let atualizados=0,naoEncontrados=[];
+    for(const it of itens){
+      const c=catExato[it.item_nome]||catNorm[_normNome(it.item_nome)]||null;
+      if(!c){naoEncontrados.push(it.item_nome);continue;}
+      const{error}=await db.from('itens_memorial').update({
+        peso_unit_kg:c.peso_unit_kg,
+        valor_dia_rs:c.valor_dia_rs
+      }).eq('id',it.id);
+      if(!error)atualizados++;
+    }
+    let msg=`${atualizados} item(ns) atualizados com preço e peso do catálogo.`;
+    if(naoEncontrados.length) msg+=`\n\n${naoEncontrados.length} não encontrado(s):\n${[...new Set(naoEncontrados)].join('\n')}`;
+    alert(msg);
+    renderAdmin();
+  }catch(e){alert('Erro: '+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent='🔄 Sincronizar memorials';}
 }
 
 // ═══════════════════════════════════════════
@@ -2320,10 +2355,11 @@ async function renderCronograma(){
 async function renderAdmin(){
   if(!user?.isAdmin){g('content-area').innerHTML='<div class="alert alert-red" style="margin:20px"><span>🚫</span><span>Acesso restrito.</span></div>';return;}
   loading();
-  const[{data:profiles},{data:todasObras},{count:totalCat}]=await Promise.all([
+  const[{data:profiles},{data:todasObras},{count:totalCat},{data:catItens}]=await Promise.all([
     db.from('profiles').select('*').order('created_at'),
     db.from('obras').select('*').order('created_at',{ascending:false}),
     db.from('itens_catalogo').select('*',{count:'exact',head:true}),
+    db.from('itens_catalogo').select('codigo,nome,peso_unit_kg,valor_dia_rs').order('nome'),
   ]);
   const users=profiles||[],obras=todasObras||[];
   const opu={};obras.forEach(o=>{if(!opu[o.user_id])opu[o.user_id]=[];opu[o.user_id].push(o);});
@@ -2358,19 +2394,35 @@ async function renderAdmin(){
     </table></div></div>
     <div class="card" style="margin-bottom:16px"><div class="card-head">
       <span class="card-head-title">📦 Catálogo de Itens SH</span>
-      <button class="btn btn-primary btn-sm" onclick="importarCatalogoPadrao()">⬆️ Importar/Atualizar</button>
-    </div>
-    <div style="padding:12px 16px;display:flex;align-items:center;gap:16px">
-      <div style="font-size:28px;font-weight:700;color:var(--ink)">${totalCat||0}</div>
-      <div>
-        <div style="font-size:13px;font-weight:600">itens no catálogo</div>
-        <div style="font-size:11px;color:var(--ink-soft)">Usado para cruzar preços e pesos dos PDFs importados</div>
+      <div style="display:flex;gap:8px">
+        ${totalCat?`<button class="btn btn-ghost btn-sm" onclick="sincronizarItensComCatalogo(event)">🔄 Sincronizar memorials</button>`:''}
+        <button class="btn btn-primary btn-sm" onclick="importarCatalogoPadrao(event)">⬆️ Importar/Atualizar</button>
       </div>
-      ${!totalCat?`<div class="alert alert-amber" style="margin:0;flex:1"><span>⚠️</span><span>Catálogo vazio — importe para ativar o cálculo de custos.</span></div>`:''}
     </div>
-    ${!totalCat?`<div style="padding:0 16px 12px;font-size:12px;color:var(--ink-soft)">
-      Se o botão retornar erro sobre coluna "codigo", execute antes no <strong>SQL Editor do Supabase</strong>:<br>
-      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">ALTER TABLE itens_catalogo ADD COLUMN IF NOT EXISTS codigo TEXT UNIQUE;</code>
+    <div style="padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:28px;font-weight:700;color:var(--ink)">${totalCat||0}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">itens no catálogo</div>
+        <div style="font-size:11px;color:var(--ink-soft)">Cruzado com PDFs importados para calcular peso e custo</div>
+      </div>
+      ${!totalCat?`<div class="alert alert-amber" style="margin:0"><span>⚠️</span><span>Catálogo vazio — clique em Importar/Atualizar.</span></div>`:''}
+    </div>
+    ${totalCat?`
+    <div style="border-top:1px solid var(--rule)">
+      <div class="tbl-wrap" style="max-height:320px;overflow:auto">
+        <table class="tbl"><thead><tr>
+          <th>Código</th><th>Descrição</th>
+          <th style="text-align:right">Peso unit. (kg)</th>
+          <th style="text-align:right">Valor/dia (R$)</th>
+        </tr></thead><tbody>
+        ${(catItens||[]).map(c=>`<tr>
+          <td class="mono" style="font-size:11px;color:var(--ink-soft)">${c.codigo||'—'}</td>
+          <td style="font-size:13px">${c.nome}</td>
+          <td style="text-align:right;font-size:12px">${c.peso_unit_kg!=null?c.peso_unit_kg.toFixed(3):'—'}</td>
+          <td style="text-align:right;font-size:12px">${c.valor_dia_rs!=null?'R$ '+c.valor_dia_rs.toFixed(6):'—'}</td>
+        </tr>`).join('')}
+        </tbody></table>
+      </div>
     </div>`:''}
     </div>
     <div class="card"><div class="card-head"><span class="card-head-title">🏗️ Todas as Obras</span></div>
