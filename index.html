@@ -683,7 +683,7 @@ async function renderEtapa1(){
         <div class="field">
           <label>% mínima do fck para desforma</label>
           <input type="number" id="e1-pct" value="${o.pct_desforma||75}" min="50" max="100" step="1" style="font-family:var(--mono);font-size:16px">
-          <span class="field-hint">Definida pelo calculista estrutural. Valor típico: 75% (NBR 14931:2023 §12.2). Atenção: fcj e Eci devem ser atingidos simultaneamente.</span>
+          <span class="field-hint">Definida pelo calculista estrutural. Atenção: fcj e Eci devem ser atingidos simultaneamente.</span>
         </div>
       </div>
     </div></div>
@@ -786,7 +786,7 @@ async function renderEtapa2(){
         <div class="alert alert-green">
           <span>💡</span>
           <div>
-            <strong>Exemplo prático:</strong> fck 40 MPa, critério 75% (NBR 14931:2023 §12.2) → resistência mínima = <strong>30 MPa</strong>.
+            <strong>Exemplo prático:</strong> fck 40 MPa, critério definido pelo calculista → resistência mínima conforme projeto.
             Laudo ao 14º dia: 32,3 MPa → ✅ aprovado! Atenção: verificar também o Eci exigido em projeto.
             Sem laudo: o sistema usa os ${DR} dias como estimativa da data de desforma.
           </div>
@@ -2765,58 +2765,95 @@ function _parseNum(s){
 }
 
 function _parsearPDFMovimentacao(allItems){
-  // Agrupar em linhas por Y (mesmo algoritmo do parser de memorial)
+  // Y threshold maior para agrupar partes de linhas longas (cabeçalho TIPO: pode ter múltiplos fragments)
   const sorted=[...allItems].sort((a,b)=>{const dy=b.y-a.y;return Math.abs(dy)>4?dy:a.x-b.x;});
   const groups=[];let cur=null;
   for(const it of sorted){
-    if(!cur||Math.abs(cur.y-it.y)>6){cur={y:it.y,parts:[]};groups.push(cur);}
+    if(!cur||Math.abs(cur.y-it.y)>8){cur={y:it.y,parts:[]};groups.push(cur);}
     cur.parts.push(it.str);
   }
   const lines=groups.map(g=>g.parts.join(' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+  console.log('[MOV PDF] linhas:',lines.length,'primeiras:',lines.slice(0,8));
 
-  const notas=[];
-  let currentNota=null;
-  let buf='';
+  // Tenta parsear com a lógica "cabeçalho primeiro, itens depois"
+  // (layout visual do PDF: TIPO: no topo, itens abaixo)
+  let notas=_parsearModoHeaderPrimeiro(lines);
 
+  // Se não encontrou nada, tenta "itens primeiro, cabeçalho depois"
+  // (caso o PDF.js extraia na ordem inversa da visual)
+  if(!notas.length) notas=_parsearModoItensPrimeiro(lines);
+
+  return notas;
+}
+
+function _tipoHeaderRegex(combined){
+  // Flexível: aceita qualquer separador entre campos (|, vírgula, espaços)
+  // Retorna {tipo, numero, data, valor, peso} ou null
+  const nfm=combined.match(/TIPO\s*:?\s*NOTA\s+FISCAL.{0,5}DATA\s*:?\s*(\d{2}\/\d{2}\/\d{4}).{0,5}NOTA\s+FISCAL\s*:?\s*(\d+).{0,30}PESO\s+TOTAL\s*:?\s*([\d.,]+).{0,30}VALOR\s+TOTAL\s*:?\s*R?\$?\s*([\d.,]+)/i);
+  if(nfm) return {tipo:'REMESSA',numero:nfm[2],data:_parseDateBR(nfm[1]),valor:_parseNum(nfm[4]),peso_total:_parseNum(nfm[3]),itens:[]};
+  const rem=combined.match(/TIPO\s*:?\s*RE\b.{0,5}DATA\s*:?\s*(\d{2}\/\d{2}\/\d{4}).{0,5}NOTA\s+FISCAL\s*:?\s*(\d+).{0,30}PESO\s+TOTAL\s*:?\s*([\d.,]+).{0,30}VALOR\s+TOTAL\s*:?\s*R?\$?\s*([\d.,]+)/i);
+  if(rem) return {tipo:'DEVOLUCAO',numero:rem[2],data:_parseDateBR(rem[1]),valor:_parseNum(rem[4]),peso_total:_parseNum(rem[3]),itens:[]};
+  return null;
+}
+
+function _matchItem(line){
+  // Aceita: CÓDIGO Nome [espaco_opcional] QTD R$ VALOR
+  // Usa R$ como âncora e trabalha para trás
+  const m=line.match(/^(\d{6}-\d)\s+(.+?)\s*(\d+)\s+R\s*\$\s*([\d.,]+)\s*$/);
+  if(!m) return null;
+  return {codigo:m[1],nome:m[2].trim(),quantidade:parseInt(m[3]),valor:_parseNum(m[4])};
+}
+
+function _parsearModoHeaderPrimeiro(lines){
+  const notas=[];let currentNota=null;let buf='';let lastCode=null;
   for(const line of lines){
-    buf=(buf+' '+line).trim();
-
-    // Detectar NOTA FISCAL (remessa) — pode estar em 2–3 linhas, por isso usa buf
-    const nfm=buf.match(/NOTA\s*FISCAL[:\s]+(\d+)[\s|,]+DATA[:\s]+(\d{2}\/\d{2}\/\d{4})[\s|,]+VALOR[:\s]+R?\$?\s*([\d.,]+)[\s|,]+PESO\s*TOTAL[:\s]+([\d.,]+)/i);
-    if(nfm){
+    const combined=(buf+' '+line).trim();
+    const h=_tipoHeaderRegex(combined);
+    if(h){
       if(currentNota)notas.push(currentNota);
-      currentNota={tipo:'REMESSA',numero:nfm[1],data:_parseDateBR(nfm[2]),valor:_parseNum(nfm[3]),peso_total:_parseNum(nfm[4]),itens:[]};
-      buf='';continue;
+      currentNota=h;buf='';lastCode=null;continue;
     }
-
-    // Detectar RE (devolução)
-    const rem=buf.match(/^RE[:\s]+(\d+)[\s|,]+DATA[:\s]+(\d{2}\/\d{2}\/\d{4})[\s|,]+VALOR[:\s]+R?\$?\s*([\d.,]+)[\s|,]+PESO\s*TOTAL[:\s]+([\d.,]+)/i);
-    if(rem){
-      if(currentNota)notas.push(currentNota);
-      currentNota={tipo:'DEVOLUCAO',numero:rem[1],data:_parseDateBR(rem[2]),valor:_parseNum(rem[3]),peso_total:_parseNum(rem[4]),itens:[]};
-      buf='';continue;
-    }
-
-    // Detectar item (código NNNNNN-N + nome + qtd + R$ valor)
     if(currentNota){
-      // Tenta linha atual isolada
-      const im=line.match(/^(\d{6}-\d)\s+(.+?)\s+(\d+)\s+R?\$?\s*([\d.,]+)\s*$/);
-      if(im){
-        currentNota.itens.push({codigo:im[1],nome:im[2].trim(),quantidade:parseInt(im[3]),valor:_parseNum(im[4])});
-        buf='';continue;
-      }
-      // Fallback: linha tem só código+nome+qtd (sem R$), valor na próxima linha
-      const im2=line.match(/^(\d{6}-\d)\s+(.+?)\s+(\d+)\s*$/);
-      if(im2){
-        currentNota.itens.push({codigo:im2[1],nome:im2[2].trim(),quantidade:parseInt(im2[3]),valor:0});
-        buf='';continue;
+      // Item completo numa linha
+      const im=_matchItem(line);
+      if(im){currentNota.itens.push(im);buf='';lastCode=null;continue;}
+      // Código isolado (coluna esquerda do PDF separada da direita)
+      const bc=line.match(/^(\d{6}-\d)\s*$/);
+      if(bc){lastCode=bc[1];buf='';continue;}
+      // Nome+QTD+VALOR sem código (coluna direita separada)
+      if(lastCode){
+        const ri=line.match(/^(.+?)\s*(\d+)\s+R\s*\$\s*([\d.,]+)\s*$/);
+        if(ri&&!/^(TIPO|CÓDIGO|DATA|PESO|VALOR)/.test(ri[1])){
+          currentNota.itens.push({codigo:lastCode,nome:ri[1].trim(),quantidade:parseInt(ri[2]),valor:_parseNum(ri[3])});
+          buf='';lastCode=null;continue;
+        }
       }
     }
-
-    // Evitar buffer crescer demais sem match de cabeçalho
-    if(buf.length>500)buf=line;
+    buf=combined.length>400?line:combined;
   }
   if(currentNota)notas.push(currentNota);
+  return notas;
+}
+
+function _parsearModoItensPrimeiro(lines){
+  const notas=[];let pending=[];let buf='';let lastCode=null;
+  for(const line of lines){
+    const combined=(buf+' '+line).trim();
+    const h=_tipoHeaderRegex(combined);
+    if(h){h.itens=pending;notas.push(h);pending=[];buf='';lastCode=null;continue;}
+    const im=_matchItem(line);
+    if(im){pending.push(im);buf='';lastCode=null;continue;}
+    const bc=line.match(/^(\d{6}-\d)\s*$/);
+    if(bc){lastCode=bc[1];buf='';continue;}
+    if(lastCode){
+      const ri=line.match(/^(.+?)\s*(\d+)\s+R\s*\$\s*([\d.,]+)\s*$/);
+      if(ri&&!/^(TIPO|CÓDIGO|DATA|PESO|VALOR)/.test(ri[1])){
+        pending.push({codigo:lastCode,nome:ri[1].trim(),quantidade:parseInt(ri[2]),valor:_parseNum(ri[3])});
+        buf='';lastCode=null;continue;
+      }
+    }
+    buf=combined.length>400?line:combined;
+  }
   return notas;
 }
 
@@ -2872,7 +2909,7 @@ async function processarMovimentacaoPDF(event){
     _notasImportadas=_parsearPDFMovimentacao(allItems);
 
     if(!_notasImportadas.length){
-      g('mov-imp-msg-erro').textContent='Nenhuma nota encontrada. Verifique se o PDF é uma relação de remessa/devolução SH com cabeçalhos "NOTA FISCAL:" ou "RE:".';
+      g('mov-imp-msg-erro').textContent='Nenhuma nota encontrada. Verifique se o PDF é uma relação de remessa/devolução SH com cabeçalhos "TIPO: NOTA FISCAL" ou "TIPO: RE".';
       _movImpEstado('erro');return;
     }
 
